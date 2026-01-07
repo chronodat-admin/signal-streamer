@@ -44,6 +44,8 @@ const Strategies = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [strategyToDelete, setStrategyToDelete] = useState<Strategy | null>(null);
   
   // Form state
   const [name, setName] = useState('');
@@ -217,13 +219,18 @@ const Strategies = () => {
     }
   };
 
-  const deleteStrategy = async (strategy: Strategy) => {
-    if (!confirm('Are you sure you want to delete this strategy? This will also delete all associated signals.')) return;
+  const handleDeleteClick = (strategy: Strategy) => {
+    setStrategyToDelete(strategy);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteStrategy = async () => {
+    if (!strategyToDelete) return;
 
     try {
       // Use the database function to delete all signals for this strategy
       const { error: functionError } = await supabase.rpc('delete_strategy_signals', {
-        p_strategy_id: strategy.id
+        p_strategy_id: strategyToDelete.id
       });
 
       if (functionError) {
@@ -232,7 +239,7 @@ const Strategies = () => {
         const { error: signalsError } = await supabase
           .from('signals')
           .delete()
-          .eq('strategy_id', strategy.id);
+          .eq('strategy_id', strategyToDelete.id);
 
         if (signalsError) {
           console.error('Error deleting signals:', signalsError);
@@ -244,11 +251,13 @@ const Strategies = () => {
       const { error } = await supabase
         .from('strategies')
         .update({ is_deleted: true })
-        .eq('id', strategy.id);
+        .eq('id', strategyToDelete.id);
 
       if (error) throw error;
 
-      setStrategies(strategies.filter((s) => s.id !== strategy.id));
+      setStrategies(strategies.filter((s) => s.id !== strategyToDelete.id));
+      setDeleteDialogOpen(false);
+      setStrategyToDelete(null);
 
       toast({
         title: 'Strategy Deleted',
@@ -456,7 +465,7 @@ const Strategies = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteStrategy(strategy)}
+                        onClick={() => handleDeleteClick(strategy)}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -468,6 +477,44 @@ const Strategies = () => {
             ))}
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Strategy</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this strategy? This will also delete all associated signals.
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            {strategyToDelete && (
+              <div className="py-4">
+                <p className="text-sm font-medium mb-1">Strategy:</p>
+                <p className="text-sm text-muted-foreground">{strategyToDelete.name}</p>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setStrategyToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={deleteStrategy}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Strategy
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
