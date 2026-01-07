@@ -16,6 +16,7 @@ import PublicStrategy from "./pages/PublicStrategy";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Preferences from "./pages/Preferences";
+import AlertLogs from "./pages/AlertLogs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/dashboard/strategies/:id" element={<StrategyDetail />} />
               <Route path="/dashboard/signals" element={<Signals />} />
               <Route path="/dashboard/integrations" element={<Integrations />} />
+              <Route path="/dashboard/logs" element={<AlertLogs />} />
               <Route path="/s/:slug" element={<PublicStrategy />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/dashboard/billing" element={<Billing />} />

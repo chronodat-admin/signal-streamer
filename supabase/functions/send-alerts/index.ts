@@ -16,7 +16,12 @@ interface AlertPayload {
 }
 
 // Discord webhook format
-async function sendDiscordAlert(webhookUrl: string, payload: AlertPayload): Promise<boolean> {
+async function sendDiscordAlert(
+  webhookUrl: string, 
+  payload: AlertPayload,
+  supabase: any,
+  logData: { userId: string; strategyId: string; signalId: string; integrationId: string }
+): Promise<{ success: boolean; error?: string; responseStatus?: number; responseBody?: string }> {
   const color = payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG" 
     ? 0x22c55e // Green
     : 0xef4444; // Red
@@ -31,6 +36,22 @@ async function sendDiscordAlert(webhookUrl: string, payload: AlertPayload): Prom
     },
   };
 
+  // Log the attempt
+  const { data: logEntry } = await supabase
+    .from("alert_logs")
+    .insert({
+      user_id: logData.userId,
+      strategy_id: logData.strategyId,
+      signal_id: logData.signalId,
+      integration_id: logData.integrationId,
+      integration_type: "discord",
+      status: "pending",
+      message: `Sending Discord alert for ${payload.signal_type} ${payload.symbol}`,
+      webhook_url: webhookUrl.substring(0, 100), // Truncate for storage
+    })
+    .select()
+    .single();
+
   try {
     console.log(`Sending Discord webhook to: ${webhookUrl.substring(0, 50)}...`);
     const response = await fetch(webhookUrl, {
@@ -39,17 +60,63 @@ async function sendDiscordAlert(webhookUrl: string, payload: AlertPayload): Prom
       body: JSON.stringify({ embeds: [embed] }),
     });
     
+    const responseBody = await response.text();
+    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Discord webhook failed: ${response.status} ${response.statusText} - ${errorText}`);
-      return false;
+      console.error(`Discord webhook failed: ${response.status} ${response.statusText} - ${responseBody}`);
+      
+      // Update log with error
+      if (logEntry?.id) {
+        await supabase
+          .from("alert_logs")
+          .update({
+            status: "error",
+            error_message: `HTTP ${response.status}: ${responseBody.substring(0, 500)}`,
+            response_status: response.status,
+            response_body: responseBody.substring(0, 1000),
+          })
+          .eq("id", logEntry.id);
+      }
+      
+      return { 
+        success: false, 
+        error: `HTTP ${response.status}: ${responseBody.substring(0, 200)}`,
+        responseStatus: response.status,
+        responseBody: responseBody.substring(0, 1000)
+      };
     }
     
     console.log("Discord alert sent successfully");
-    return true;
+    
+    // Update log with success
+    if (logEntry?.id) {
+      await supabase
+        .from("alert_logs")
+        .update({
+          status: "success",
+          message: "Discord alert sent successfully",
+          response_status: response.status,
+        })
+        .eq("id", logEntry.id);
+    }
+    
+    return { success: true, responseStatus: response.status };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Discord alert error:", error);
-    return false;
+    
+    // Update log with error
+    if (logEntry?.id) {
+      await supabase
+        .from("alert_logs")
+        .update({
+          status: "error",
+          error_message: errorMessage.substring(0, 500),
+        })
+        .eq("id", logEntry.id);
+    }
+    
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -301,7 +368,18 @@ serve(async (req) => {
 
         switch (integrationType) {
           case "discord":
-            success = await sendDiscordAlert(webhookUrl, payload);
+            const discordResult = await sendDiscordAlert(
+              webhookUrl, 
+              payload, 
+              supabase,
+              {
+                userId: userId,
+                strategyId: strategy_id,
+                signalId: signal_id,
+                integrationId: integration.id
+              }
+            );
+            success = discordResult.success;
             break;
           case "slack":
             success = await sendSlackAlert(webhookUrl, payload);
