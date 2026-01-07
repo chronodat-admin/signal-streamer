@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Copy, Check, Webhook, Clock, Download, ExternalLink, Loader2, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { StrategyAnalytics } from '@/components/strategy/StrategyAnalytics';
+import { getUserPlan } from '@/lib/planUtils';
 
 interface Strategy {
   id: string;
@@ -45,7 +46,11 @@ const StrategyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const webhookUrl = `https://werpnszquvnivfjdhcfd.supabase.co/functions/v1/tradingview-webhook`;
+  // Get webhook URL from environment or construct from Supabase URL
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  const webhookUrl = supabaseUrl 
+    ? `${supabaseUrl}/functions/v1/tradingview-webhook`
+    : 'https://YOUR_PROJECT.supabase.co/functions/v1/tradingview-webhook';
 
   useEffect(() => {
     if (user && id) {
@@ -158,11 +163,70 @@ const StrategyDetail = () => {
   }'`
     : '';
 
+  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
+
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('user_id', user.id)
+        .single();
+      if (data?.plan) setUserPlan(data.plan);
+    };
+    fetchUserPlan();
+  }, [user]);
+
   const exportCSV = () => {
+    if (userPlan === 'FREE') {
+      toast({
+        title: 'Upgrade Required',
+        description: 'CSV export is available for Pro users. Upgrade to unlock.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (signals.length === 0) {
+      toast({
+        title: 'No Data',
+        description: 'There are no signals to export.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Signal Type', 'Symbol', 'Price', 'Interval', 'Time', 'Created At'];
+    const rows = signals.map((signal) => [
+      signal.signal_type,
+      signal.symbol,
+      signal.price.toString(),
+      signal.interval || '',
+      signal.signal_time,
+      signal.created_at,
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${strategy?.name || 'signals'}-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     toast({
-      title: 'Upgrade Required',
-      description: 'CSV export is available for Pro users. Upgrade to unlock.',
-      variant: 'destructive',
+      title: 'Export Successful',
+      description: `Exported ${signals.length} signals to CSV`,
     });
   };
 

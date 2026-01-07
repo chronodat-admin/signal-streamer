@@ -90,6 +90,35 @@ serve(async (req) => {
       }
     }
 
+    // Basic rate limiting: Check signals in last second
+    const oneSecondAgo = new Date(Date.now() - 1000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("signals")
+      .select("*", { count: "exact", head: true })
+      .eq("strategy_id", strategyId)
+      .gte("created_at", oneSecondAgo);
+
+    // Get user plan for rate limits
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("user_id", strategy.user_id)
+      .single();
+
+    const plan = profile?.plan || "FREE";
+    const rateLimitPerSec = plan === "FREE" ? 1 : plan === "PRO" ? 5 : 20;
+
+    if ((recentCount || 0) >= rateLimitPerSec) {
+      console.log(`Rate limit exceeded for strategy ${strategyId}: ${recentCount} requests in last second`);
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Please slow down your requests." }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Insert signal
     const { error: insertError } = await supabase.from("signals").insert({
       user_id: strategy.user_id,

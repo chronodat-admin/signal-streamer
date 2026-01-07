@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Layers, Settings, Eye, EyeOff, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { canCreateStrategy, getUserPlan, getPlanLimits } from '@/lib/planUtils';
 
 interface Strategy {
   id: string;
@@ -41,6 +42,7 @@ const Strategies = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
   
   // Form state
   const [name, setName] = useState('');
@@ -51,8 +53,15 @@ const Strategies = () => {
   useEffect(() => {
     if (user) {
       fetchStrategies();
+      fetchUserPlan();
     }
   }, [user]);
+
+  const fetchUserPlan = async () => {
+    if (!user) return;
+    const plan = await getUserPlan(user.id);
+    setUserPlan(plan);
+  };
 
   const fetchStrategies = async () => {
     if (!user) return;
@@ -95,11 +104,12 @@ const Strategies = () => {
     e.preventDefault();
     if (!user || !name.trim()) return;
 
-    // Check plan limits (FREE = 1 strategy)
-    if (strategies.length >= 1) {
+    // Check plan limits using server-side function
+    const { allowed, reason } = await canCreateStrategy(user.id, strategies.length);
+    if (!allowed) {
       toast({
         title: 'Upgrade Required',
-        description: 'Free plan allows only 1 strategy. Upgrade to Pro for more.',
+        description: reason || 'You have reached your strategy limit.',
         variant: 'destructive',
       });
       return;
@@ -283,15 +293,17 @@ const Strategies = () => {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                Free Plan
+                {userPlan} Plan
               </Badge>
               <span className="text-sm text-muted-foreground">
-                {strategies.length}/1 strategies used
+                {strategies.length}/{getPlanLimits(userPlan).maxStrategies === -1 ? '∞' : getPlanLimits(userPlan).maxStrategies} strategies used
               </span>
             </div>
-            <Link to="/pricing">
-              <Button variant="outline" size="sm">Upgrade</Button>
-            </Link>
+            {userPlan !== 'ELITE' && (
+              <Link to="/pricing">
+                <Button variant="outline" size="sm">Upgrade</Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
 

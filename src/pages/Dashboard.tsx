@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 
 interface Signal {
   id: string;
@@ -51,13 +52,24 @@ const Dashboard = () => {
     if (!user) return;
 
     try {
-      const { data: signalsData, error: signalsError } = await supabase
+      // Get user plan and apply history limits
+      const plan = await getUserPlan(user.id);
+      const historyLimit = getHistoryDateLimit(plan);
+      
+      let query = supabase
         .from('signals')
         .select(`
           *,
           strategies (name)
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
+
+      // Apply history limit if not unlimited
+      if (historyLimit) {
+        query = query.gte('created_at', historyLimit.toISOString());
+      }
+
+      const { data: signalsData, error: signalsError } = await query
         .order('created_at', { ascending: false })
         .limit(10);
 
