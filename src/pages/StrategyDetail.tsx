@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Copy, Check, Webhook, Clock, Download, ExternalLink, Loader2, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -299,7 +300,7 @@ const StrategyDetail = () => {
         </div>
 
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="glass-card h-12 p-1">
+          <TabsList className="h-10 p-1 bg-muted/50">
             <TabsTrigger value="analytics" className="gap-2 h-10 px-4">
               <BarChart3 className="h-4 w-4" />
               Analytics
@@ -326,7 +327,7 @@ const StrategyDetail = () => {
               </Button>
             </div>
 
-            <Card className="glass-card overflow-hidden">
+            <Card className="overflow-hidden">
               <CardContent className="p-0">
                 {signals.length === 0 ? (
                   <div className="text-center py-16">
@@ -338,33 +339,38 @@ const StrategyDetail = () => {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-border bg-muted/30">
-                          <th className="text-left py-4 px-6 table-header">Signal</th>
-                          <th className="text-left py-4 px-6 table-header">Symbol</th>
-                          <th className="text-left py-4 px-6 table-header">Price</th>
-                          <th className="text-left py-4 px-6 table-header">Interval</th>
-                          <th className="text-left py-4 px-6 table-header">Time</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {signals.map((signal, index) => (
-                          <tr
-                            key={signal.id}
-                            className={`table-row ${index === signals.length - 1 ? 'border-none' : ''}`}
-                          >
-                            <td className="py-4 px-6">{getSignalBadge(signal.signal_type)}</td>
-                            <td className="py-4 px-6 font-mono font-semibold">{signal.symbol}</td>
-                            <td className="py-4 px-6 font-mono">${Number(signal.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td className="py-4 px-6 text-muted-foreground">{signal.interval || '-'}</td>
-                            <td className="py-4 px-6 text-sm text-muted-foreground">
-                              {format(new Date(signal.created_at), 'MMM d, HH:mm:ss')}
-                            </td>
-                          </tr>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Signal</TableHead>
+                          <TableHead>Symbol</TableHead>
+                          <TableHead>Price</TableHead>
+                          <TableHead>Interval</TableHead>
+                          <TableHead>Time</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {signals.map((signal) => (
+                          <TableRow key={signal.id}>
+                            <TableCell>{getSignalBadge(signal.signal_type)}</TableCell>
+                            <TableCell>
+                              <span className="font-mono font-medium">{signal.symbol}</span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-mono">${Number(signal.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-muted-foreground">{signal.interval || '-'}</span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-muted-foreground">
+                                {format(new Date(signal.created_at), 'MMM d, HH:mm:ss')}
+                              </span>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </CardContent>
@@ -373,7 +379,7 @@ const StrategyDetail = () => {
 
           <TabsContent value="setup" className="space-y-6">
             {/* Webhook URL */}
-            <Card className="glass-card">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">1. Webhook URL</CardTitle>
                 <CardDescription>
@@ -402,7 +408,7 @@ const StrategyDetail = () => {
             </Card>
 
             {/* JSON Template */}
-            <Card className="glass-card">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">2. Alert Message (JSON)</CardTitle>
                 <CardDescription>
@@ -436,7 +442,7 @@ const StrategyDetail = () => {
             </Card>
 
             {/* Setup Steps */}
-            <Card className="glass-card">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">3. Setup Steps</CardTitle>
               </CardHeader>
@@ -461,7 +467,7 @@ const StrategyDetail = () => {
             </Card>
 
             {/* Test with cURL */}
-            <Card className="glass-card">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Test with cURL</CardTitle>
                 <CardDescription>

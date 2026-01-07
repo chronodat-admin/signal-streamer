@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Activity, TrendingUp, TrendingDown, Clock, ArrowLeft, Loader2, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -211,64 +212,64 @@ const PublicStrategy = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="stat-card">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Signals</p>
-                  <p className="text-3xl font-bold">{stats.total}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Signals</p>
+                  <p className="text-2xl font-semibold">{stats.total}</p>
                 </div>
-                <Activity className="h-8 w-8 text-primary" />
+                <Activity className="h-5 w-5 text-primary" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">BUY Signals</p>
-                  <p className="text-3xl font-bold text-success">{stats.buys}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">BUY Signals</p>
+                  <p className="text-2xl font-semibold text-success">{stats.buys}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-success" />
+                <TrendingUp className="h-5 w-5 text-success" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">SELL Signals</p>
-                  <p className="text-3xl font-bold text-destructive">{stats.sells}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">SELL Signals</p>
+                  <p className="text-2xl font-semibold text-destructive">{stats.sells}</p>
                 </div>
-                <TrendingDown className="h-8 w-8 text-destructive" />
+                <TrendingDown className="h-5 w-5 text-destructive" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Latest Signal</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Latest Signal</p>
                   {stats.latestSignal ? (
                     <div className="mt-1">{getSignalBadge(stats.latestSignal.signal_type)}</div>
                   ) : (
-                    <p className="text-xl font-bold">-</p>
+                    <p className="text-lg font-semibold">-</p>
                   )}
                 </div>
-                <Clock className="h-8 w-8 text-warning" />
+                <Clock className="h-5 w-5 text-warning" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Signals Table */}
-        <Card className="glass-card">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Clock className="h-4 w-4" />
               Recent Signals
             </CardTitle>
           </CardHeader>
@@ -283,31 +284,34 @@ const PublicStrategy = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Signal</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Symbol</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Price</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Signal</TableHead>
+                      <TableHead>Symbol</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {signals.map((signal) => (
-                      <tr
-                        key={signal.id}
-                        className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
-                      >
-                        <td className="py-3 px-2">{getSignalBadge(signal.signal_type)}</td>
-                        <td className="py-3 px-2 font-mono font-medium">{signal.symbol}</td>
-                        <td className="py-3 px-2 font-mono">${Number(signal.price).toFixed(2)}</td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">
-                          {format(new Date(signal.created_at), 'MMM d, HH:mm')}
-                        </td>
-                      </tr>
+                      <TableRow key={signal.id}>
+                        <TableCell>{getSignalBadge(signal.signal_type)}</TableCell>
+                        <TableCell>
+                          <span className="font-mono font-medium">{signal.symbol}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono">${Number(signal.price).toFixed(2)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-muted-foreground">
+                            {format(new Date(signal.created_at), 'MMM d, HH:mm')}
+                          </span>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>

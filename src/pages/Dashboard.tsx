@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
@@ -152,61 +153,61 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <Card className="stat-card group">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Signals Today</p>
-                  <p className="text-5xl font-bold mt-3 tracking-tight">{stats.signalsToday}</p>
-                  <p className="text-xs text-muted-foreground mt-2">Last 24 hours</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Signals Today</p>
+                  <p className="text-3xl font-semibold tracking-tight">{stats.signalsToday}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Last 24 hours</p>
                 </div>
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Activity className="h-6 w-6 text-primary" />
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="stat-card group">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">This Week</p>
-                  <p className="text-5xl font-bold mt-3 tracking-tight">{stats.signalsWeek}</p>
-                  <p className="text-xs text-muted-foreground mt-2">Last 7 days</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">This Week</p>
+                  <p className="text-3xl font-semibold tracking-tight">{stats.signalsWeek}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
                 </div>
-                <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
-                  <TrendingUp className="h-6 w-6 text-emerald-500" />
+                <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="stat-card group">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Strategies</p>
-                  <p className="text-5xl font-bold mt-3 tracking-tight">{strategiesCount}</p>
-                  <p className="text-xs text-muted-foreground mt-2">Active strategies</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Strategies</p>
+                  <p className="text-3xl font-semibold tracking-tight">{strategiesCount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Active strategies</p>
                 </div>
-                <div className="h-12 w-12 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
-                  <Layers className="h-6 w-6 text-violet-500" />
+                <div className="h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                  <Layers className="h-5 w-5 text-violet-500" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="stat-card group">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Top Symbol</p>
-                  <p className="text-4xl font-bold mt-3 font-mono tracking-tight">{stats.mostActiveSymbol || '—'}</p>
-                  <p className="text-xs text-muted-foreground mt-2">Most signals</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Top Symbol</p>
+                  <p className="text-2xl font-semibold mt-1 font-mono tracking-tight">{stats.mostActiveSymbol || '—'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Most signals</p>
                 </div>
-                <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                  <BarChart3 className="h-6 w-6 text-amber-500" />
+                <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <BarChart3 className="h-5 w-5 text-amber-500" />
                 </div>
               </div>
             </CardContent>
@@ -214,10 +215,10 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Signals */}
-        <Card className="glass-card overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-muted/20">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <Clock className="h-5 w-5 text-muted-foreground" />
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Clock className="h-4 w-4 text-muted-foreground" />
               Recent Signals
             </CardTitle>
             {signals.length > 0 && (
@@ -254,38 +255,38 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border/50 bg-muted/30">
-                      <th className="text-left py-4 px-6 table-header">Signal</th>
-                      <th className="text-left py-4 px-6 table-header">Symbol</th>
-                      <th className="text-left py-4 px-6 table-header">Price</th>
-                      <th className="text-left py-4 px-6 table-header">Strategy</th>
-                      <th className="text-left py-4 px-6 table-header">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {signals.map((signal, index) => (
-                      <tr key={signal.id} className={`table-row ${index === signals.length - 1 ? 'border-none' : ''}`}>
-                        <td className="py-4 px-6">{getSignalBadge(signal.signal_type)}</td>
-                        <td className="py-4 px-6">
-                          <span className="font-mono font-semibold">{signal.symbol}</span>
-                        </td>
-                        <td className="py-4 px-6">
-                          <span className="font-mono text-foreground">${Number(signal.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </td>
-                        <td className="py-4 px-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Signal</TableHead>
+                      <TableHead>Symbol</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Strategy</TableHead>
+                      <TableHead>Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {signals.map((signal) => (
+                      <TableRow key={signal.id}>
+                        <TableCell>{getSignalBadge(signal.signal_type)}</TableCell>
+                        <TableCell>
+                          <span className="font-mono font-medium">{signal.symbol}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono">${Number(signal.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </TableCell>
+                        <TableCell>
                           <span className="text-muted-foreground">{signal.strategies?.name}</span>
-                        </td>
-                        <td className="py-4 px-6">
-                          <span className="text-sm text-muted-foreground">
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-muted-foreground">
                             {format(new Date(signal.created_at), 'MMM d, HH:mm')}
                           </span>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>

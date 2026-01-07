@@ -289,7 +289,7 @@ const Strategies = () => {
         </div>
 
         {/* Plan Info */}
-        <Card className="glass-card border-primary/20">
+        <Card className="border-primary/20">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
@@ -313,7 +313,7 @@ const Strategies = () => {
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           </div>
         ) : strategies.length === 0 ? (
-          <Card className="glass-card">
+          <Card>
             <CardContent className="p-12 text-center">
               <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No strategies yet</h3>
@@ -329,7 +329,7 @@ const Strategies = () => {
         ) : (
           <div className="grid gap-4">
             {strategies.map((strategy) => (
-              <Card key={strategy.id} className="stat-card">
+              <Card key={strategy.id}>
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex-1">
