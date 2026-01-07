@@ -28,7 +28,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 142 71% 45%; /* Supabase green */
+    --primary: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 20% 96.1%;
@@ -37,13 +37,13 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 142 71% 45%;
+    --accent: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --success: 142 71% 45%;
+    --success: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
@@ -51,12 +51,12 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142 71% 45%;
+    --ring: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
 
     --radius: 0.5rem; /* Supabase uses smaller radius (8px) */
 
     /* Trading colors */
-    --buy: 142 71% 45%;
+    --buy: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --sell: 0 72% 51%;
     --neutral: 215 16% 47%;
     
@@ -95,7 +95,7 @@
     --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 142 71% 45%;
+    --primary: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -104,13 +104,13 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 142 71% 45%;
+    --accent: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 71% 45%;
+    --success: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --success-foreground: 222.2 47.4% 11.2%;
 
     --warning: 38 92% 50%;
@@ -118,10 +118,10 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 142 71% 45%;
+    --ring: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
 
     /* Trading colors */
-    --buy: 142 71% 45%;
+    --buy: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
     --sell: 0 72% 51%;
     --neutral: 215 20% 55%;
     

@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -20,6 +20,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Strategies', href: '/dashboard/strategies', icon: Layers },
   { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
+  { name: 'Preferences', href: '/dashboard/preferences', icon: Settings },
 ];
 
 const planColors: Record<PlanType, string> = {
@@ -266,8 +267,26 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </aside>
 
+      {/* Top Header - Desktop Only */}
+      <header className="hidden lg:flex fixed top-0 right-0 h-16 border-b border-border bg-background/95 backdrop-blur-md z-40 transition-all duration-300" style={{ left: collapsed ? '80px' : '288px' }}>
+        <div className="flex items-center justify-end w-full px-6">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-2 ring-primary/20">
+                <span className="text-sm font-bold text-primary">
+                  {user.email?.[0].toUpperCase()}
+                </span>
+              </div>
+              <p className="text-xs font-medium text-foreground truncate max-w-[100px]">
+                {user.email?.split('@')[0] || 'User'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Main Content */}
-      <main className={`pt-14 lg:pt-0 min-h-screen transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <main className={`pt-14 lg:pt-16 min-h-screen transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
         <div className="p-6 lg:p-8 max-w-7xl mx-auto">
           {children}
         </div>

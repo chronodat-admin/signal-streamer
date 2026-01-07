@@ -13,6 +13,7 @@ import StrategyDetail from "./pages/StrategyDetail";
 import PublicStrategy from "./pages/PublicStrategy";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
+import Preferences from "./pages/Preferences";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/s/:slug" element={<PublicStrategy />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/dashboard/billing" element={<Billing />} />
+              <Route path="/dashboard/preferences" element={<Preferences />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

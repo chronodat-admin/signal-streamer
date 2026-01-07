@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Layers, Settings, Eye, EyeOff, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Layers, Settings, Eye, EyeOff, Trash2, Loader2, ExternalLink, Copy, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { canCreateStrategy, getUserPlan, getPlanLimits } from '@/lib/planUtils';
 
@@ -43,6 +43,7 @@ const Strategies = () => {
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
   
   // Form state
   const [name, setName] = useState('');
@@ -155,6 +156,34 @@ const Strategies = () => {
       });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const copyPublicLink = async (strategy: Strategy) => {
+    if (!strategy.is_public || !strategy.slug) {
+      toast({
+        title: 'Strategy is not public',
+        description: 'Please make the strategy public first.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/s/${strategy.slug}`;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopiedLink(strategy.id);
+      toast({
+        title: 'Link copied!',
+        description: 'Public link copied to clipboard.',
+      });
+      setTimeout(() => setCopiedLink(null), 2000);
+    } catch (error) {
+      toast({
+        title: 'Failed to copy',
+        description: 'Could not copy link to clipboard.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -363,6 +392,27 @@ const Strategies = () => {
                           onCheckedChange={() => togglePublic(strategy)}
                         />
                       </div>
+                      {strategy.is_public && strategy.slug && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyPublicLink(strategy)}
+                          className="gap-2"
+                          title="Copy public link"
+                        >
+                          {copiedLink === strategy.id ? (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4" />
+                              Copy Link
+                            </>
+                          )}
+                        </Button>
+                      )}
                       <Link to={`/dashboard/strategies/${strategy.id}`}>
                         <Button variant="outline" size="sm" className="gap-2">
                           <Settings className="h-4 w-4" />

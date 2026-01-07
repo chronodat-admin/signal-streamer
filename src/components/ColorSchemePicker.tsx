@@ -13,6 +13,7 @@ interface ColorScheme {
 }
 
 const colorSchemes: ColorScheme[] = [
+  { name: 'Green', hue: 142, saturation: 71, lightness: 45, preview: 'bg-[hsl(142,71%,45%)]' },
   { name: 'Blue', hue: 199, saturation: 89, lightness: 48, preview: 'bg-[hsl(199,89%,48%)]' },
   { name: 'Cyan', hue: 185, saturation: 84, lightness: 45, preview: 'bg-[hsl(185,84%,45%)]' },
   { name: 'Emerald', hue: 160, saturation: 84, lightness: 39, preview: 'bg-[hsl(160,84%,39%)]' },
@@ -32,12 +33,14 @@ export const ColorSchemePicker = () => {
         return colorSchemes.find(s => s.name === parsed.name) || colorSchemes[0];
       }
     }
-    return colorSchemes[0];
+    // Default to Green (Supabase-style)
+    return colorSchemes.find(s => s.name === 'Green') || colorSchemes[0];
   });
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     applyColorScheme(currentScheme);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const applyColorScheme = (scheme: ColorScheme) => {

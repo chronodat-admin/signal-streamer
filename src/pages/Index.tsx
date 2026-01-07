@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, Zap, Shield, BarChart3, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { Activity, Zap, Shield, BarChart3, ArrowRight, Check, Sparkles, LayoutDashboard } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 
@@ -10,11 +10,8 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && user) {
-      navigate('/dashboard');
-    }
-  }, [user, loading, navigate]);
+  // Removed auto-redirect to allow users to see the home page
+  // Users can click the Dashboard button to go to dashboard
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,12 +28,23 @@ const Index = () => {
             <Link to="/pricing" className="nav-link hidden sm:block">Pricing</Link>
             <ColorSchemePicker />
             <ThemeToggle />
-            <Link to="/auth">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </Link>
-            <Link to="/auth">
-              <Button size="sm" className="shadow-md">Get Started</Button>
-            </Link>
+            {user ? (
+              <Link to="/dashboard">
+                <Button size="sm" className="shadow-md gap-2">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm">Sign In</Button>
+                </Link>
+                <Link to="/auth">
+                  <Button size="sm" className="shadow-md">Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -67,14 +75,25 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
-            <Link to="/auth">
-              <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all h-12 px-8">
-                Start Free <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/pricing">
-              <Button variant="outline" size="lg" className="h-12 px-8">View Pricing</Button>
-            </Link>
+            {user ? (
+              <Link to="/dashboard">
+                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all h-12 px-8">
+                  <LayoutDashboard className="h-5 w-5" />
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all h-12 px-8">
+                    Start Free <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/pricing">
+                  <Button variant="outline" size="lg" className="h-12 px-8">View Pricing</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
