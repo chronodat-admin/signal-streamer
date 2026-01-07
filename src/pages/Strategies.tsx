@@ -231,57 +231,47 @@ const Strategies = () => {
     setDeleting(true);
 
     try {
-      // First, try to delete signals using the RPC function
-      const { error: functionError } = await supabase.rpc('delete_strategy_signals', {
+      // Use the combined function that handles both signal deletion and strategy soft-delete
+      // This function uses SECURITY DEFINER to bypass RLS issues
+      const { data: success, error: functionError } = await supabase.rpc('soft_delete_strategy', {
         p_strategy_id: strategyToDelete.id
       });
 
       if (functionError) {
-        // Fallback: try direct delete if function doesn't exist or has issues
-        console.warn('RPC function error, trying direct delete:', functionError);
-        const { error: signalsError, count } = await supabase
+        console.error('Error calling soft_delete_strategy:', functionError);
+        
+        // Fallback: try the old method if the new function doesn't exist
+        console.warn('Trying fallback method...');
+        
+        // Try to delete signals first
+        const { error: signalsError } = await supabase
           .from('signals')
-          .delete({ count: 'exact' })
+          .delete()
           .eq('strategy_id', strategyToDelete.id);
 
-        if (signalsError) {
-          console.error('Error deleting signals:', signalsError);
-          // If signals can't be deleted, still try to delete the strategy
-          // (signals might be deleted via cascade or might not exist)
-          if (signalsError.code !== 'PGRST116') { // PGRST116 = no rows returned
-            throw new Error(`Failed to delete signals: ${signalsError.message}`);
-          }
-        } else {
-          console.log(`Deleted ${count || 0} signals`);
+        if (signalsError && signalsError.code !== 'PGRST116') {
+          console.warn('Signals deletion warning (may not exist):', signalsError);
         }
-      } else {
-        console.log('Signals deleted via RPC function');
-      }
 
-      // Then, soft delete the strategy
-      // Note: RLS policy "Users can update their own strategies" handles user_id check
-      // We don't use .select() because the SELECT policy filters out deleted strategies
-      const { error: strategyError, count } = await supabase
-        .from('strategies')
-        .update({ is_deleted: true })
-        .eq('id', strategyToDelete.id)
-        .eq('user_id', user?.id || ''); // Explicit user_id check for safety
+        // Then try to update strategy (without user_id filter to let RLS handle it)
+        const { error: strategyError, count } = await supabase
+          .from('strategies')
+          .update({ is_deleted: true })
+          .eq('id', strategyToDelete.id);
 
-      if (strategyError) {
-        console.error('Error deleting strategy:', strategyError);
-        console.error('Strategy ID:', strategyToDelete.id);
-        console.error('User ID:', user?.id);
-        console.error('Error details:', JSON.stringify(strategyError, null, 2));
-        throw new Error(`Failed to delete strategy: ${strategyError.message || strategyError.code || 'Unknown error'}`);
-      }
+        if (strategyError) {
+          console.error('Error deleting strategy (fallback):', strategyError);
+          throw new Error(`Failed to delete strategy: ${strategyError.message || strategyError.code || 'Unknown error'}`);
+        }
 
-      // Verify that a row was updated
-      if (count === 0) {
-        console.error('No strategy was updated - check if strategy exists and user owns it');
+        if (count === 0) {
+          throw new Error('Strategy not found or you do not have permission to delete it');
+        }
+      } else if (!success) {
         throw new Error('Strategy not found or you do not have permission to delete it');
       }
 
-      console.log(`Strategy successfully soft-deleted: ${strategyToDelete.id} (${count} row(s) updated)`);
+      console.log(`Strategy successfully soft-deleted: ${strategyToDelete.id}`);
 
       // Update local state
       setStrategies(strategies.filter((s) => s.id !== strategyToDelete.id));
