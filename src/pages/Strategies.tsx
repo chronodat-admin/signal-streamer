@@ -414,25 +414,38 @@ const Strategies = () => {
                         />
                       </div>
                       {strategy.is_public && strategy.slug && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyPublicLink(strategy)}
-                          className="gap-2"
-                          title="Copy public link"
-                        >
-                          {copiedLink === strategy.id ? (
-                            <>
-                              <Check className="h-4 w-4" />
-                              Copied
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-4 w-4" />
-                              Copy Link
-                            </>
-                          )}
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyPublicLink(strategy)}
+                            className="gap-2"
+                            title="Copy public link"
+                          >
+                            {copiedLink === strategy.id ? (
+                              <>
+                                <Check className="h-4 w-4" />
+                                Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-4 w-4" />
+                                Copy Link
+                              </>
+                            )}
+                          </Button>
+                          <Link to={`/s/${strategy.slug}`} target="_blank" rel="noopener noreferrer">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              title="Open public page in new window"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Open
+                            </Button>
+                          </Link>
+                        </>
                       )}
                       <Link to={`/dashboard/strategies/${strategy.id}`}>
                         <Button variant="outline" size="sm" className="gap-2">
