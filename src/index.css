@@ -272,11 +272,17 @@
   }
 
   .signal-buy {
-    @apply text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 font-medium;
+    color: hsl(var(--buy));
+    background-color: hsl(var(--buy) / 0.1);
+    border-color: hsl(var(--buy) / 0.2);
+    font-weight: 500;
   }
 
   .signal-sell {
-    @apply text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20 font-medium;
+    color: hsl(var(--sell));
+    background-color: hsl(var(--sell) / 0.1);
+    border-color: hsl(var(--sell) / 0.2);
+    font-weight: 500;
   }
 
   .signal-neutral {

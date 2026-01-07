@@ -171,11 +171,11 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
                 <p className="text-3xl font-bold mt-1">{analytics.total}</p>
                 <div className="flex items-center gap-1 mt-2">
                   {analytics.isTrendUp ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                    <TrendingUp className="h-3.5 w-3.5 text-buy" />
                   ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+                    <TrendingDown className="h-3.5 w-3.5 text-sell" />
                   )}
-                  <span className={`text-xs font-medium ${analytics.isTrendUp ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <span className={`text-xs font-medium ${analytics.isTrendUp ? 'text-buy' : 'text-sell'}`}>
                     {analytics.trendPercent}%
                   </span>
                   <span className="text-xs text-muted-foreground">vs last week</span>
@@ -201,8 +201,8 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
                   <Badge className="signal-sell border text-xs px-2">{analytics.sellCount} Sell</Badge>
                 </div>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <Target className="h-5 w-5 text-emerald-500" />
+              <div className="h-10 w-10 rounded-xl bg-buy/10 flex items-center justify-center">
+                <Target className="h-5 w-5 text-buy" />
               </div>
             </div>
           </CardContent>
