@@ -141,3 +141,4 @@ export const formatPnL = (pnl: number): { value: string; className: string } => 
 };
 
 
+

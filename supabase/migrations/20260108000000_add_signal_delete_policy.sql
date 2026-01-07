@@ -21,3 +21,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.delete_strategy_signals(uuid) TO authenticated;
 
 
+
