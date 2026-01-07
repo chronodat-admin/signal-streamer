@@ -12,7 +12,9 @@
     "db:push": "npx supabase db push",
     "db:status": "npx supabase migration list",
     "db:link": "npx supabase link --project-ref ogcnilkuneeqkhmoamxi",
-    "db:push:direct": "npx supabase db push --db-url"
+    "db:push:direct": "npx supabase db push --db-url",
+    "functions:deploy": "npx supabase functions deploy tradingview-webhook",
+    "functions:list": "npx supabase functions list"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
