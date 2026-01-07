@@ -14,6 +14,7 @@
     "db:link": "npx supabase link --project-ref ogcnilkuneeqkhmoamxi",
     "db:push:direct": "npx supabase db push --db-url",
     "functions:deploy": "npx supabase functions deploy tradingview-webhook",
+    "functions:deploy:script": "node deploy-function.js",
     "functions:list": "npx supabase functions list"
   },
   "dependencies": {

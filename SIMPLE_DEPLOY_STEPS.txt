@@ -1,0 +1,41 @@
+═══════════════════════════════════════════════════════════════
+  DEPLOY EDGE FUNCTION - SIMPLE STEPS
+═══════════════════════════════════════════════════════════════
+
+The function needs to be deployed to fix the NOT_FOUND error.
+
+┌─────────────────────────────────────────────────────────────┐
+│  EASIEST METHOD: Supabase Dashboard (2 minutes)            │
+└─────────────────────────────────────────────────────────────┘
+
+1. Open this URL in your browser:
+   https://supabase.com/dashboard/project/ogcnilkuneeqkhmoamxi/functions
+
+2. Click "Create Function" or "New Function"
+
+3. Function Name: tradingview-webhook
+   (exactly this - lowercase, with hyphen)
+
+4. Open this file in your editor:
+   supabase/functions/tradingview-webhook/index.ts
+
+5. Copy ALL the code (Ctrl+A, Ctrl+C)
+
+6. Paste into the Supabase dashboard editor
+
+7. Click "Deploy"
+
+8. Wait ~30 seconds for deployment
+
+9. Done! The function is now live.
+
+┌─────────────────────────────────────────────────────────────┐
+│  Function URL After Deployment:                             │
+└─────────────────────────────────────────────────────────────┘
+
+https://ogcnilkuneeqkhmoamxi.supabase.co/functions/v1/tradingview-webhook
+
+This URL is automatically used by your app - no changes needed!
+
+═══════════════════════════════════════════════════════════════
+
