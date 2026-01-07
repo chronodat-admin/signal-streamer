@@ -186,3 +186,4 @@ $$;
 -- Grant execute permission
 GRANT EXECUTE ON FUNCTION public.get_user_trades(uuid, integer) TO authenticated;
 
+
