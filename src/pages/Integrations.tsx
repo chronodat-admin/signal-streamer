@@ -21,15 +21,19 @@ interface Integration {
   id: string;
   user_id: string;
   strategy_id: string | null;
-  integration_type: IntegrationType;
+  integration_type?: IntegrationType;
+  type?: IntegrationType; // Support both old and new schema
   name: string;
-  webhook_url: string;
+  webhook_url?: string; // May not exist in old schema
   status: IntegrationStatus;
-  enabled: boolean;
+  enabled?: boolean;
   config: Record<string, any>;
-  last_used_at: string | null;
-  error_message: string | null;
+  last_used_at?: string | null;
+  last_delivery_at?: string | null; // Old schema field
+  error_message?: string | null;
+  error_count?: number; // Old schema field
   created_at: string;
+  updated_at?: string;
   strategies?: {
     name: string;
   };
@@ -205,7 +209,7 @@ const Integrations = () => {
     try {
       const { error } = await supabase
         .from('integrations')
-        .update({ enabled: !integration.enabled })
+        .update({ enabled: !(integration.enabled !== false) })
         .eq('id', integration.id);
 
       if (error) throw error;
@@ -217,12 +221,13 @@ const Integrations = () => {
 
   const handleEdit = (integration: Integration) => {
     setEditingIntegration(integration);
+    const integrationType = integration.integration_type || integration.type || 'discord';
     setFormData({
-      integration_type: integration.integration_type,
+      integration_type: integrationType as IntegrationType,
       name: integration.name,
       strategy_id: integration.strategy_id || 'all',
-      webhook_url: integration.webhook_url,
-      enabled: integration.enabled,
+      webhook_url: integration.webhook_url || integration.config?.webhook_url || '',
+      enabled: integration.enabled !== undefined ? integration.enabled : true,
       bot_token: integration.config?.bot_token || '',
       chat_id: integration.config?.chat_id || '',
       phone_number: integration.config?.phone_number || '',
@@ -470,18 +475,18 @@ const Integrations = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
                       <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${
-                        integration.integration_type === 'discord' ? 'bg-indigo-500/10 text-indigo-500' :
-                        integration.integration_type === 'slack' ? 'bg-purple-500/10 text-purple-500' :
-                        integration.integration_type === 'telegram' ? 'bg-blue-500/10 text-blue-500' :
+                        (integration.integration_type || integration.type) === 'discord' ? 'bg-indigo-500/10 text-indigo-500' :
+                        (integration.integration_type || integration.type) === 'slack' ? 'bg-purple-500/10 text-purple-500' :
+                        (integration.integration_type || integration.type) === 'telegram' ? 'bg-blue-500/10 text-blue-500' :
                         'bg-green-500/10 text-green-500'
                       }`}>
-                        {getIntegrationIcon(integration.integration_type)}
+                        {getIntegrationIcon((integration.integration_type || integration.type || 'discord') as IntegrationType)}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold">{integration.name}</h3>
                           <Badge variant="outline" className="text-xs">
-                            {integration.integration_type}
+                            {integration.integration_type || integration.type || 'unknown'}
                           </Badge>
                           {integration.strategies && (
                             <Badge variant="secondary" className="text-xs">
@@ -495,7 +500,7 @@ const Integrations = () => {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
-                          {integration.webhook_url || `${integration.integration_type} integration`}
+                          {integration.webhook_url || `${integration.integration_type || integration.type || 'integration'}`}
                         </p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
                           <span>Status: <Badge variant={integration.status === 'active' ? 'default' : 'destructive'} className="ml-1">{integration.status}</Badge></span>
@@ -510,7 +515,7 @@ const Integrations = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Switch
-                        checked={integration.enabled}
+                        checked={integration.enabled !== false}
                         onCheckedChange={() => handleToggle(integration)}
                       />
                       <Button
