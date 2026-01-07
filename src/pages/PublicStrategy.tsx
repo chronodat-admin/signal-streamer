@@ -1,0 +1,330 @@
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Activity, TrendingUp, TrendingDown, Clock, ArrowLeft, Loader2, Lock } from 'lucide-react';
+import { format } from 'date-fns';
+
+interface Strategy {
+  id: string;
+  name: string;
+  description: string | null;
+  exchange: string | null;
+  timeframe: string | null;
+  is_public: boolean;
+  created_at: string;
+}
+
+interface Signal {
+  id: string;
+  signal_type: string;
+  symbol: string;
+  price: number;
+  signal_time: string;
+  created_at: string;
+}
+
+interface Stats {
+  total: number;
+  buys: number;
+  sells: number;
+  latestSignal: Signal | null;
+}
+
+const PublicStrategy = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [strategy, setStrategy] = useState<Strategy | null>(null);
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [stats, setStats] = useState<Stats>({ total: 0, buys: 0, sells: 0, latestSignal: null });
+  const [loading, setLoading] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
+
+  useEffect(() => {
+    if (slug) {
+      fetchPublicStrategy();
+    }
+  }, [slug]);
+
+  const fetchPublicStrategy = async () => {
+    if (!slug) return;
+
+    try {
+      // Try to find by slug first, then by ID
+      let { data: strategyData, error } = await supabase
+        .from('strategies')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_deleted', false)
+        .maybeSingle();
+
+      if (!strategyData) {
+        // Try by ID
+        const { data, error: idError } = await supabase
+          .from('strategies')
+          .select('*')
+          .eq('id', slug)
+          .eq('is_deleted', false)
+          .maybeSingle();
+
+        if (idError) throw idError;
+        strategyData = data;
+      }
+
+      if (!strategyData) {
+        setLoading(false);
+        return;
+      }
+
+      if (!strategyData.is_public) {
+        setIsPrivate(true);
+        setLoading(false);
+        return;
+      }
+
+      setStrategy(strategyData);
+
+      // Fetch signals (last 50)
+      const { data: signalsData, error: signalsError } = await supabase
+        .from('signals')
+        .select('*')
+        .eq('strategy_id', strategyData.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (signalsError) throw signalsError;
+      setSignals(signalsData || []);
+
+      // Calculate stats
+      const allSignals = signalsData || [];
+      const buys = allSignals.filter((s) => 
+        s.signal_type.toUpperCase() === 'BUY' || s.signal_type.toUpperCase() === 'LONG'
+      ).length;
+      const sells = allSignals.filter((s) => 
+        s.signal_type.toUpperCase() === 'SELL' || s.signal_type.toUpperCase() === 'SHORT'
+      ).length;
+
+      setStats({
+        total: allSignals.length,
+        buys,
+        sells,
+        latestSignal: allSignals[0] || null,
+      });
+    } catch (error) {
+      console.error('Error fetching public strategy:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSignalBadge = (type: string) => {
+    const upperType = type.toUpperCase();
+    if (upperType === 'BUY' || upperType === 'LONG') {
+      return <Badge className="signal-buy border">BUY</Badge>;
+    }
+    if (upperType === 'SELL' || upperType === 'SHORT') {
+      return <Badge className="signal-sell border">SELL</Badge>;
+    }
+    return <Badge className="signal-neutral border">{upperType}</Badge>;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isPrivate) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <Lock className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+          <h1 className="text-2xl font-bold mb-2">This strategy is private</h1>
+          <p className="text-muted-foreground mb-6">
+            The owner has not made this strategy public
+          </p>
+          <Link to="/">
+            <Button className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Go Home
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!strategy) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <Activity className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+          <h1 className="text-2xl font-bold mb-2">Strategy not found</h1>
+          <p className="text-muted-foreground mb-6">
+            This strategy doesn't exist or has been deleted
+          </p>
+          <Link to="/">
+            <Button className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Go Home
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="border-b border-border bg-card">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <Activity className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold">SignalPulse</span>
+          </Link>
+          <Link to="/auth">
+            <Button size="sm">Get Started</Button>
+          </Link>
+        </div>
+      </nav>
+
+      <div className="container mx-auto px-6 py-8 max-w-6xl">
+        {/* Strategy Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold">{strategy.name}</h1>
+            <Badge className="signal-buy border">Public</Badge>
+          </div>
+          {strategy.description && (
+            <p className="text-lg text-muted-foreground mb-4">{strategy.description}</p>
+          )}
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            {strategy.exchange && <span>📊 {strategy.exchange}</span>}
+            {strategy.timeframe && <span>⏱️ {strategy.timeframe}</span>}
+            <span>Created {format(new Date(strategy.created_at), 'MMM d, yyyy')}</span>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="stat-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Signals</p>
+                  <p className="text-3xl font-bold">{stats.total}</p>
+                </div>
+                <Activity className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="stat-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">BUY Signals</p>
+                  <p className="text-3xl font-bold text-success">{stats.buys}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-success" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="stat-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">SELL Signals</p>
+                  <p className="text-3xl font-bold text-destructive">{stats.sells}</p>
+                </div>
+                <TrendingDown className="h-8 w-8 text-destructive" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="stat-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Latest Signal</p>
+                  {stats.latestSignal ? (
+                    <div className="mt-1">{getSignalBadge(stats.latestSignal.signal_type)}</div>
+                  ) : (
+                    <p className="text-xl font-bold">-</p>
+                  )}
+                </div>
+                <Clock className="h-8 w-8 text-warning" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Signals Table */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Recent Signals
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {signals.length === 0 ? (
+              <div className="text-center py-12">
+                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No signals yet</h3>
+                <p className="text-muted-foreground">
+                  This strategy hasn't received any signals yet
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Signal</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Symbol</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Price</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signals.map((signal) => (
+                      <tr
+                        key={signal.id}
+                        className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
+                      >
+                        <td className="py-3 px-2">{getSignalBadge(signal.signal_type)}</td>
+                        <td className="py-3 px-2 font-mono font-medium">{signal.symbol}</td>
+                        <td className="py-3 px-2 font-mono">${Number(signal.price).toFixed(2)}</td>
+                        <td className="py-3 px-2 text-sm text-muted-foreground">
+                          {format(new Date(signal.created_at), 'MMM d, HH:mm')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* CTA */}
+        <div className="mt-8 text-center">
+          <p className="text-muted-foreground mb-4">
+            Want to track your own trading signals?
+          </p>
+          <Link to="/auth">
+            <Button className="glow-effect">Get Started Free</Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PublicStrategy;

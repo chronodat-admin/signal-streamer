@@ -1,0 +1,371 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ===========================================
+   COLOR CONFIGURATION
+   Change these values to customize your theme
+   =========================================== */
+
+@layer base {
+  :root {
+    /* ========== BRAND COLORS ========== */
+    /* Primary accent - change this to customize the main brand color */
+    /* Options: Blue (199), Cyan (185), Emerald (160), Violet (270), Rose (345), Orange (25) */
+    --brand-hue: 199;
+    --brand-saturation: 89%;
+    --brand-lightness: 48%;
+    
+    /* ========== LIGHT MODE ========== */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+
+    --radius: 0.75rem;
+
+    /* Trading colors */
+    --buy: 142 71% 45%;
+    --sell: 0 72% 51%;
+    --neutral: 215 16% 47%;
+    
+    /* Chart colors - customize for different chart elements */
+    --chart-1: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 270 60% 55%;
+    --chart-5: 345 75% 55%;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.08), 0 2px 4px -2px hsl(222 47% 11% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.05);
+    --shadow-glow: 0 0 20px hsl(var(--brand-hue) var(--brand-saturation) var(--brand-lightness) / 0.2);
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+  }
+
+  /* ========== DARK MODE ========== */
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --primary-foreground: 222 47% 6%;
+
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 30% 12%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --accent-foreground: 222 47% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 222 47% 6%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 6%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 14%;
+    --ring: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+
+    /* Trading colors */
+    --buy: 142 71% 45%;
+    --sell: 0 72% 51%;
+    --neutral: 215 20% 55%;
+    
+    /* Chart colors */
+    --chart-1: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 270 60% 55%;
+    --chart-5: 345 75% 55%;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 4% / 0.5);
+    --shadow-md: 0 4px 6px -1px hsl(222 47% 4% / 0.5), 0 2px 4px -2px hsl(222 47% 4% / 0.5);
+    --shadow-lg: 0 10px 15px -3px hsl(222 47% 4% / 0.5), 0 4px 6px -4px hsl(222 47% 4% / 0.5);
+    --shadow-glow: 0 0 20px hsl(var(--brand-hue) var(--brand-saturation) var(--brand-lightness) / 0.3);
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 222 30% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 30% 15%;
+    --sidebar-ring: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
+  }
+
+  /* ===========================================
+     COLOR PRESETS
+     Uncomment one of these to use a preset
+     =========================================== */
+
+  /* Cyan Theme */
+  /* :root, .dark { --brand-hue: 185; --brand-saturation: 84%; --brand-lightness: 45%; } */
+
+  /* Emerald Theme */
+  /* :root, .dark { --brand-hue: 160; --brand-saturation: 84%; --brand-lightness: 39%; } */
+
+  /* Violet Theme */
+  /* :root, .dark { --brand-hue: 270; --brand-saturation: 70%; --brand-lightness: 55%; } */
+
+  /* Rose Theme */
+  /* :root, .dark { --brand-hue: 345; --brand-saturation: 82%; --brand-lightness: 55%; } */
+
+  /* Orange Theme */
+  /* :root, .dark { --brand-hue: 25; --brand-saturation: 95%; --brand-lightness: 53%; } */
+
+  /* Indigo Theme */
+  /* :root, .dark { --brand-hue: 240; --brand-saturation: 70%; --brand-lightness: 55%; } */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-sm;
+  }
+
+  .gradient-text {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-hue) var(--brand-saturation) var(--brand-lightness)),
+      hsl(calc(var(--brand-hue) + 30) 80% 55%)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .signal-buy {
+    @apply text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 font-medium;
+  }
+
+  .signal-sell {
+    @apply text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20 font-medium;
+  }
+
+  .signal-neutral {
+    @apply text-muted-foreground bg-muted/50 border-border font-medium;
+  }
+
+  .stat-card {
+    @apply glass-card p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .nav-link {
+    @apply px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all duration-200;
+  }
+
+  .nav-link-active {
+    @apply bg-primary/10 text-primary font-medium;
+  }
+
+  /* Professional card styles */
+  .card-elevated {
+    @apply bg-card border border-border rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300;
+  }
+
+  /* Gradient button styles */
+  .btn-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-hue) var(--brand-saturation) var(--brand-lightness)),
+      hsl(calc(var(--brand-hue) + 20) 80% 50%)
+    );
+    @apply text-primary-foreground font-medium shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5;
+  }
+
+  /* Table styles */
+  .table-header {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+
+  .table-row {
+    @apply border-b border-border/50 hover:bg-muted/30 transition-colors duration-150;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 10px hsl(var(--brand-hue) var(--brand-saturation) var(--brand-lightness) / 0.2);
+    }
+    to {
+      box-shadow: 0 0 20px hsl(var(--brand-hue) var(--brand-saturation) var(--brand-lightness) / 0.4);
+    }
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-sm;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-cyan-500 to-blue-500;
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .signal-buy {
+    @apply text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 font-medium;
+  }
+
+  .signal-sell {
+    @apply text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20 font-medium;
+  }
+
+  .signal-neutral {
+    @apply text-muted-foreground bg-muted/50 border-border font-medium;
+  }
+
+  .stat-card {
+    @apply glass-card p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .nav-link {
+    @apply px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all duration-200;
+  }
+
+  .nav-link-active {
+    @apply bg-primary/10 text-primary font-medium;
+  }
+
+  /* Professional card styles */
+  .card-elevated {
+    @apply bg-card border border-border rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300;
+  }
+
+  /* Gradient button styles */
+  .btn-gradient {
+    @apply bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground font-medium shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5;
+  }
+
+  /* Table styles */
+  .table-header {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+
+  .table-row {
+    @apply border-b border-border/50 hover:bg-muted/30 transition-colors duration-150;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 10px hsl(199 89% 48% / 0.2);
+    }
+    to {
+      box-shadow: 0 0 20px hsl(199 89% 48% / 0.4);
+    }
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
