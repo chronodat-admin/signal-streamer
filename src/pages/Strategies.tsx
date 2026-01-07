@@ -122,7 +122,42 @@ const Strategies = () => {
     setCreating(true);
 
     try {
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      // Generate unique slug using database function, or fallback to client-side generation
+      let slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      
+      // Check if slug already exists for active strategies
+      const { data: existingStrategy } = await supabase
+        .from('strategies')
+        .select('id')
+        .eq('slug', slug)
+        .eq('is_deleted', false)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      // If slug exists, append a number
+      if (existingStrategy) {
+        let counter = 1;
+        let newSlug = `${slug}-${counter}`;
+        let exists = true;
+        
+        while (exists) {
+          const { data: check } = await supabase
+            .from('strategies')
+            .select('id')
+            .eq('slug', newSlug)
+            .eq('is_deleted', false)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (!check) {
+            exists = false;
+            slug = newSlug;
+          } else {
+            counter++;
+            newSlug = `${slug}-${counter}`;
+          }
+        }
+      }
       
       const { data, error } = await supabase
         .from('strategies')

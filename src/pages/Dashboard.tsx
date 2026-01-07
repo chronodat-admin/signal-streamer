@@ -335,14 +335,14 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Trades (Unique Buy/Sell Pairs) */}
+        {/* Open Trades */}
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between border-b border-border">
             <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              Recent Trades
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              Open Trades
             </CardTitle>
-            {trades.length > 0 && (
+            {trades.filter(t => t.status === 'open').length > 0 && (
               <Link to="/dashboard/signals">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   View All Signals <ArrowRight className="h-4 w-4" />
@@ -358,21 +358,105 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">Loading trades...</p>
                 </div>
               </div>
-            ) : trades.length === 0 ? (
-              <div className="text-center py-16 px-6">
-                <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="h-8 w-8 text-muted-foreground" />
+            ) : trades.filter(t => t.status === 'open').length === 0 ? (
+              <div className="text-center py-12 px-6">
+                <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <Activity className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">No trades yet</h3>
-                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                  Trades will appear here when you receive paired BUY/SELL or LONG/SHORT signals
+                <h3 className="text-base font-semibold mb-1">No open trades</h3>
+                <p className="text-sm text-muted-foreground">
+                  Open positions will appear here
                 </p>
-                <Link to="/dashboard/strategies">
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create Strategy
-                  </Button>
-                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Direction</TableHead>
+                      <TableHead>Symbol</TableHead>
+                      <TableHead>Entry Price</TableHead>
+                      <TableHead>Current</TableHead>
+                      <TableHead>Strategy</TableHead>
+                      <TableHead>Entry Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {trades.filter(t => t.status === 'open').map((trade) => (
+                      <TableRow key={trade.id}>
+                        <TableCell>
+                          <Badge className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
+                            {trade.direction === 'long' ? (
+                              <span className="flex items-center gap-1">
+                                <ArrowUpRight className="h-3 w-3" />
+                                LONG
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <ArrowDownRight className="h-3 w-3" />
+                                SHORT
+                              </span>
+                            )}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono font-medium">{trade.symbol}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono">${Number(trade.entry_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-muted-foreground">—</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-muted-foreground">{trade.strategy_name}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-muted-foreground">
+                            {format(new Date(trade.entry_time), 'MMM d, HH:mm')}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Closed Trades */}
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              Closed Trades
+            </CardTitle>
+            {trades.filter(t => t.status === 'closed').length > 0 && (
+              <Link to="/dashboard/signals">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  View All Signals <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <p className="text-sm text-muted-foreground">Loading trades...</p>
+                </div>
+              </div>
+            ) : trades.filter(t => t.status === 'closed').length === 0 ? (
+              <div className="text-center py-12 px-6">
+                <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <Clock className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-base font-semibold mb-1">No closed trades</h3>
+                <p className="text-sm text-muted-foreground">
+                  Completed trades will appear here
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -384,13 +468,12 @@ const Dashboard = () => {
                       <TableHead>Entry</TableHead>
                       <TableHead>Exit</TableHead>
                       <TableHead>P&L</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Strategy</TableHead>
                       <TableHead>Time</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {trades.map((trade) => (
+                    {trades.filter(t => t.status === 'closed').map((trade) => (
                       <TableRow key={trade.id}>
                         <TableCell>
                           <Badge className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
@@ -421,18 +504,13 @@ const Dashboard = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {trade.status === 'closed' && trade.pnl_percent !== null ? (
+                          {trade.pnl_percent !== null ? (
                             <span className={`font-semibold ${formatPnL(trade.pnl_percent).className}`}>
                               {formatPnL(trade.pnl_percent).value}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={trade.status === 'closed' ? 'default' : trade.status === 'open' ? 'secondary' : 'outline'}>
-                            {trade.status.toUpperCase()}
-                          </Badge>
                         </TableCell>
                         <TableCell>
                           <span className="text-muted-foreground">{trade.strategy_name}</span>
