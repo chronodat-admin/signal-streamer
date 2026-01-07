@@ -218,9 +218,29 @@ const Strategies = () => {
   };
 
   const deleteStrategy = async (strategy: Strategy) => {
-    if (!confirm('Are you sure you want to delete this strategy?')) return;
+    if (!confirm('Are you sure you want to delete this strategy? This will also delete all associated signals.')) return;
 
     try {
+      // Use the database function to delete all signals for this strategy
+      const { error: functionError } = await supabase.rpc('delete_strategy_signals', {
+        p_strategy_id: strategy.id
+      });
+
+      if (functionError) {
+        // Fallback: try direct delete if function doesn't exist
+        console.warn('Function not available, trying direct delete:', functionError);
+        const { error: signalsError } = await supabase
+          .from('signals')
+          .delete()
+          .eq('strategy_id', strategy.id);
+
+        if (signalsError) {
+          console.error('Error deleting signals:', signalsError);
+          throw signalsError;
+        }
+      }
+
+      // Then, soft delete the strategy
       const { error } = await supabase
         .from('strategies')
         .update({ is_deleted: true })
@@ -232,12 +252,13 @@ const Strategies = () => {
 
       toast({
         title: 'Strategy Deleted',
-        description: 'The strategy has been removed.',
+        description: 'The strategy and all associated signals have been removed.',
       });
     } catch (error) {
+      console.error('Error deleting strategy:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete strategy',
+        description: 'Failed to delete strategy. Please try again.',
         variant: 'destructive',
       });
     }

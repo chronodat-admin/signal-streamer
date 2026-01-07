@@ -152,7 +152,7 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
     );
   }
 
-  const pieColors = ['hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--muted-foreground))'];
+  const pieColors = ['hsl(var(--buy))', 'hsl(var(--sell))', 'hsl(var(--muted-foreground))'];
   const signalTypeData = [
     { name: 'Buy', value: analytics.buyCount },
     { name: 'Sell', value: analytics.sellCount },
@@ -259,12 +259,12 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
                 <AreaChart data={analytics.timeSeriesData}>
                   <defs>
                     <linearGradient id="buyGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--buy))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--buy))" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="sellGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--sell))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--sell))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -293,7 +293,7 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
                     type="monotone"
                     dataKey="buy"
                     stackId="1"
-                    stroke="hsl(var(--primary))"
+                    stroke="hsl(var(--buy))"
                     fill="url(#buyGradient)"
                     strokeWidth={2}
                     name="Buy"
@@ -302,7 +302,7 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
                     type="monotone"
                     dataKey="sell"
                     stackId="1"
-                    stroke="hsl(var(--destructive))"
+                    stroke="hsl(var(--sell))"
                     fill="url(#sellGradient)"
                     strokeWidth={2}
                     name="Sell"
@@ -353,14 +353,14 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
               <div className="w-1/2 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-primary" />
+                    <div className="h-3 w-3 rounded-full bg-buy" />
                     <span className="text-sm">Buy/Long</span>
                   </div>
                   <span className="font-semibold">{analytics.buyPercent}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-destructive" />
+                    <div className="h-3 w-3 rounded-full bg-sell" />
                     <span className="text-sm">Sell/Short</span>
                   </div>
                   <span className="font-semibold">{analytics.sellPercent}%</span>

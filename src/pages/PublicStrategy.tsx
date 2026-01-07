@@ -75,6 +75,7 @@ const PublicStrategy = () => {
 
       if (!strategyData) {
         setLoading(false);
+        setIsPrivate(false); // Not private, just not found
         return;
       }
 
@@ -114,8 +115,9 @@ const PublicStrategy = () => {
       });
     } catch (error) {
       console.error('Error fetching public strategy:', error);
-    } finally {
       setLoading(false);
+      setIsPrivate(false);
+      setStrategy(null);
     }
   };
 
@@ -229,9 +231,9 @@ const PublicStrategy = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">BUY Signals</p>
-                  <p className="text-2xl font-semibold text-success">{stats.buys}</p>
+                  <p className="text-2xl font-semibold text-buy">{stats.buys}</p>
                 </div>
-                <TrendingUp className="h-5 w-5 text-success" />
+                <TrendingUp className="h-5 w-5 text-buy" />
               </div>
             </CardContent>
           </Card>

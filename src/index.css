@@ -55,9 +55,9 @@
 
     --radius: 0.5rem; /* Supabase uses smaller radius (8px) */
 
-    /* Trading colors */
-    --buy: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
-    --sell: 0 72% 51%;
+    /* Trading colors - Always green for buy, red for sell */
+    --buy: 142 71% 45%; /* Green - consistent across all color schemes */
+    --sell: 0 72% 51%; /* Red - consistent across all color schemes */
     --neutral: 215 16% 47%;
     
     /* Chart colors - customize for different chart elements */
@@ -120,9 +120,9 @@
     --input: 217.2 32.6% 17.5%;
     --ring: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
 
-    /* Trading colors */
-    --buy: var(--brand-hue) var(--brand-saturation) var(--brand-lightness);
-    --sell: 0 72% 51%;
+    /* Trading colors - Always green for buy, red for sell */
+    --buy: 142 71% 45%; /* Green - consistent across all color schemes */
+    --sell: 0 72% 51%; /* Red - consistent across all color schemes */
     --neutral: 215 20% 55%;
     
     /* Chart colors */
