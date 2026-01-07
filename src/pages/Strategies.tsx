@@ -46,6 +46,7 @@ const Strategies = () => {
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [strategyToDelete, setStrategyToDelete] = useState<Strategy | null>(null);
+  const [deleting, setDeleting] = useState(false);
   
   // Form state
   const [name, setName] = useState('');
@@ -227,34 +228,62 @@ const Strategies = () => {
   const deleteStrategy = async () => {
     if (!strategyToDelete) return;
 
+    setDeleting(true);
+
     try {
-      // Use the database function to delete all signals for this strategy
+      // First, try to delete signals using the RPC function
       const { error: functionError } = await supabase.rpc('delete_strategy_signals', {
         p_strategy_id: strategyToDelete.id
       });
 
       if (functionError) {
-        // Fallback: try direct delete if function doesn't exist
-        console.warn('Function not available, trying direct delete:', functionError);
-        const { error: signalsError } = await supabase
+        // Fallback: try direct delete if function doesn't exist or has issues
+        console.warn('RPC function error, trying direct delete:', functionError);
+        const { error: signalsError, count } = await supabase
           .from('signals')
-          .delete()
+          .delete({ count: 'exact' })
           .eq('strategy_id', strategyToDelete.id);
 
         if (signalsError) {
           console.error('Error deleting signals:', signalsError);
-          throw signalsError;
+          // If signals can't be deleted, still try to delete the strategy
+          // (signals might be deleted via cascade or might not exist)
+          if (signalsError.code !== 'PGRST116') { // PGRST116 = no rows returned
+            throw new Error(`Failed to delete signals: ${signalsError.message}`);
+          }
+        } else {
+          console.log(`Deleted ${count || 0} signals`);
         }
+      } else {
+        console.log('Signals deleted via RPC function');
       }
 
       // Then, soft delete the strategy
-      const { error } = await supabase
+      // Note: RLS policy "Users can update their own strategies" handles user_id check
+      // We don't use .select() because the SELECT policy filters out deleted strategies
+      const { error: strategyError, count } = await supabase
         .from('strategies')
         .update({ is_deleted: true })
-        .eq('id', strategyToDelete.id);
+        .eq('id', strategyToDelete.id)
+        .eq('user_id', user?.id || ''); // Explicit user_id check for safety
 
-      if (error) throw error;
+      if (strategyError) {
+        console.error('Error deleting strategy:', strategyError);
+        console.error('Strategy ID:', strategyToDelete.id);
+        console.error('User ID:', user?.id);
+        console.error('Error details:', JSON.stringify(strategyError, null, 2));
+        throw new Error(`Failed to delete strategy: ${strategyError.message || strategyError.code || 'Unknown error'}`);
+      }
 
+      // Verify that a row was updated
+      if (count === 0) {
+        console.error('No strategy was updated - check if strategy exists and user owns it');
+        throw new Error('Strategy not found or you do not have permission to delete it');
+      }
+
+      console.log(`Strategy successfully soft-deleted: ${strategyToDelete.id} (${count} row(s) updated)`);
+
+      // Update local state
       setStrategies(strategies.filter((s) => s.id !== strategyToDelete.id));
       setDeleteDialogOpen(false);
       setStrategyToDelete(null);
@@ -263,13 +292,15 @@ const Strategies = () => {
         title: 'Strategy Deleted',
         description: 'The strategy and all associated signals have been removed.',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting strategy:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete strategy. Please try again.',
+        description: error?.message || 'Failed to delete strategy. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -507,10 +538,20 @@ const Strategies = () => {
               <Button
                 variant="destructive"
                 onClick={deleteStrategy}
+                disabled={deleting}
                 className="gap-2"
               >
-                <Trash2 className="h-4 w-4" />
-                Delete Strategy
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Delete Strategy
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>
