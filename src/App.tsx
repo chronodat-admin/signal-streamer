@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Strategies from "./pages/Strategies";
 import StrategyDetail from "./pages/StrategyDetail";
+import Signals from "./pages/Signals";
 import PublicStrategy from "./pages/PublicStrategy";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/strategies" element={<Strategies />} />
               <Route path="/dashboard/strategies/:id" element={<StrategyDetail />} />
+              <Route path="/dashboard/signals" element={<Signals />} />
               <Route path="/s/:slug" element={<PublicStrategy />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/dashboard/billing" element={<Billing />} />

@@ -9,10 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Copy, Check, Webhook, Clock, Download, ExternalLink, Loader2, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Webhook, Clock, Download, ExternalLink, Loader2, BarChart3, DollarSign, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { StrategyAnalytics } from '@/components/strategy/StrategyAnalytics';
 import { getUserPlan } from '@/lib/planUtils';
+import { calculateSignalPnL, formatPnL } from '@/lib/pnlUtils';
 
 interface Strategy {
   id: string;
@@ -46,6 +47,7 @@ const StrategyDetail = () => {
   const [allSignals, setAllSignals] = useState<Signal[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
+  const [pnlData, setPnlData] = useState<ReturnType<typeof calculateSignalPnL> | null>(null);
 
   // Get webhook URL from environment or construct from Supabase URL
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -111,6 +113,10 @@ const StrategyDetail = () => {
 
       if (error) throw error;
       setAllSignals(data || []);
+      
+      // Calculate P&L
+      const pnl = calculateSignalPnL(data || []);
+      setPnlData(pnl);
     } catch (error) {
       console.error('Error fetching all signals:', error);
     }
@@ -316,6 +322,78 @@ const StrategyDetail = () => {
           </TabsList>
 
           <TabsContent value="analytics" className="space-y-6">
+            {/* P&L Summary Cards */}
+            {pnlData && pnlData.totalTrades > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          Total P&L
+                        </p>
+                        <p className={`text-2xl font-semibold ${formatPnL(pnlData.totalPnL).className}`}>
+                          {formatPnL(pnlData.totalPnL).value}
+                        </p>
+                      </div>
+                      <DollarSign className={`h-5 w-5 ${pnlData.totalPnL >= 0 ? 'text-buy' : 'text-sell'}`} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          Win Rate
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {((pnlData.winningTrades / pnlData.totalTrades) * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                      <TrendingUp className="h-5 w-5 text-buy" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          Total Trades
+                        </p>
+                        <p className="text-2xl font-semibold">{pnlData.totalTrades}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {pnlData.winningTrades}W / {pnlData.losingTrades}L
+                        </p>
+                      </div>
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          Avg Gain
+                        </p>
+                        <p className="text-2xl font-semibold text-buy">
+                          {pnlData.avgGain > 0 ? `+${pnlData.avgGain.toFixed(2)}%` : '—'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Avg Loss: {pnlData.avgLoss > 0 ? `-${pnlData.avgLoss.toFixed(2)}%` : '—'}
+                        </p>
+                      </div>
+                      <TrendingUp className="h-5 w-5 text-buy" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
             <StrategyAnalytics signals={allSignals} strategyName={strategy.name} />
           </TabsContent>
 

@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3 } from 'lucide-react';
+import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
+import { calculateSignalPnL, formatPnL } from '@/lib/pnlUtils';
 
 interface Signal {
   id: string;
@@ -29,6 +30,9 @@ interface DashboardStats {
   signalsWeek: number;
   mostActiveStrategy: string | null;
   mostActiveSymbol: string | null;
+  totalPnL: number;
+  totalTrades: number;
+  winRate: number;
 }
 
 const Dashboard = () => {
@@ -39,9 +43,13 @@ const Dashboard = () => {
     signalsWeek: 0,
     mostActiveStrategy: null,
     mostActiveSymbol: null,
+    totalPnL: 0,
+    totalTrades: 0,
+    winRate: 0,
   });
   const [loading, setLoading] = useState(true);
   const [strategiesCount, setStrategiesCount] = useState(0);
+  const [allSignals, setAllSignals] = useState<Signal[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -70,12 +78,16 @@ const Dashboard = () => {
         query = query.gte('created_at', historyLimit.toISOString());
       }
 
-      const { data: signalsData, error: signalsError } = await query
-        .order('created_at', { ascending: false })
-        .limit(10);
+      // Fetch all signals for P&L calculation
+      const { data: allSignalsData, error: allSignalsError } = await query
+        .order('created_at', { ascending: false });
 
-      if (signalsError) throw signalsError;
-      setSignals(signalsData || []);
+      if (allSignalsError) throw allSignalsError;
+      setAllSignals(allSignalsData || []);
+
+      // Get recent 10 for display
+      const recentSignals = (allSignalsData || []).slice(0, 10);
+      setSignals(recentSignals);
 
       const { count: stratCount } = await supabase
         .from('strategies')
@@ -110,11 +122,20 @@ const Dashboard = () => {
       });
       const mostActiveSymbol = Object.entries(symbolCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
+      // Calculate P&L
+      const pnlData = calculateSignalPnL(allSignalsData || []);
+      const winRate = pnlData.totalTrades > 0
+        ? (pnlData.winningTrades / pnlData.totalTrades) * 100
+        : 0;
+
       setStats({
         signalsToday,
         signalsWeek,
         mostActiveStrategy,
         mostActiveSymbol,
+        totalPnL: pnlData.totalPnL,
+        totalTrades: pnlData.totalTrades,
+        winRate,
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -153,6 +174,39 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total P&L</p>
+                  <p className={`text-3xl font-semibold tracking-tight ${formatPnL(stats.totalPnL).className}`}>
+                    {formatPnL(stats.totalPnL).value}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{stats.totalTrades} closed trades</p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <DollarSign className={`h-5 w-5 ${stats.totalPnL >= 0 ? 'text-buy' : 'text-sell'}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Win Rate</p>
+                  <p className="text-3xl font-semibold tracking-tight">{stats.winRate.toFixed(1)}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats.totalTrades > 0 ? `${Math.round((stats.winRate / 100) * stats.totalTrades)} wins` : 'No trades'}
+                  </p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
@@ -222,7 +276,7 @@ const Dashboard = () => {
               Recent Signals
             </CardTitle>
             {signals.length > 0 && (
-              <Link to="/dashboard/strategies">
+              <Link to="/dashboard/signals">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   View All <ArrowRight className="h-4 w-4" />
                 </Button>

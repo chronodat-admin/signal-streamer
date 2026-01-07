@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, ChevronLeft, ChevronRight, Settings, Radio } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -19,6 +19,7 @@ interface DashboardLayoutProps {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Strategies', href: '/dashboard/strategies', icon: Layers },
+  { name: 'Signals', href: '/dashboard/signals', icon: Radio },
   { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
   { name: 'Preferences', href: '/dashboard/preferences', icon: Settings },
 ];

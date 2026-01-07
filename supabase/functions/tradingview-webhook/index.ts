@@ -90,6 +90,48 @@ serve(async (req) => {
       }
     }
 
+    // Check for duplicate buy/sell signals (same symbol, same type, within 5 minutes)
+    const signalTypeUpper = signal.toUpperCase();
+    const isBuyOrLong = signalTypeUpper === "BUY" || signalTypeUpper === "LONG";
+    const isSellOrShort = signalTypeUpper === "SELL" || signalTypeUpper === "SHORT";
+    
+    if (isBuyOrLong || isSellOrShort) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: recentSignals } = await supabase
+        .from("signals")
+        .select("id, signal_type, created_at")
+        .eq("strategy_id", strategyId)
+        .eq("symbol", symbol.toUpperCase())
+        .gte("created_at", fiveMinutesAgo)
+        .order("created_at", { ascending: false });
+
+      if (recentSignals && recentSignals.length > 0) {
+        // Check if there's a recent signal of the same type
+        const duplicate = recentSignals.find((s) => {
+          const sType = s.signal_type.toUpperCase();
+          if (isBuyOrLong) {
+            return sType === "BUY" || sType === "LONG";
+          } else {
+            return sType === "SELL" || sType === "SHORT";
+          }
+        });
+
+        if (duplicate) {
+          console.log(`Duplicate ${signalTypeUpper} signal for ${symbol} within 5 minutes, ignoring`);
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: `Duplicate ${signalTypeUpper} signal ignored (similar signal exists within 5 minutes)` 
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+    }
+
     // Basic rate limiting: Check signals in last second
     const oneSecondAgo = new Date(Date.now() - 1000).toISOString();
     const { count: recentCount } = await supabase
