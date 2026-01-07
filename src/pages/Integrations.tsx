@@ -46,7 +46,7 @@ const Integrations = () => {
   const [formData, setFormData] = useState({
     integration_type: 'discord' as IntegrationType,
     name: '',
-    strategy_id: '',
+    strategy_id: 'all',
     webhook_url: '',
     enabled: true,
     // Telegram/WhatsApp specific
@@ -134,8 +134,10 @@ const Integrations = () => {
         status: 'active',
       };
 
-      if (formData.strategy_id) {
+      if (formData.strategy_id && formData.strategy_id !== "all") {
         payload.strategy_id = formData.strategy_id;
+      } else {
+        payload.strategy_id = null;
       }
 
       if (editingIntegration) {
@@ -218,7 +220,7 @@ const Integrations = () => {
     setFormData({
       integration_type: integration.integration_type,
       name: integration.name,
-      strategy_id: integration.strategy_id || '',
+      strategy_id: integration.strategy_id || 'all',
       webhook_url: integration.webhook_url,
       enabled: integration.enabled,
       bot_token: integration.config?.bot_token || '',
@@ -235,7 +237,7 @@ const Integrations = () => {
     setFormData({
       integration_type: 'discord',
       name: '',
-      strategy_id: '',
+      strategy_id: 'all',
       webhook_url: '',
       enabled: true,
       bot_token: '',
@@ -333,14 +335,14 @@ const Integrations = () => {
                 <div className="space-y-2">
                   <Label>Strategy (Optional - leave empty for all strategies)</Label>
                   <Select
-                    value={formData.strategy_id}
-                    onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}
+                    value={formData.strategy_id || "all"}
+                    onValueChange={(value) => setFormData({ ...formData, strategy_id: value === "all" ? "" : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All Strategies" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Strategies</SelectItem>
+                      <SelectItem value="all">All Strategies</SelectItem>
                       {strategies.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
                           {s.name}
