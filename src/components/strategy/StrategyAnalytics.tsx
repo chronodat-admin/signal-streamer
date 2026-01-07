@@ -197,8 +197,8 @@ export const StrategyAnalytics = ({ signals, strategyName }: StrategyAnalyticsPr
                   {analytics.sellCount > 0 ? (analytics.buyCount / analytics.sellCount).toFixed(2) : '∞'}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <Badge className="signal-buy border text-xs px-2">{analytics.buyCount} Buy</Badge>
-                  <Badge className="signal-sell border text-xs px-2">{analytics.sellCount} Sell</Badge>
+                  <Badge variant="outline" className="signal-buy border text-xs px-2">{analytics.buyCount} Buy</Badge>
+                  <Badge variant="outline" className="signal-sell border text-xs px-2">{analytics.sellCount} Sell</Badge>
                 </div>
               </div>
               <div className="h-10 w-10 rounded-xl bg-buy/10 flex items-center justify-center">

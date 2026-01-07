@@ -214,12 +214,12 @@ const Dashboard = () => {
   const getSignalBadge = (type: string) => {
     const upperType = type.toUpperCase();
     if (upperType === 'BUY' || upperType === 'LONG') {
-      return <Badge className="signal-buy border px-3 py-1">BUY</Badge>;
+      return <Badge variant="outline" className="signal-buy border px-3 py-1">BUY</Badge>;
     }
     if (upperType === 'SELL' || upperType === 'SHORT') {
-      return <Badge className="signal-sell border px-3 py-1">SELL</Badge>;
+      return <Badge variant="outline" className="signal-sell border px-3 py-1">SELL</Badge>;
     }
-    return <Badge className="signal-neutral border px-3 py-1">{upperType}</Badge>;
+    return <Badge variant="outline" className="signal-neutral border px-3 py-1">{upperType}</Badge>;
   };
 
   return (
@@ -385,7 +385,7 @@ const Dashboard = () => {
                     {trades.filter(t => t.status === 'open').map((trade) => (
                       <TableRow key={trade.id}>
                         <TableCell>
-                          <Badge className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
+                          <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
                             {trade.direction === 'long' ? (
                               <span className="flex items-center gap-1">
                                 <ArrowUpRight className="h-3 w-3" />
@@ -436,8 +436,8 @@ const Dashboard = () => {
               <Link to="/dashboard/signals">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   View All Signals <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+                  </Button>
+                </Link>
             )}
           </CardHeader>
           <CardContent className="p-0">
@@ -476,7 +476,7 @@ const Dashboard = () => {
                     {trades.filter(t => t.status === 'closed').map((trade) => (
                       <TableRow key={trade.id}>
                         <TableCell>
-                          <Badge className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
+                          <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
                             {trade.direction === 'long' ? (
                               <span className="flex items-center gap-1">
                                 <ArrowUpRight className="h-3 w-3" />

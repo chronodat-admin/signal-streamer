@@ -157,12 +157,12 @@ const Signals = () => {
   const getSignalBadge = (type: string) => {
     const upperType = type.toUpperCase();
     if (upperType === 'BUY' || upperType === 'LONG') {
-      return <Badge className="signal-buy border px-3 py-1">BUY</Badge>;
+      return <Badge variant="outline" className="signal-buy border px-3 py-1">BUY</Badge>;
     }
     if (upperType === 'SELL' || upperType === 'SHORT') {
-      return <Badge className="signal-sell border px-3 py-1">SELL</Badge>;
+      return <Badge variant="outline" className="signal-sell border px-3 py-1">SELL</Badge>;
     }
-    return <Badge className="signal-neutral border px-3 py-1">{upperType}</Badge>;
+    return <Badge variant="outline" className="signal-neutral border px-3 py-1">{upperType}</Badge>;
   };
 
   const exportCSV = () => {

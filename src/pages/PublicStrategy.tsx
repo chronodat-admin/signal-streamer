@@ -126,12 +126,12 @@ const PublicStrategy = () => {
   const getSignalBadge = (type: string) => {
     const upperType = type.toUpperCase();
     if (upperType === 'BUY' || upperType === 'LONG') {
-      return <Badge className="signal-buy border">BUY</Badge>;
+      return <Badge variant="outline" className="signal-buy border">BUY</Badge>;
     }
     if (upperType === 'SELL' || upperType === 'SHORT') {
-      return <Badge className="signal-sell border">SELL</Badge>;
+      return <Badge variant="outline" className="signal-sell border">SELL</Badge>;
     }
-    return <Badge className="signal-neutral border">{upperType}</Badge>;
+    return <Badge variant="outline" className="signal-neutral border">{upperType}</Badge>;
   };
 
   if (loading) {

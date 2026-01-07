@@ -272,16 +272,16 @@
   }
 
   .signal-buy {
-    color: hsl(var(--buy));
-    background-color: hsl(var(--buy) / 0.1);
-    border-color: hsl(var(--buy) / 0.2);
+    color: hsl(var(--buy)) !important;
+    background-color: hsl(var(--buy) / 0.1) !important;
+    border-color: hsl(var(--buy) / 0.2) !important;
     font-weight: 500;
   }
 
   .signal-sell {
-    color: hsl(var(--sell));
-    background-color: hsl(var(--sell) / 0.1);
-    border-color: hsl(var(--sell) / 0.2);
+    color: hsl(var(--sell)) !important;
+    background-color: hsl(var(--sell) / 0.1) !important;
+    border-color: hsl(var(--sell) / 0.2) !important;
     font-weight: 500;
   }
 
