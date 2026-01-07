@@ -32,12 +32,21 @@ async function sendDiscordAlert(webhookUrl: string, payload: AlertPayload): Prom
   };
 
   try {
+    console.log(`Sending Discord webhook to: ${webhookUrl.substring(0, 50)}...`);
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ embeds: [embed] }),
     });
-    return response.ok;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Discord webhook failed: ${response.status} ${response.statusText} - ${errorText}`);
+      return false;
+    }
+    
+    console.log("Discord alert sent successfully");
+    return true;
   } catch (error) {
     console.error("Discord alert error:", error);
     return false;
@@ -200,17 +209,55 @@ serve(async (req) => {
       });
     }
 
-    // Get active integrations for this strategy
-    const { data: integrations, error: integrationsError } = await supabase
+    // Get active integrations for this strategy (or user-level if strategy_id is null)
+    // First get the user_id from the strategy
+    const { data: strategyData } = await supabase
+      .from("strategies")
+      .select("user_id")
+      .eq("id", strategy_id)
+      .single();
+
+    const userId = strategyData?.user_id;
+
+    if (!userId) {
+      console.error(`Strategy ${strategy_id} not found or has no user_id`);
+      return new Response(JSON.stringify({ error: "Strategy not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get strategy-specific integrations
+    const { data: strategyIntegrations, error: strategyError } = await supabase
       .from("integrations")
       .select("*")
       .eq("strategy_id", strategy_id)
       .eq("enabled", true)
       .eq("status", "active");
 
-    if (integrationsError) {
-      console.error("Error fetching integrations:", integrationsError);
+    // Get user-level integrations (strategy_id IS NULL)
+    const { data: userIntegrations, error: userError } = await supabase
+      .from("integrations")
+      .select("*")
+      .is("strategy_id", null)
+      .eq("user_id", userId)
+      .eq("enabled", true)
+      .eq("status", "active");
+
+    if (strategyError) {
+      console.error("Error fetching strategy integrations:", strategyError);
     }
+    if (userError) {
+      console.error("Error fetching user integrations:", userError);
+    }
+
+    // Combine both types of integrations
+    const filteredIntegrations = [
+      ...(strategyIntegrations || []),
+      ...(userIntegrations || [])
+    ];
+
+    console.log(`Found ${filteredIntegrations.length} active integrations for strategy ${strategy_id} (${strategyIntegrations?.length || 0} strategy-specific, ${userIntegrations?.length || 0} user-level)`);
 
     const payload: AlertPayload = {
       signal_type: signal.signal_type,
@@ -224,15 +271,40 @@ serve(async (req) => {
     const results = [];
 
     // Send alerts to all integrations
-    for (const integration of integrations || []) {
+    for (const integration of filteredIntegrations) {
       let success = false;
       try {
-        switch (integration.integration_type) {
+        // Handle both old schema (type) and new schema (integration_type)
+        const integrationType = integration.integration_type || integration.type;
+        
+        if (!integrationType) {
+          console.error(`Integration ${integration.id} has no type specified`);
+          continue;
+        }
+
+        // Get webhook_url - could be in column or config
+        const webhookUrl = integration.webhook_url || integration.config?.webhook_url;
+        
+        if (!webhookUrl && (integrationType === 'discord' || integrationType === 'slack')) {
+          console.error(`Integration ${integration.id} (${integrationType}) has no webhook_url. Integration data:`, JSON.stringify(integration));
+          await supabase
+            .from("integrations")
+            .update({
+              status: "error",
+              error_message: "Missing webhook_url",
+            })
+            .eq("id", integration.id);
+          continue;
+        }
+
+        console.log(`Sending ${integrationType} alert to integration ${integration.id} (${integration.name})`);
+
+        switch (integrationType) {
           case "discord":
-            success = await sendDiscordAlert(integration.webhook_url, payload);
+            success = await sendDiscordAlert(webhookUrl, payload);
             break;
           case "slack":
-            success = await sendSlackAlert(integration.webhook_url, payload);
+            success = await sendSlackAlert(webhookUrl, payload);
             break;
           case "telegram":
             const telegramConfig = integration.config as { bot_token?: string; chat_id?: string };
@@ -252,27 +324,43 @@ serve(async (req) => {
         }
 
         // Update integration status
+        const updateData: any = {
+          last_used_at: new Date().toISOString(),
+          status: success ? "active" : "error",
+        };
+        
+        if (!success) {
+          updateData.error_message = "Failed to send alert";
+        } else {
+          updateData.error_message = null;
+        }
+        
         await supabase
           .from("integrations")
-          .update({
-            last_used_at: new Date().toISOString(),
-            status: success ? "active" : "error",
-            error_message: success ? null : "Failed to send alert",
-          })
+          .update(updateData)
           .eq("id", integration.id);
+
+        console.log(`${integrationType} alert ${success ? 'sent successfully' : 'failed'} for integration ${integration.id}`);
 
         results.push({
           integration_id: integration.id,
-          integration_type: integration.integration_type,
+          integration_type: integrationType,
           success,
         });
       } catch (error) {
-        console.error(`Error sending ${integration.integration_type} alert:`, error);
+        console.error(`Error sending ${integrationType} alert:`, error);
+        await supabase
+          .from("integrations")
+          .update({
+            status: "error",
+            error_message: error instanceof Error ? error.message : String(error),
+          })
+          .eq("id", integration.id);
         results.push({
           integration_id: integration.id,
-          integration_type: integration.integration_type,
+          integration_type: integrationType,
           success: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
