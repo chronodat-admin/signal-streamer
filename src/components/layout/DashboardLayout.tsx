@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, ChevronLeft, ChevronRight, Settings, Radio } from 'lucide-react';
+import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, Settings, Radio } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -156,18 +156,33 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className={`p-4 border-b border-border ${collapsed ? 'flex justify-center' : ''}`}>
-            <Link to="/" className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md flex-shrink-0">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              {!collapsed && (
-                <div>
-                  <span className="text-xl font-bold">SignalPulse</span>
-                  <p className="text-xs text-muted-foreground">Trading Signals</p>
+          <div className="p-4 border-b border-border">
+            <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+              <Link to="/" className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md flex-shrink-0">
+                  <Activity className="h-6 w-6 text-white" />
                 </div>
-              )}
-            </Link>
+                {!collapsed && (
+                  <div>
+                    <span className="text-xl font-bold">SignalPulse</span>
+                    <p className="text-xs text-muted-foreground">Trading Signals</p>
+                  </div>
+                )}
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCollapsed(!collapsed)}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {collapsed ? (
+                  <Menu className="h-4 w-4" />
+                ) : (
+                  <Menu className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Navigation */}
@@ -179,25 +194,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <NavItem key={item.name} item={item} />
             ))}
           </nav>
-
-          {/* Collapse Toggle - Desktop Only */}
-          <div className="hidden lg:flex px-3 py-2 border-t border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCollapsed(!collapsed)}
-              className={`w-full gap-2 text-muted-foreground hover:text-foreground ${collapsed ? 'justify-center px-2' : 'justify-start'}`}
-            >
-              {collapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <>
-                  <ChevronLeft className="h-4 w-4" />
-                  <span>Collapse</span>
-                </>
-              )}
-            </Button>
-          </div>
 
           {/* Appearance Controls - Desktop */}
           <div className={`px-3 py-2 border-t border-border hidden lg:flex items-center ${collapsed ? 'flex-col gap-2' : 'justify-between'}`}>
