@@ -127,8 +127,8 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Track and manage your trading signals</p>
+            <h1 className="text-4xl font-bold tracking-tight mb-2">Dashboard</h1>
+            <p className="text-muted-foreground text-lg">Track and manage your trading signals</p>
           </div>
           <Link to="/dashboard/strategies">
             <Button className="gap-2 shadow-md hover:shadow-lg transition-all">
@@ -144,8 +144,8 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Signals Today</p>
-                  <p className="text-4xl font-bold mt-2 tracking-tight">{stats.signalsToday}</p>
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Signals Today</p>
+                  <p className="text-5xl font-bold mt-3 tracking-tight">{stats.signalsToday}</p>
                   <p className="text-xs text-muted-foreground mt-2">Last 24 hours</p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -159,8 +159,8 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">This Week</p>
-                  <p className="text-4xl font-bold mt-2 tracking-tight">{stats.signalsWeek}</p>
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">This Week</p>
+                  <p className="text-5xl font-bold mt-3 tracking-tight">{stats.signalsWeek}</p>
                   <p className="text-xs text-muted-foreground mt-2">Last 7 days</p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
@@ -174,8 +174,8 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Strategies</p>
-                  <p className="text-4xl font-bold mt-2 tracking-tight">{strategiesCount}</p>
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Strategies</p>
+                  <p className="text-5xl font-bold mt-3 tracking-tight">{strategiesCount}</p>
                   <p className="text-xs text-muted-foreground mt-2">Active strategies</p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
@@ -189,8 +189,8 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Top Symbol</p>
-                  <p className="text-3xl font-bold mt-2 font-mono tracking-tight">{stats.mostActiveSymbol || '—'}</p>
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Top Symbol</p>
+                  <p className="text-4xl font-bold mt-3 font-mono tracking-tight">{stats.mostActiveSymbol || '—'}</p>
                   <p className="text-xs text-muted-foreground mt-2">Most signals</p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">

@@ -55,13 +55,13 @@ const Index = () => {
             <span>Real-time TradingView Signal Tracking</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in tracking-tight leading-[1.1]">
             Track Your Trading
             <br />
             <span className="gradient-text">Signals with Precision</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in leading-relaxed">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in leading-relaxed">
             Connect TradingView webhooks to SignalPulse and never miss a signal. 
             Track, analyze, and share your trading strategies in real-time.
           </p>
