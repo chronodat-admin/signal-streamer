@@ -113,6 +113,8 @@ const PublicStrategy = () => {
         sells,
         latestSignal: allSignals[0] || null,
       });
+      
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching public strategy:', error);
       setLoading(false);
