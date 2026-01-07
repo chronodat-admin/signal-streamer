@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Strategies from "./pages/Strategies";
 import StrategyDetail from "./pages/StrategyDetail";
 import Signals from "./pages/Signals";
+import Integrations from "./pages/Integrations";
 import PublicStrategy from "./pages/PublicStrategy";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/dashboard/strategies" element={<Strategies />} />
               <Route path="/dashboard/strategies/:id" element={<StrategyDetail />} />
               <Route path="/dashboard/signals" element={<Signals />} />
+              <Route path="/dashboard/integrations" element={<Integrations />} />
               <Route path="/s/:slug" element={<PublicStrategy />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/dashboard/billing" element={<Billing />} />

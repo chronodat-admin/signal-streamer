@@ -182,6 +182,35 @@ serve(async (req) => {
       });
     }
 
+    // Get the inserted signal ID to trigger alerts
+    const { data: insertedSignal } = await supabase
+      .from("signals")
+      .select("id")
+      .eq("strategy_id", strategyId)
+      .eq("signal_type", signal.toUpperCase())
+      .eq("symbol", symbol.toUpperCase())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    // Trigger alerts asynchronously (don't wait for response)
+    if (insertedSignal) {
+      fetch(`${supabaseUrl}/functions/v1/send-alerts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({
+          signal_id: insertedSignal.id,
+          strategy_id: strategyId,
+        }),
+      }).catch((error) => {
+        console.error("Error triggering alerts:", error);
+        // Don't fail the webhook if alerts fail
+      });
+    }
+
     console.log("Signal stored successfully for strategy:", strategy.name);
 
     return new Response(JSON.stringify({ success: true, message: "Signal received" }), {

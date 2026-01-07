@@ -1,4 +1,5 @@
 -- Add DELETE policy for signals so users can delete their own signals
+DROP POLICY IF EXISTS "Users can delete their own signals" ON public.signals;
 CREATE POLICY "Users can delete their own signals"
   ON public.signals FOR DELETE
   USING (auth.uid() = user_id);

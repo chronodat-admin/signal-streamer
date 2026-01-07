@@ -1,10 +1,18 @@
 -- Fix slug unique constraint to allow reuse after soft deletion
 -- Remove the old unique constraint
-ALTER TABLE public.strategies DROP CONSTRAINT IF EXISTS strategies_slug_key;
+DO $$ 
+BEGIN
+  ALTER TABLE public.strategies DROP CONSTRAINT IF EXISTS strategies_slug_key;
+EXCEPTION
+  WHEN undefined_object THEN null;
+END $$;
+
+-- Drop existing index if it exists
+DROP INDEX IF EXISTS strategies_slug_unique_active;
 
 -- Create a partial unique index that only enforces uniqueness for non-deleted strategies
 -- This allows the same slug to be reused after a strategy is soft-deleted
-CREATE UNIQUE INDEX IF NOT EXISTS strategies_slug_unique_active 
+CREATE UNIQUE INDEX strategies_slug_unique_active 
   ON public.strategies(slug) 
   WHERE slug IS NOT NULL AND is_deleted = false;
 

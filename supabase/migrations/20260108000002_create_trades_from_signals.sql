@@ -129,6 +129,8 @@ CREATE TRIGGER on_signal_processed_to_trade
   FOR EACH ROW
   EXECUTE FUNCTION public.process_signal_to_trade();
 
+-- Note: If trigger already exists from previous migration, this will recreate it
+
 -- Add index for faster trade lookups
 CREATE INDEX IF NOT EXISTS idx_trades_open_lookup 
   ON public.trades(strategy_id, symbol, status) 
