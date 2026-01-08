@@ -37,6 +37,7 @@ interface Stats {
 
 const PublicStrategy = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { preferences } = usePreferences();
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, buys: 0, sells: 0, latestSignal: null });

@@ -41,6 +41,7 @@ export default function AlertLogs() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const logsPerPage = 50;
+  const { preferences } = usePreferences();
 
   const fetchLogs = async () => {
     if (!user) return;

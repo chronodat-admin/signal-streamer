@@ -39,6 +39,7 @@ interface Strategy {
 
 const Strategies = () => {
   const { user } = useAuth();
+  const { preferences } = usePreferences();
   const { toast } = useToast();
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);

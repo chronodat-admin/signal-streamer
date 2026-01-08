@@ -192,6 +192,7 @@ const Integrations = () => {
   const [strategies, setStrategies] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { preferences } = usePreferences();
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationOption | null>(null);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
   const [searchTerm, setSearchTerm] = useState('');

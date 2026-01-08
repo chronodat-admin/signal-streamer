@@ -49,7 +49,18 @@ export const ColorSchemePicker = () => {
     root.style.setProperty('--brand-saturation', `${scheme.saturation}%`);
     root.style.setProperty('--brand-lightness', `${scheme.lightness}%`);
     
-    localStorage.setItem('signalpulse-color-scheme', JSON.stringify(scheme));
+    try {
+      // Only stringify plain object data, not React components or DOM elements
+      const serializable = {
+        name: scheme.name,
+        hue: scheme.hue,
+        saturation: scheme.saturation,
+        lightness: scheme.lightness,
+      };
+      localStorage.setItem('signalpulse-color-scheme', JSON.stringify(serializable));
+    } catch (error) {
+      console.error('Error saving color scheme to localStorage:', error);
+    }
     setCurrentScheme(scheme);
   };
 

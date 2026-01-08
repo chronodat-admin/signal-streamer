@@ -38,7 +38,16 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem('signalpulse-preferences', JSON.stringify(preferences));
+    try {
+      // Only stringify plain object data, not React components or DOM elements
+      const serializable = {
+        currency: preferences.currency,
+        dateFormat: preferences.dateFormat,
+      };
+      localStorage.setItem('signalpulse-preferences', JSON.stringify(serializable));
+    } catch (error) {
+      console.error('Error saving preferences to localStorage:', error);
+    }
   }, [preferences]);
 
   const setCurrency = (currency: Currency) => {

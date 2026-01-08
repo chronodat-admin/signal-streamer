@@ -42,6 +42,7 @@ interface Signal {
 const StrategyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { preferences } = usePreferences();
   const { toast } = useToast();
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [signals, setSignals] = useState<Signal[]>([]);

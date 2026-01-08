@@ -16,7 +16,8 @@ const Preferences = () => {
   const { theme, setTheme } = useTheme();
   const { preferences, setCurrency, setDateFormat } = usePreferences();
 
-  const handleSave = () => {
+  const handleSave = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
     toast({
       title: 'Preferences saved',
       description: 'Your preferences have been saved successfully.',

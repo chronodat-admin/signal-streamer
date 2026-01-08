@@ -38,6 +38,7 @@ interface SignalFilters {
 
 const Signals = () => {
   const { user } = useAuth();
+  const { preferences } = usePreferences();
   const { toast } = useToast();
   const [signals, setSignals] = useState<Signal[]>([]);
   const [filteredSignals, setFilteredSignals] = useState<Signal[]>([]);
