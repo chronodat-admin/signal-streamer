@@ -244,3 +244,4 @@ export const NoSearchResults = ({ query }: { query: string }) => (
   />
 );
 
+

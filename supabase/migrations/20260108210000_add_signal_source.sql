@@ -12,3 +12,4 @@ COMMENT ON COLUMN public.signals.source IS 'Source of the signal: tradingview, t
 -- Update existing signals to have default source
 UPDATE public.signals SET source = 'tradingview' WHERE source IS NULL;
 
+
