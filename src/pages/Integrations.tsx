@@ -9,12 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, MessageSquare, Hash, Send, Phone, Loader2, ExternalLink, Settings } from 'lucide-react';
+import { Plus, Trash2, MessageSquare, Hash, Send, Phone, Loader2, ExternalLink, Settings, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
-type IntegrationType = 'discord' | 'slack' | 'telegram' | 'whatsapp';
+type IntegrationType = 'discord' | 'slack' | 'telegram' | 'whatsapp' | 'email' | 'webhook' | 'pushover' | 'ntfy' | 'zapier' | 'ifttt' | 'microsoft-teams' | 'google-chat';
 type IntegrationStatus = 'active' | 'inactive' | 'error';
 
 interface Integration {
@@ -22,22 +22,167 @@ interface Integration {
   user_id: string;
   strategy_id: string | null;
   integration_type?: IntegrationType;
-  type?: IntegrationType; // Support both old and new schema
+  type?: IntegrationType;
   name: string;
-  webhook_url?: string; // May not exist in old schema
+  webhook_url?: string;
   status: IntegrationStatus;
   enabled?: boolean;
   config: Record<string, any>;
   last_used_at?: string | null;
-  last_delivery_at?: string | null; // Old schema field
+  last_delivery_at?: string | null;
   error_message?: string | null;
-  error_count?: number; // Old schema field
+  error_count?: number;
   created_at: string;
   updated_at?: string;
   strategies?: {
     name: string;
   };
 }
+
+interface IntegrationOption {
+  id: IntegrationType;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  logoUrl?: string;
+  logoSvg?: string;
+  color: string;
+  bgColor: string;
+  categories: string[];
+  docsUrl?: string;
+}
+
+const availableIntegrations: IntegrationOption[] = [
+  {
+    id: 'discord',
+    name: 'Discord',
+    description: 'Send alerts to Discord channels via webhooks',
+    icon: <MessageSquare className="h-6 w-6" />,
+    logoUrl: 'https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-500/10',
+    categories: ['Messaging', 'Webhooks'],
+    docsUrl: 'https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks',
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    description: 'Send alerts to Slack channels via webhooks',
+    icon: <Hash className="h-6 w-6" />,
+    logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-500/10',
+    categories: ['Messaging', 'Webhooks'],
+    docsUrl: 'https://api.slack.com/messaging/webhooks',
+  },
+  {
+    id: 'telegram',
+    name: 'Telegram',
+    description: 'Send alerts via Telegram bot',
+    icon: <Send className="h-6 w-6" />,
+    logoUrl: 'https://telegram.org/img/t_logo.png',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-500/10',
+    categories: ['Messaging', 'Bot'],
+    docsUrl: 'https://core.telegram.org/bots/api',
+  },
+  {
+    id: 'whatsapp',
+    name: 'WhatsApp',
+    description: 'Send alerts via WhatsApp (Twilio)',
+    icon: <Phone className="h-6 w-6" />,
+    logoUrl: 'https://static.whatsapp.net/rsrc.php/v3/yz/r/ujTY9i_Jhs1.png',
+    color: 'text-green-600',
+    bgColor: 'bg-green-500/10',
+    categories: ['Messaging', 'SMS'],
+    docsUrl: 'https://www.twilio.com/docs/whatsapp',
+  },
+  {
+    id: 'email',
+    name: 'Email',
+    description: 'Send alerts via email (SMTP)',
+    icon: <MessageSquare className="h-6 w-6" />,
+    logoUrl: 'https://www.gstatic.com/images/branding/product/1x/gmail_48dp.png',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-500/10',
+    categories: ['Email'],
+  },
+  {
+    id: 'webhook',
+    name: 'Generic Webhook',
+    description: 'Send alerts to any webhook URL',
+    icon: <ExternalLink className="h-6 w-6" />,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-500/10',
+    categories: ['Webhooks'],
+  },
+  {
+    id: 'pushover',
+    name: 'Pushover',
+    description: 'Send push notifications via Pushover',
+    icon: <Phone className="h-6 w-6" />,
+    logoUrl: 'https://pushover.net/images/logo.png',
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-500/10',
+    categories: ['Push Notifications'],
+    docsUrl: 'https://pushover.net/api',
+  },
+  {
+    id: 'ntfy',
+    name: 'ntfy',
+    description: 'Send push notifications via ntfy',
+    icon: <MessageSquare className="h-6 w-6" />,
+    logoUrl: 'https://ntfy.sh/static/img/ntfy.png',
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-500/10',
+    categories: ['Push Notifications'],
+    docsUrl: 'https://ntfy.sh/docs/publish/',
+  },
+  {
+    id: 'zapier',
+    name: 'Zapier',
+    description: 'Connect to Zapier workflows',
+    icon: <ExternalLink className="h-6 w-6" />,
+    logoUrl: 'https://cdn.zapier.com/zapier/images/logos/zapier-logo.png',
+    color: 'text-red-600',
+    bgColor: 'bg-red-500/10',
+    categories: ['Automation', 'Webhooks'],
+    docsUrl: 'https://zapier.com/apps/webhook',
+  },
+  {
+    id: 'ifttt',
+    name: 'IFTTT',
+    description: 'Connect to IFTTT applets',
+    icon: <ExternalLink className="h-6 w-6" />,
+    logoUrl: 'https://ifttt.com/favicon.ico',
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-500/10',
+    categories: ['Automation', 'Webhooks'],
+    docsUrl: 'https://ifttt.com/maker_webhooks',
+  },
+  {
+    id: 'microsoft-teams',
+    name: 'Microsoft Teams',
+    description: 'Send alerts to Teams channels',
+    icon: <MessageSquare className="h-6 w-6" />,
+    logoUrl: 'https://c.s-microsoft.com/favicon.ico',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-500/10',
+    categories: ['Messaging', 'Webhooks'],
+    docsUrl: 'https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to-add-incoming-webhook',
+  },
+  {
+    id: 'google-chat',
+    name: 'Google Chat',
+    description: 'Send alerts to Google Chat spaces',
+    icon: <MessageSquare className="h-6 w-6" />,
+    logoUrl: 'https://www.gstatic.com/images/branding/product/1x/chat_48dp.png',
+    color: 'text-green-600',
+    bgColor: 'bg-green-500/10',
+    categories: ['Messaging', 'Webhooks'],
+    docsUrl: 'https://developers.google.com/chat/how-tos/webhooks',
+  },
+];
 
 const Integrations = () => {
   const { user } = useAuth();
@@ -46,14 +191,15 @@ const Integrations = () => {
   const [strategies, setStrategies] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<IntegrationOption | null>(null);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     integration_type: 'discord' as IntegrationType,
     name: '',
     strategy_id: 'all',
     webhook_url: '',
     enabled: true,
-    // Telegram/WhatsApp specific
     bot_token: '',
     chat_id: '',
     phone_number: '',
@@ -111,6 +257,24 @@ const Integrations = () => {
     } catch (error) {
       console.error('Error fetching strategies:', error);
     }
+  };
+
+  const handleCreateIntegration = (integration: IntegrationOption) => {
+    setSelectedIntegration(integration);
+    setEditingIntegration(null);
+    setFormData({
+      integration_type: integration.id,
+      name: integration.name,
+      strategy_id: 'all',
+      webhook_url: '',
+      enabled: true,
+      bot_token: '',
+      chat_id: '',
+      phone_number: '',
+      api_key: '',
+      from_number: '',
+    });
+    setDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,10 +356,10 @@ const Integrations = () => {
       if (error) throw error;
       toast({
         title: 'Integration Deleted',
-        description: 'Your integration has been removed.',
+        description: 'Your integration has been deleted successfully.',
       });
       fetchIntegrations();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting integration:', error);
       toast({
         title: 'Error',
@@ -222,6 +386,8 @@ const Integrations = () => {
   const handleEdit = (integration: Integration) => {
     setEditingIntegration(integration);
     const integrationType = integration.integration_type || integration.type || 'discord';
+    const option = availableIntegrations.find(i => i.id === integrationType);
+    setSelectedIntegration(option || null);
     setFormData({
       integration_type: integrationType as IntegrationType,
       name: integration.name,
@@ -239,6 +405,7 @@ const Integrations = () => {
 
   const resetForm = () => {
     setEditingIntegration(null);
+    setSelectedIntegration(null);
     setFormData({
       integration_type: 'discord',
       name: '',
@@ -253,293 +420,378 @@ const Integrations = () => {
     });
   };
 
-  const getIntegrationIcon = (type: IntegrationType) => {
-    switch (type) {
-      case 'discord':
-        return <MessageSquare className="h-5 w-5" />;
-      case 'slack':
-        return <Hash className="h-5 w-5" />;
-      case 'telegram':
-        return <Send className="h-5 w-5" />;
-      case 'whatsapp':
-        return <Phone className="h-5 w-5" />;
-    }
-  };
+  const filteredIntegrations = availableIntegrations.filter(integration =>
+    integration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    integration.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    integration.categories.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const getIntegrationDocs = (type: IntegrationType) => {
-    switch (type) {
-      case 'discord':
-        return 'https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks';
-      case 'slack':
-        return 'https://api.slack.com/messaging/webhooks';
-      case 'telegram':
-        return 'https://core.telegram.org/bots/api';
-      case 'whatsapp':
-        return 'https://www.twilio.com/docs/whatsapp';
+  const getStatusIcon = (status: IntegrationStatus) => {
+    switch (status) {
+      case 'active':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-yellow-500" />;
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight mb-2">Integrations</h1>
-            <p className="text-muted-foreground text-lg">
-              Send trading signals to Discord, Slack, Telegram, and WhatsApp
-            </p>
-          </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 shadow-md hover:shadow-lg transition-all">
-                <Plus className="h-4 w-4" />
-                New Integration
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingIntegration ? 'Edit Integration' : 'Create Integration'}</DialogTitle>
-                <DialogDescription>
-                  Configure alerts for your trading signals
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Integration Type</Label>
-                  <Select
-                    value={formData.integration_type}
-                    onValueChange={(value) => setFormData({ ...formData, integration_type: value as IntegrationType })}
-                    disabled={!!editingIntegration}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="discord">Discord</SelectItem>
-                      <SelectItem value="slack">Slack</SelectItem>
-                      <SelectItem value="telegram">Telegram</SelectItem>
-                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>
+          <p className="text-muted-foreground mt-2">
+            Connect your trading signals to Discord, Slack, Telegram, WhatsApp, and more
+          </p>
+        </div>
 
-                <div className="space-y-2">
-                  <Label>Name</Label>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Start typing to filter..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Available Integrations Grid */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Available Integrations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredIntegrations.map((integration) => {
+              const isConfigured = integrations.some(
+                i => (i.integration_type || i.type) === integration.id
+              );
+              return (
+                <Card
+                  key={integration.id}
+                  className="cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => handleCreateIntegration(integration)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className={`${integration.bgColor} ${integration.color} p-3 rounded-lg flex items-center justify-center min-w-[48px] min-h-[48px] relative`}>
+                        {integration.logoUrl ? (
+                          <>
+                            <img 
+                              src={integration.logoUrl} 
+                              alt={integration.name}
+                              className="h-6 w-6 object-contain"
+                              onError={(e) => {
+                                // Hide image and show icon fallback
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) {
+                                  fallback.style.display = 'block';
+                                }
+                              }}
+                            />
+                            <div className="hidden">
+                              {integration.icon}
+                            </div>
+                          </>
+                        ) : (
+                          integration.icon
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-semibold text-base">{integration.name}</h3>
+                          {isConfigured && (
+                            <Badge variant="outline" className="text-xs">Configured</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {integration.description}
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {integration.categories.map((cat) => (
+                            <Badge key={cat} variant="secondary" className="text-xs">
+                              {cat}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Configured Integrations */}
+        {integrations.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Your Integrations</h2>
+            <div className="grid gap-4">
+              {integrations.map((integration) => {
+                const integrationType = integration.integration_type || integration.type || 'discord';
+                const option = availableIntegrations.find(i => i.id === integrationType);
+                return (
+                  <Card key={integration.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4 flex-1">
+                          {option && (
+                            <div className={`${option.bgColor} ${option.color} p-3 rounded-lg flex items-center justify-center min-w-[48px] min-h-[48px] relative`}>
+                              {option.logoUrl ? (
+                                <>
+                                  <img 
+                                    src={option.logoUrl} 
+                                    alt={option.name}
+                                    className="h-6 w-6 object-contain"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      const fallback = target.nextElementSibling as HTMLElement;
+                                      if (fallback) {
+                                        fallback.style.display = 'block';
+                                      }
+                                    }}
+                                  />
+                                  <div className="hidden">
+                                    {option.icon}
+                                  </div>
+                                </>
+                              ) : (
+                                option.icon
+                              )}
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold">{integration.name}</h3>
+                              <Badge variant="outline" className="text-xs">
+                                {integrationType}
+                              </Badge>
+                              {integration.strategies ? (
+                                <Badge variant="secondary" className="text-xs">
+                                  {integration.strategies.name}
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs">
+                                  All Strategies
+                                </Badge>
+                              )}
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(integration.status)}
+                                <span className="text-xs text-muted-foreground">{integration.status}</span>
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {integration.webhook_url ? (
+                                <span className="truncate block max-w-md">{integration.webhook_url}</span>
+                              ) : (
+                                option?.description || integrationType
+                              )}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              {integration.last_used_at && (
+                                <span>Last used: {format(new Date(integration.last_used_at), 'MMM d, HH:mm')}</span>
+                              )}
+                              {integration.error_message && (
+                                <span className="text-red-500">Error: {integration.error_message}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={integration.enabled !== false}
+                            onCheckedChange={() => handleToggle(integration)}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(integration)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(integration.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Configuration Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingIntegration ? 'Edit Integration' : `Configure ${selectedIntegration?.name || 'Integration'}`}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedIntegration?.description || 'Configure your integration settings'}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="My Integration"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="strategy_id">Strategy (Optional - leave empty for all strategies)</Label>
+                <Select
+                  value={formData.strategy_id}
+                  onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a strategy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Strategies</SelectItem>
+                    {strategies.map((strategy) => (
+                      <SelectItem key={strategy.id} value={strategy.id}>
+                        {strategy.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(formData.integration_type === 'discord' || formData.integration_type === 'slack' || 
+                formData.integration_type === 'webhook' || formData.integration_type === 'zapier' || 
+                formData.integration_type === 'ifttt' || formData.integration_type === 'microsoft-teams' ||
+                formData.integration_type === 'google-chat' || formData.integration_type === 'pushover' ||
+                formData.integration_type === 'ntfy') && (
+                <div>
+                  <Label htmlFor="webhook_url">Webhook URL</Label>
                   <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="My Discord Alerts"
+                    id="webhook_url"
+                    type="url"
+                    value={formData.webhook_url}
+                    onChange={(e) => setFormData({ ...formData, webhook_url: e.target.value })}
+                    placeholder="https://..."
                     required
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Strategy (Optional - leave empty for all strategies)</Label>
-                  <Select
-                    value={formData.strategy_id || "all"}
-                    onValueChange={(value) => setFormData({ ...formData, strategy_id: value === "all" ? "" : value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Strategies" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Strategies</SelectItem>
-                      {strategies.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {(formData.integration_type === 'discord' || formData.integration_type === 'slack') && (
-                  <div className="space-y-2">
-                    <Label>Webhook URL</Label>
-                    <Input
-                      type="url"
-                      value={formData.webhook_url}
-                      onChange={(e) => setFormData({ ...formData, webhook_url: e.target.value })}
-                      placeholder="https://discord.com/api/webhooks/..."
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      <a href={getIntegrationDocs(formData.integration_type)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  {selectedIntegration?.docsUrl && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                         How to get webhook URL
                       </a>
                     </p>
-                  </div>
-                )}
+                  )}
+                </div>
+              )}
 
-                {formData.integration_type === 'telegram' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>Bot Token</Label>
-                      <Input
-                        value={formData.bot_token}
-                        onChange={(e) => setFormData({ ...formData, bot_token: e.target.value })}
-                        placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Get your bot token from <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@BotFather</a>
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Chat ID</Label>
-                      <Input
-                        value={formData.chat_id}
-                        onChange={(e) => setFormData({ ...formData, chat_id: e.target.value })}
-                        placeholder="123456789"
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Get your chat ID from <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@userinfobot</a>
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {formData.integration_type === 'whatsapp' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>API Key (Twilio Account SID)</Label>
-                      <Input
-                        value={formData.api_key}
-                        onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                        placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Phone Number (with country code)</Label>
-                      <Input
-                        value={formData.phone_number}
-                        onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                        placeholder="+1234567890"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>From Number (Optional)</Label>
-                      <Input
-                        value={formData.from_number}
-                        onChange={(e) => setFormData({ ...formData, from_number: e.target.value })}
-                        placeholder="whatsapp:+14155238886"
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={formData.enabled}
-                      onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
+              {formData.integration_type === 'telegram' && (
+                <>
+                  <div>
+                    <Label htmlFor="bot_token">Bot Token</Label>
+                    <Input
+                      id="bot_token"
+                      value={formData.bot_token}
+                      onChange={(e) => setFormData({ ...formData, bot_token: e.target.value })}
+                      placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                      required
                     />
-                    <Label>Enabled</Label>
                   </div>
+                  <div>
+                    <Label htmlFor="chat_id">Chat ID</Label>
+                    <Input
+                      id="chat_id"
+                      value={formData.chat_id}
+                      onChange={(e) => setFormData({ ...formData, chat_id: e.target.value })}
+                      placeholder="-1001234567890"
+                      required
+                    />
+                  </div>
+                  {selectedIntegration?.docsUrl && (
+                    <p className="text-xs text-muted-foreground">
+                      <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        How to get bot token and chat ID
+                      </a>
+                    </p>
+                  )}
+                </>
+              )}
+
+              {formData.integration_type === 'whatsapp' && (
+                <>
+                  <div>
+                    <Label htmlFor="api_key">API Key</Label>
+                    <Input
+                      id="api_key"
+                      value={formData.api_key}
+                      onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                      placeholder="Your Twilio API key"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone_number">Phone Number</Label>
+                    <Input
+                      id="phone_number"
+                      value={formData.phone_number}
+                      onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                      placeholder="+1234567890"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="from_number">From Number</Label>
+                    <Input
+                      id="from_number"
+                      value={formData.from_number}
+                      onChange={(e) => setFormData({ ...formData, from_number: e.target.value })}
+                      placeholder="whatsapp:+14155238886"
+                    />
+                  </div>
+                  {selectedIntegration?.docsUrl && (
+                    <p className="text-xs text-muted-foreground">
+                      <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        How to set up WhatsApp integration
+                      </a>
+                    </p>
+                  )}
+                </>
+              )}
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={formData.enabled}
+                    onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
+                  />
+                  <Label>Enabled</Label>
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
                   <Button type="submit">
                     {editingIntegration ? 'Update' : 'Create'} Integration
                   </Button>
                 </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Integrations List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : integrations.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No integrations yet</h3>
-              <p className="text-muted-foreground mb-6">
-                Create an integration to receive alerts on Discord, Slack, Telegram, or WhatsApp
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {integrations.map((integration) => (
-              <Card key={integration.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${
-                        (integration.integration_type || integration.type) === 'discord' ? 'bg-indigo-500/10 text-indigo-500' :
-                        (integration.integration_type || integration.type) === 'slack' ? 'bg-purple-500/10 text-purple-500' :
-                        (integration.integration_type || integration.type) === 'telegram' ? 'bg-blue-500/10 text-blue-500' :
-                        'bg-green-500/10 text-green-500'
-                      }`}>
-                        {getIntegrationIcon((integration.integration_type || integration.type || 'discord') as IntegrationType)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{integration.name}</h3>
-                          <Badge variant="outline" className="text-xs">
-                            {integration.integration_type || integration.type || 'unknown'}
-                          </Badge>
-                          {integration.strategies && (
-                            <Badge variant="secondary" className="text-xs">
-                              {integration.strategies.name}
-                            </Badge>
-                          )}
-                          {!integration.strategies && (
-                            <Badge variant="secondary" className="text-xs">
-                              All Strategies
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {integration.webhook_url || `${integration.integration_type || integration.type || 'integration'}`}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>Status: <Badge variant={integration.status === 'active' ? 'default' : 'destructive'} className="ml-1">{integration.status}</Badge></span>
-                          {integration.last_used_at && (
-                            <span>Last used: {format(new Date(integration.last_used_at), 'MMM d, HH:mm')}</span>
-                          )}
-                        </div>
-                        {integration.error_message && (
-                          <p className="text-xs text-destructive mt-2">{integration.error_message}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={integration.enabled !== false}
-                        onCheckedChange={() => handleToggle(integration)}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(integration)}
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(integration.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
