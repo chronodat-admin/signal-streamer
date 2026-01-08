@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { formatPnL } from '@/lib/pnlUtils';
 import { DashboardPageSkeleton, StatsCardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { EmptyTrades } from '@/components/dashboard/EmptyState';
+import { DateFilter, DateFilterType, DateRange } from '@/components/dashboard/DateFilter';
 
 interface Signal {
   id: string;
@@ -61,6 +62,7 @@ const Dashboard = () => {
   const { preferences } = usePreferences();
   const [signals, setSignals] = useState<Signal[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [allTrades, setAllTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     signalsToday: 0,
     signalsWeek: 0,
@@ -75,12 +77,94 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [strategiesCount, setStrategiesCount] = useState(0);
   const [allSignals, setAllSignals] = useState<Signal[]>([]);
+  const [dateFilter, setDateFilter] = useState<DateFilterType>('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
   }, [user]);
+
+  // Helper function to get date range based on filter type
+  const getDateRange = (filter: DateFilterType, customRange?: DateRange): { from: Date | null; to: Date | null } => {
+    const now = new Date();
+    now.setHours(23, 59, 59, 999); // End of today
+
+    switch (filter) {
+      case 'today': {
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        return { from: todayStart, to: now };
+      }
+      case 'week': {
+        const weekStart = new Date(now);
+        weekStart.setDate(weekStart.getDate() - 6);
+        weekStart.setHours(0, 0, 0, 0);
+        return { from: weekStart, to: now };
+      }
+      case 'month': {
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        monthStart.setHours(0, 0, 0, 0);
+        return { from: monthStart, to: now };
+      }
+      case 'year': {
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        yearStart.setHours(0, 0, 0, 0);
+        return { from: yearStart, to: now };
+      }
+      case 'custom': {
+        if (customRange?.from && customRange?.to) {
+          const from = new Date(customRange.from);
+          from.setHours(0, 0, 0, 0);
+          const to = new Date(customRange.to);
+          to.setHours(23, 59, 59, 999);
+          return { from, to };
+        }
+        return { from: null, to: null };
+      }
+      default:
+        return { from: null, to: null };
+    }
+  };
+
+  // Filter trades based on selected date range
+  const filteredTrades = useMemo(() => {
+    if (dateFilter === 'all') {
+      return allTrades;
+    }
+
+    const range = getDateRange(dateFilter, dateRange);
+    if (!range.from || !range.to) {
+      return allTrades;
+    }
+
+    return allTrades.filter((trade) => {
+      const tradeDate = new Date(trade.entry_time);
+      return tradeDate >= range.from! && tradeDate <= range.to!;
+    });
+  }, [allTrades, dateFilter, dateRange]);
+
+  // Calculate filtered stats
+  const filteredStats = useMemo(() => {
+    const closedTrades = filteredTrades.filter((t) => t.status === 'closed');
+    const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl_percent || 0), 0);
+    const totalTrades = closedTrades.length;
+    const winningTrades = closedTrades.filter((t) => (t.pnl_percent || 0) > 0).length;
+    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+    const openPositions = filteredTrades.filter((t) => t.status === 'open').length;
+    const bestTrade = closedTrades.length > 0
+      ? Math.max(...closedTrades.map(t => t.pnl_percent || 0))
+      : null;
+
+    return {
+      totalPnL,
+      totalTrades,
+      winRate,
+      openPositions,
+      bestTrade,
+    };
+  }, [filteredTrades]);
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -114,7 +198,7 @@ const Dashboard = () => {
       const recentSignals = (allSignalsData || []).slice(0, 10);
       setSignals(recentSignals);
 
-      // Fetch trades (unique buy/sell pairs) for dashboard
+      // Fetch all trades for filtering (we'll limit display later)
       const { data: tradesData, error: tradesError } = await supabase
         .from('trades')
         .select(`
@@ -133,8 +217,7 @@ const Dashboard = () => {
           strategies (name)
         `)
         .eq('user_id', user.id)
-        .order('entry_time', { ascending: false })
-        .limit(10);
+        .order('entry_time', { ascending: false });
 
       if (tradesError) {
         console.warn('Error fetching trades, using signals instead:', tradesError);
@@ -154,7 +237,8 @@ const Dashboard = () => {
           pnl_percent: t.pnl_percent,
           created_at: t.created_at,
         }));
-        setTrades(formattedTrades);
+        setAllTrades(formattedTrades);
+        setTrades(formattedTrades.slice(0, 10)); // Keep recent 10 for display
       }
 
       const { count: stratCount } = await supabase
@@ -190,41 +274,17 @@ const Dashboard = () => {
       });
       const mostActiveSymbol = Object.entries(symbolCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
-      // Calculate P&L from trades (more accurate than signals)
-      const { data: closedTradesData } = await supabase
-        .from('trades')
-        .select('pnl, pnl_percent')
-        .eq('user_id', user.id)
-        .eq('status', 'closed');
-
-      const closedTrades = closedTradesData || [];
-      const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl_percent || 0), 0);
-      const totalTrades = closedTrades.length;
-      const winningTrades = closedTrades.filter((t) => (t.pnl_percent || 0) > 0).length;
-      const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-
-      // Count open positions
-      const { count: openCount } = await supabase
-        .from('trades')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'open');
-
-      // Find best trade
-      const bestTrade = closedTrades.length > 0
-        ? Math.max(...closedTrades.map(t => t.pnl_percent || 0))
-        : null;
-
+      // Stats will be calculated from filtered trades in useMemo
       setStats({
         signalsToday,
         signalsWeek,
         mostActiveStrategy,
         mostActiveSymbol,
-        totalPnL,
-        totalTrades,
-        winRate,
-        openPositions: openCount || 0,
-        bestTrade,
+        totalPnL: 0,
+        totalTrades: 0,
+        winRate: 0,
+        openPositions: 0,
+        bestTrade: null,
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -261,12 +321,22 @@ const Dashboard = () => {
             <h1 className="text-4xl font-display font-bold tracking-tight mb-2">Dashboard</h1>
             <p className="text-muted-foreground text-lg">Track and manage your trading signals</p>
           </div>
-          <Link to="/dashboard/strategies">
-            <Button className="gap-2 shadow-md hover:shadow-lg transition-all">
-              <Plus className="h-4 w-4" />
-              New Strategy
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <DateFilter
+              value={dateFilter}
+              dateRange={dateRange}
+              onFilterChange={(filter, range) => {
+                setDateFilter(filter);
+                setDateRange(range);
+              }}
+            />
+            <Link to="/dashboard/strategies">
+              <Button className="gap-2 shadow-md hover:shadow-lg transition-all">
+                <Plus className="h-4 w-4" />
+                New Strategy
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -276,13 +346,13 @@ const Dashboard = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total P&L</p>
-                  <p className={`text-3xl font-semibold tracking-tight ${formatPnL(stats.totalPnL).className}`}>
-                    {formatPnL(stats.totalPnL).value}
+                  <p className={`text-3xl font-semibold tracking-tight ${formatPnL(filteredStats.totalPnL).className}`}>
+                    {formatPnL(filteredStats.totalPnL).value}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">{stats.totalTrades} closed trades</p>
+                  <p className="text-xs text-muted-foreground mt-1">{filteredStats.totalTrades} closed trades</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <DollarSign className={`h-5 w-5 ${stats.totalPnL >= 0 ? 'text-buy' : 'text-sell'}`} />
+                  <DollarSign className={`h-5 w-5 ${filteredStats.totalPnL >= 0 ? 'text-buy' : 'text-sell'}`} />
                 </div>
               </div>
             </CardContent>
@@ -292,9 +362,9 @@ const Dashboard = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Win Rate</p>
-                  <p className="text-3xl font-semibold tracking-tight">{stats.winRate.toFixed(1)}%</p>
+                  <p className="text-3xl font-semibold tracking-tight">{filteredStats.winRate.toFixed(1)}%</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {stats.totalTrades > 0 ? `${Math.round((stats.winRate / 100) * stats.totalTrades)} wins` : 'No trades'}
+                    {filteredStats.totalTrades > 0 ? `${Math.round((filteredStats.winRate / 100) * filteredStats.totalTrades)} wins` : 'No trades'}
                   </p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -369,7 +439,7 @@ const Dashboard = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Open Positions</p>
-                  <p className="text-3xl font-semibold tracking-tight">{stats.openPositions}</p>
+                  <p className="text-3xl font-semibold tracking-tight">{filteredStats.openPositions}</p>
                   <p className="text-xs text-muted-foreground mt-1">Active trades</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
@@ -384,8 +454,8 @@ const Dashboard = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Best Trade</p>
-                  <p className={`text-3xl font-semibold tracking-tight ${stats.bestTrade !== null && stats.bestTrade > 0 ? 'text-buy' : ''}`}>
-                    {stats.bestTrade !== null ? `+${stats.bestTrade.toFixed(2)}%` : '—'}
+                  <p className={`text-3xl font-semibold tracking-tight ${filteredStats.bestTrade !== null && filteredStats.bestTrade > 0 ? 'text-buy' : ''}`}>
+                    {filteredStats.bestTrade !== null ? `+${filteredStats.bestTrade.toFixed(2)}%` : '—'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Top performer</p>
                 </div>
@@ -404,7 +474,7 @@ const Dashboard = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
               Open Trades
             </CardTitle>
-            {trades.filter(t => t.status === 'open').length > 0 && (
+            {filteredTrades.filter(t => t.status === 'open').length > 0 && (
               <Link to="/dashboard/signals">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   View All Signals <ArrowRight className="h-4 w-4" />
@@ -413,7 +483,7 @@ const Dashboard = () => {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            {trades.filter(t => t.status === 'open').length === 0 ? (
+            {filteredTrades.filter(t => t.status === 'open').length === 0 ? (
               <EmptyTrades type="open" />
             ) : (
               <div className="overflow-x-auto">
@@ -429,7 +499,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {trades.filter(t => t.status === 'open').map((trade) => (
+                    {filteredTrades.filter(t => t.status === 'open').map((trade) => (
                       <TableRow key={trade.id}>
                         <TableCell>
                           <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
@@ -479,7 +549,7 @@ const Dashboard = () => {
               <Clock className="h-4 w-4 text-muted-foreground" />
               Closed Trades
             </CardTitle>
-            {trades.filter(t => t.status === 'closed').length > 0 && (
+            {filteredTrades.filter(t => t.status === 'closed').length > 0 && (
               <Link to="/dashboard/signals">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   View All Signals <ArrowRight className="h-4 w-4" />
@@ -488,7 +558,7 @@ const Dashboard = () => {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            {trades.filter(t => t.status === 'closed').length === 0 ? (
+            {filteredTrades.filter(t => t.status === 'closed').length === 0 ? (
               <EmptyTrades type="closed" />
             ) : (
               <div className="overflow-x-auto">
@@ -505,7 +575,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {trades.filter(t => t.status === 'closed').map((trade) => (
+                    {filteredTrades.filter(t => t.status === 'closed').map((trade) => (
                       <TableRow key={trade.id}>
                         <TableCell>
                           <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
