@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,6 +111,15 @@ export default function ApiKeys() {
     const plan = await getUserPlan(user.id);
     setUserPlan(plan);
   };
+
+  // Calculate max rate limit based on user plan
+  const maxRateLimit = useMemo(() => {
+    const limits = getPlanLimits(userPlan);
+    // Convert per-second to per-minute: multiply by 60, with reasonable caps
+    const maxPerMin = limits.rateLimitPerSec * 60;
+    // Cap at 1200 for safety (20 req/sec = 1200/min for ELITE)
+    return Math.min(maxPerMin, 1200);
+  }, [userPlan]);
 
   const fetchApiKeys = async () => {
     try {
@@ -383,15 +392,15 @@ export default function ApiKeys() {
                 Create API Key
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
+              <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shrink-0">
                 <DialogTitle>{editingKey ? 'Edit API Key' : 'Create API Key'}</DialogTitle>
                 <DialogDescription>
                   Configure how your third-party application sends signals
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-6 py-4">
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-minimal">
                 {/* Basic Info */}
                 <div className="grid gap-4">
                   <div className="space-y-2">
@@ -519,13 +528,20 @@ export default function ApiKeys() {
                     id="rate-limit"
                     type="number"
                     min={1}
-                    max={1000}
+                    max={maxRateLimit}
                     value={formData.rate_limit_per_minute}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      rate_limit_per_minute: parseInt(e.target.value) || 60 
-                    }))}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 60;
+                      const clampedValue = Math.min(Math.max(1, value), maxRateLimit);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        rate_limit_per_minute: clampedValue
+                      }));
+                    }}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Your {userPlan} plan allows up to {maxRateLimit} requests per minute
+                  </p>
                 </div>
 
                 {/* Active Toggle */}
@@ -542,7 +558,7 @@ export default function ApiKeys() {
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
+              <div className="flex justify-end gap-3 pt-4 px-6 pb-6 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shrink-0">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
