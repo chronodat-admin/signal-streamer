@@ -210,6 +210,207 @@ async function sendTelegramAlert(config: { bot_token: string; chat_id: string },
   }
 }
 
+// Email alert (using SMTP or email API service)
+async function sendEmailAlert(
+  config: { 
+    smtp_host?: string; 
+    smtp_port?: number; 
+    smtp_user?: string; 
+    smtp_password?: string; 
+    from_email?: string; 
+    to_email?: string;
+    api_key?: string; // For services like Resend, SendGrid
+    api_service?: string; // 'resend', 'sendgrid', 'smtp'
+  }, 
+  payload: AlertPayload,
+  supabase: any,
+  logData: { userId: string; strategyId: string; signalId: string; integrationId: string }
+): Promise<{ success: boolean; error?: string }> {
+  const emoji = payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG" 
+    ? "🟢" 
+    : "🔴";
+
+  const subject = `${emoji} ${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}`;
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: ${payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG" ? "#22c55e" : "#ef4444"};">
+        ${emoji} ${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}
+      </h2>
+      <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Strategy:</strong> ${payload.strategy_name}</p>
+        <p><strong>Symbol:</strong> ${payload.symbol}</p>
+        <p><strong>Price:</strong> $${payload.price.toFixed(2)}</p>
+        <p><strong>Time:</strong> ${new Date(payload.signal_time).toLocaleString()}</p>
+      </div>
+      <p style="color: #666; font-size: 12px;">SignalPulse Trading Signals</p>
+    </div>
+  `;
+  const textBody = `${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}\n\nStrategy: ${payload.strategy_name}\nPrice: $${payload.price.toFixed(2)}\nTime: ${new Date(payload.signal_time).toLocaleString()}`;
+
+  // Log the attempt
+  let logEntry: any = null;
+  try {
+    const { data, error } = await supabase
+      .from("alert_logs")
+      .insert({
+        user_id: logData.userId,
+        strategy_id: logData.strategyId,
+        signal_id: logData.signalId,
+        integration_id: logData.integrationId,
+        integration_type: "email",
+        status: "pending",
+        message: `Sending email alert for ${payload.signal_type} ${payload.symbol}`,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating log entry:", error);
+    } else {
+      logEntry = data;
+    }
+  } catch (logError) {
+    console.error("Exception creating log entry:", logError);
+  }
+
+  try {
+    const toEmail = config.to_email;
+    if (!toEmail) {
+      throw new Error("No recipient email address configured");
+    }
+
+    // Try Resend API first (if api_key and api_service is 'resend')
+    if (config.api_key && config.api_service === 'resend') {
+      console.log("Sending email via Resend API");
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${config.api_key}`,
+        },
+        body: JSON.stringify({
+          from: config.from_email || "alerts@signalpulse.com",
+          to: toEmail,
+          subject: subject,
+          html: htmlBody,
+          text: textBody,
+        }),
+      });
+
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(`Resend API error: ${response.status} - ${JSON.stringify(responseData)}`);
+      }
+
+      if (logEntry?.id) {
+        await supabase
+          .from("alert_logs")
+          .update({
+            status: "success",
+            message: "Email sent successfully via Resend",
+            response_status: response.status,
+          })
+          .eq("id", logEntry.id);
+      }
+
+      return { success: true };
+    }
+
+    // Try SendGrid API (if api_key and api_service is 'sendgrid')
+    if (config.api_key && config.api_service === 'sendgrid') {
+      console.log("Sending email via SendGrid API");
+      const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${config.api_key}`,
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: toEmail }] }],
+          from: { email: config.from_email || "alerts@signalpulse.com" },
+          subject: subject,
+          content: [
+            { type: "text/plain", value: textBody },
+            { type: "text/html", value: htmlBody },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`SendGrid API error: ${response.status} - ${errorText}`);
+      }
+
+      if (logEntry?.id) {
+        await supabase
+          .from("alert_logs")
+          .update({
+            status: "success",
+            message: "Email sent successfully via SendGrid",
+            response_status: response.status,
+          })
+          .eq("id", logEntry.id);
+      }
+
+      return { success: true };
+    }
+
+    // Fallback: Use webhook URL if provided (for services like Zapier, IFTTT, etc.)
+    if (config.api_key && !config.api_service) {
+      // Assume it's a generic webhook-based email service
+      console.log("Sending email via webhook");
+      const response = await fetch(config.api_key, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: toEmail,
+          subject: subject,
+          html: htmlBody,
+          text: textBody,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Email webhook error: ${response.status} - ${errorText}`);
+      }
+
+      if (logEntry?.id) {
+        await supabase
+          .from("alert_logs")
+          .update({
+            status: "success",
+            message: "Email sent successfully via webhook",
+            response_status: response.status,
+          })
+          .eq("id", logEntry.id);
+      }
+
+      return { success: true };
+    }
+
+    // If no API service configured, return error
+    throw new Error("No email service configured. Please configure Resend, SendGrid, or a webhook URL.");
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Email alert error:", errorMessage);
+    
+    if (logEntry?.id) {
+      await supabase
+        .from("alert_logs")
+        .update({
+          status: "error",
+          error_message: errorMessage.substring(0, 500),
+        })
+        .eq("id", logEntry.id);
+    }
+    
+    return { success: false, error: errorMessage };
+  }
+}
+
 // WhatsApp (using Twilio API or similar)
 async function sendWhatsAppAlert(config: { api_key: string; phone_number: string; from_number?: string }, payload: AlertPayload): Promise<boolean> {
   // Using Twilio API format - adjust based on your WhatsApp provider
@@ -454,6 +655,35 @@ serve(async (req) => {
             const whatsappConfig = integration.config as { api_key?: string; phone_number?: string; from_number?: string };
             if (whatsappConfig.api_key && whatsappConfig.phone_number) {
               success = await sendWhatsAppAlert(whatsappConfig, payload);
+            }
+            break;
+          case "email":
+            const emailConfig = integration.config as { 
+              smtp_host?: string; 
+              smtp_port?: number; 
+              smtp_user?: string; 
+              smtp_password?: string; 
+              from_email?: string; 
+              to_email?: string;
+              api_key?: string;
+              api_service?: string;
+            };
+            if (emailConfig.to_email || emailConfig.api_key) {
+              const emailResult = await sendEmailAlert(
+                emailConfig,
+                payload,
+                supabase,
+                {
+                  userId: userId,
+                  strategyId: strategy_id,
+                  signalId: signal_id,
+                  integrationId: integration.id
+                }
+              );
+              success = emailResult.success;
+            } else {
+              console.error(`Email integration ${integration.id} has no recipient email or API key configured`);
+              success = false;
             }
             break;
         }

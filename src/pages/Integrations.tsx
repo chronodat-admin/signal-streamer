@@ -205,6 +205,10 @@ const Integrations = () => {
     phone_number: '',
     api_key: '',
     from_number: '',
+    // Email specific
+    to_email: '',
+    from_email: '',
+    api_service: 'resend', // 'resend', 'sendgrid', or webhook
   });
 
   useEffect(() => {
@@ -273,6 +277,9 @@ const Integrations = () => {
       phone_number: '',
       api_key: '',
       from_number: '',
+      to_email: '',
+      from_email: '',
+      api_service: 'resend',
     });
     setDialogOpen(true);
   };
@@ -290,6 +297,11 @@ const Integrations = () => {
         config.api_key = formData.api_key;
         config.phone_number = formData.phone_number;
         config.from_number = formData.from_number;
+      } else if (formData.integration_type === 'email') {
+        config.to_email = formData.to_email;
+        config.from_email = formData.from_email;
+        config.api_key = formData.api_key;
+        config.api_service = formData.api_service;
       }
 
       const payload: any = {
@@ -399,6 +411,9 @@ const Integrations = () => {
       phone_number: integration.config?.phone_number || '',
       api_key: integration.config?.api_key || '',
       from_number: integration.config?.from_number || '',
+      to_email: integration.config?.to_email || '',
+      from_email: integration.config?.from_email || '',
+      api_service: (integration.config?.api_service || 'resend') as 'resend' | 'sendgrid' | 'webhook',
     });
     setDialogOpen(true);
   };
@@ -417,6 +432,9 @@ const Integrations = () => {
       phone_number: '',
       api_key: '',
       from_number: '',
+      to_email: '',
+      from_email: '',
+      api_service: 'resend',
     });
   };
 
@@ -769,6 +787,66 @@ const Integrations = () => {
                       </a>
                     </p>
                   )}
+                </>
+              )}
+
+              {formData.integration_type === 'email' && (
+                <>
+                  <div>
+                    <Label htmlFor="to_email">Recipient Email</Label>
+                    <Input
+                      id="to_email"
+                      type="email"
+                      value={formData.to_email}
+                      onChange={(e) => setFormData({ ...formData, to_email: e.target.value })}
+                      placeholder="alerts@example.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="from_email">From Email</Label>
+                    <Input
+                      id="from_email"
+                      type="email"
+                      value={formData.from_email}
+                      onChange={(e) => setFormData({ ...formData, from_email: e.target.value })}
+                      placeholder="noreply@signalpulse.com"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Leave empty to use default
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="api_service">Email Service</Label>
+                    <Select
+                      value={formData.api_service}
+                      onValueChange={(value) => setFormData({ ...formData, api_service: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="resend">Resend (Recommended)</SelectItem>
+                        <SelectItem value="sendgrid">SendGrid</SelectItem>
+                        <SelectItem value="webhook">Webhook/API</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="api_key_email">API Key or Webhook URL</Label>
+                    <Input
+                      id="api_key_email"
+                      value={formData.api_key}
+                      onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                      placeholder={formData.api_service === 'webhook' ? 'https://api.example.com/send-email' : 're_... or SG....'}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formData.api_service === 'resend' && 'Get your API key from resend.com'}
+                      {formData.api_service === 'sendgrid' && 'Get your API key from sendgrid.com'}
+                      {formData.api_service === 'webhook' && 'Enter your email webhook URL'}
+                    </p>
+                  </div>
                 </>
               )}
 
