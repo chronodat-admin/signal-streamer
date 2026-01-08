@@ -164,32 +164,45 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-4 border-b border-border">
-            <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-              <Link to="/" className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md flex-shrink-0">
-                  <Activity className="h-6 w-6 text-white" />
-                </div>
-                {!collapsed && (
+            {collapsed ? (
+              <div className="flex flex-col items-center gap-3">
+                <Link to="/" className="flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md flex-shrink-0">
+                    <Activity className="h-6 w-6 text-white" />
+                  </div>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCollapsed(!collapsed)}
+                  className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                  title="Expand sidebar"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <Link to="/" className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md flex-shrink-0">
+                    <Activity className="h-6 w-6 text-white" />
+                  </div>
                   <div>
                     <span className="text-xl font-bold">SignalPulse</span>
                     <p className="text-xs text-muted-foreground">Trading Signals</p>
                   </div>
-                )}
-              </Link>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCollapsed(!collapsed)}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                {collapsed ? (
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCollapsed(!collapsed)}
+                  className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                  title="Collapse sidebar"
+                >
                   <Menu className="h-4 w-4" />
-                ) : (
-                  <Menu className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Navigation */}
