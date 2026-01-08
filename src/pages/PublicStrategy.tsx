@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Activity, TrendingUp, TrendingDown, Clock, ArrowLeft, Loader2, Lock } from 'lucide-react';
-import { format } from 'date-fns';
+import { usePreferences } from '@/hooks/usePreferences';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 
 interface Strategy {
   id: string;
@@ -210,7 +211,7 @@ const PublicStrategy = () => {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             {strategy.exchange && <span>📊 {strategy.exchange}</span>}
             {strategy.timeframe && <span>⏱️ {strategy.timeframe}</span>}
-            <span>Created {format(new Date(strategy.created_at), 'MMM d, yyyy')}</span>
+            <span>Created {formatDate(strategy.created_at, preferences.dateFormat)}</span>
           </div>
         </div>
 
@@ -305,11 +306,11 @@ const PublicStrategy = () => {
                           <span className="font-mono font-medium">{signal.symbol}</span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono">${Number(signal.price).toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(Number(signal.price), preferences.currency)}</span>
                         </TableCell>
                         <TableCell>
                           <span className="text-muted-foreground">
-                            {format(new Date(signal.created_at), 'MMM d, HH:mm')}
+                            {formatDateTime(signal.created_at, preferences.dateFormat)}
                           </span>
                         </TableCell>
                       </TableRow>

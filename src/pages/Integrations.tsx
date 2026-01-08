@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, MessageSquare, Hash, Send, Phone, Loader2, ExternalLink, Settings, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { usePreferences } from '@/hooks/usePreferences';
+import { formatDate, formatDateTime } from '@/lib/formatUtils';
 
 type IntegrationType = 'discord' | 'slack' | 'telegram' | 'whatsapp' | 'email' | 'webhook' | 'pushover' | 'ntfy' | 'zapier' | 'ifttt' | 'microsoft-teams' | 'google-chat';
 type IntegrationStatus = 'active' | 'inactive' | 'error';
@@ -611,7 +612,7 @@ const Integrations = () => {
                             </p>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
                               {integration.last_used_at && (
-                                <span>Last used: {format(new Date(integration.last_used_at), 'MMM d, HH:mm')}</span>
+                                <span>Last used: {formatDateTime(integration.last_used_at, preferences.dateFormat)}</span>
                               )}
                               {integration.error_message && (
                                 <span className="text-red-500">Error: {integration.error_message}</span>

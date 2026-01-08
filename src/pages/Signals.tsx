@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Activity, Filter, Download, Search, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { usePreferences } from '@/hooks/usePreferences';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -388,7 +389,7 @@ const Signals = () => {
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">
-                              {format(new Date(signal.created_at), 'MMM d, yyyy')}
+                              {formatDate(signal.created_at, preferences.dateFormat)}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {format(new Date(signal.created_at), 'HH:mm:ss')}
@@ -403,7 +404,7 @@ const Signals = () => {
                           <span className="font-mono font-medium">{signal.symbol}</span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono">${Number(signal.price).toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(Number(signal.price), preferences.currency)}</span>
                         </TableCell>
                         <TableCell>
                           {signal.alert_id ? (

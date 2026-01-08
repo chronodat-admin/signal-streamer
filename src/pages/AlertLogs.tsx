@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Search, Filter, RefreshCw, AlertCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { usePreferences } from '@/hooks/usePreferences';
+import { formatDate, formatDateTime } from '@/lib/formatUtils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface AlertLog {
@@ -240,7 +241,7 @@ export default function AlertLogs() {
                       {logs.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="font-mono text-xs">
-                            {format(new Date(log.created_at), 'MMM d, HH:mm:ss')}
+                            {formatDateTime(log.created_at, preferences.dateFormat)}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1">

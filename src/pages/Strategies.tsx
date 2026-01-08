@@ -21,7 +21,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Layers, Settings, Eye, EyeOff, Trash2, Loader2, ExternalLink, Copy, Check, AlertCircle, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { format } from 'date-fns';
+import { usePreferences } from '@/hooks/usePreferences';
+import { formatDate } from '@/lib/formatUtils';
 import { canCreateStrategy, getUserPlan, getPlanLimits } from '@/lib/planUtils';
 
 interface Strategy {
@@ -498,7 +499,7 @@ const Strategies = () => {
                         {strategy.exchange && <span>📊 {strategy.exchange}</span>}
                         {strategy.timeframe && <span>⏱️ {strategy.timeframe}</span>}
                         <span>📈 {strategy.signals_count} signals</span>
-                        <span>Created {format(new Date(strategy.created_at), 'MMM d, yyyy')}</span>
+                        <span>Created {formatDate(strategy.created_at, preferences.dateFormat)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

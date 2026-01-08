@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Copy, Check, Webhook, Clock, Download, ExternalLink, Loader2, BarChart3, DollarSign, TrendingUp } from 'lucide-react';
-import { format } from 'date-fns';
+import { usePreferences } from '@/hooks/usePreferences';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { StrategyAnalytics } from '@/components/strategy/StrategyAnalytics';
 import { getUserPlan } from '@/lib/planUtils';
 import { calculateSignalPnL, formatPnL } from '@/lib/pnlUtils';
@@ -435,14 +436,14 @@ const StrategyDetail = () => {
                               <span className="font-mono font-medium">{signal.symbol}</span>
                             </TableCell>
                             <TableCell>
-                              <span className="font-mono">${Number(signal.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              <span className="font-mono">{formatCurrency(Number(signal.price), preferences.currency)}</span>
                             </TableCell>
                             <TableCell>
                               <span className="text-muted-foreground">{signal.interval || '-'}</span>
                             </TableCell>
                             <TableCell>
                               <span className="text-muted-foreground">
-                                {format(new Date(signal.created_at), 'MMM d, HH:mm:ss')}
+                                {formatDateTime(signal.created_at, preferences.dateFormat)}
                               </span>
                             </TableCell>
                           </TableRow>
@@ -518,7 +519,7 @@ const StrategyDetail = () => {
                   </div>
                   <div>
                     The <code className="bg-muted px-1.5 py-0.5 rounded">signal</code> field uses 
-                    {' '}<code className="bg-muted px-1.5 py-0.5 rounded">{{strategy.order.action}}</code> which will automatically 
+                    {' '}<code className="bg-muted px-1.5 py-0.5 rounded">{'{{strategy.order.action}}'}</code> which will automatically 
                     {' '}be replaced with BUY, SELL, etc. by TradingView.
                   </div>
                 </p>

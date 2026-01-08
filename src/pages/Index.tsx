@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, Zap, Shield, BarChart3, ArrowRight, Check, Sparkles, LayoutDashboard } from 'lucide-react';
+import { Activity, Zap, Shield, BarChart3, ArrowRight, Check, Sparkles, LayoutDashboard, Target, Clock, Share2, Download, Gauge, Settings, TrendingUp } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 
@@ -125,7 +125,7 @@ const Index = () => {
               Everything You Need to Track Signals
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Simple webhook integration, powerful analytics, and real-time notifications.
+              Powerful features designed for traders who demand precision, speed, and reliability.
             </p>
           </div>
           
@@ -133,21 +133,57 @@ const Index = () => {
             {[
               {
                 icon: Zap,
-                title: 'Instant Webhooks',
-                description: 'Connect TradingView alerts in seconds. Just paste your webhook URL and start tracking.',
+                title: 'Instant Webhook Integration',
+                description: 'Connect TradingView alerts in seconds with our simple webhook setup. Copy-paste your URL and start receiving signals immediately with sub-50ms latency.',
                 color: 'text-primary bg-primary/10',
               },
               {
+                icon: Target,
+                title: 'Multi-Strategy Management',
+                description: 'Organize unlimited trading strategies with custom names, descriptions, and timeframes. Track multiple exchanges and pairs from one dashboard.',
+                color: 'text-blue-500 bg-blue-500/10',
+              },
+              {
                 icon: BarChart3,
-                title: 'Signal Analytics',
-                description: 'Track signal performance with detailed metrics. Analyze BUY/SELL ratios and timing.',
+                title: 'Real-Time Analytics',
+                description: 'Monitor signal performance with comprehensive metrics. Track BUY/SELL ratios, timing patterns, and most active symbols with live updates.',
                 color: 'text-emerald-500 bg-emerald-500/10',
               },
               {
+                icon: Clock,
+                title: 'Historical Data Tracking',
+                description: 'Access your complete signal history with plan-based retention. Free users get 7 days, Pro gets 90 days, Elite gets unlimited access.',
+                color: 'text-orange-500 bg-orange-500/10',
+              },
+              {
+                icon: Share2,
+                title: 'Public Strategy Sharing',
+                description: 'Share your successful strategies with the community via public URLs. Control visibility with private-by-default settings and custom slugs.',
+                color: 'text-purple-500 bg-purple-500/10',
+              },
+              {
+                icon: Download,
+                title: 'CSV Data Export',
+                description: 'Export your signal data for external analysis. Download complete datasets with timestamps, symbols, and signal types in standard CSV format.',
+                color: 'text-cyan-500 bg-cyan-500/10',
+              },
+              {
                 icon: Shield,
-                title: 'Secure & Private',
-                description: 'Your strategies stay private by default. Share only when you want to.',
+                title: 'Enterprise-Grade Security',
+                description: 'Your data is protected with Row-Level Security, token-based authentication, and user isolation. Private strategies stay private by default.',
                 color: 'text-violet-500 bg-violet-500/10',
+              },
+              {
+                icon: Gauge,
+                title: 'Smart Rate Limiting',
+                description: 'Intelligent rate limiting prevents abuse while ensuring high performance. Plans scale from 1/sec (Free) to 20/sec (Elite) per strategy.',
+                color: 'text-pink-500 bg-pink-500/10',
+              },
+              {
+                icon: Settings,
+                title: 'Easy Setup & Configuration',
+                description: 'Get started in minutes with step-by-step TradingView integration guides, JSON templates, and copy-to-clipboard webhook URLs.',
+                color: 'text-indigo-500 bg-indigo-500/10',
               },
             ].map((feature, i) => (
               <div key={i} className="stat-card group cursor-default">

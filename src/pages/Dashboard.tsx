@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { usePreferences } from '@/hooks/usePreferences';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { formatPnL } from '@/lib/pnlUtils';
 
@@ -53,6 +54,7 @@ interface DashboardStats {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { preferences } = usePreferences();
   const [signals, setSignals] = useState<Signal[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -403,7 +405,7 @@ const Dashboard = () => {
                           <span className="font-mono font-medium">{trade.symbol}</span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono">${Number(trade.entry_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          <span className="font-mono">{formatCurrency(Number(trade.entry_price), preferences.currency)}</span>
                         </TableCell>
                         <TableCell>
                           <span className="text-muted-foreground">—</span>
@@ -413,7 +415,7 @@ const Dashboard = () => {
                         </TableCell>
                         <TableCell>
                           <span className="text-muted-foreground">
-                            {format(new Date(trade.entry_time), 'MMM d, HH:mm')}
+                            {formatDateTime(trade.entry_time, preferences.dateFormat)}
                           </span>
                         </TableCell>
                       </TableRow>
@@ -494,11 +496,11 @@ const Dashboard = () => {
                           <span className="font-mono font-medium">{trade.symbol}</span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono">${Number(trade.entry_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          <span className="font-mono">{formatCurrency(Number(trade.entry_price), preferences.currency)}</span>
                         </TableCell>
                         <TableCell>
                           {trade.exit_price ? (
-                            <span className="font-mono">${Number(trade.exit_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span className="font-mono">{formatCurrency(Number(trade.exit_price), preferences.currency)}</span>
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
@@ -517,7 +519,7 @@ const Dashboard = () => {
                         </TableCell>
                         <TableCell>
                           <span className="text-muted-foreground">
-                            {format(new Date(trade.entry_time), 'MMM d, HH:mm')}
+                            {formatDateTime(trade.entry_time, preferences.dateFormat)}
                           </span>
                         </TableCell>
                       </TableRow>
