@@ -165,7 +165,8 @@ const StrategyDetail = () => {
       )
     : '';
 
-  const curlCommand = strategy
+  // cURL command for Bash/Mac/Linux
+  const curlCommandBash = strategy
     ? `curl -X POST ${webhookUrl} \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -178,6 +179,14 @@ const StrategyDetail = () => {
     "interval": "5"
   }'`
     : '';
+
+  // cURL command for Windows (cmd.exe)
+  const curlCommandWindows = strategy
+    ? `curl.exe -X POST "${webhookUrl}" -H "Content-Type: application/json" -d "{\\"token\\": \\"${strategy.secret_token}\\", \\"strategyId\\": \\"${strategy.id}\\", \\"signal\\": \\"BUY\\", \\"symbol\\": \\"AAPL\\", \\"price\\": 192.34, \\"time\\": \\"${new Date().toISOString()}\\", \\"interval\\": \\"5\\"}"`
+    : '';
+
+  // For display, we'll use a simplified version that works cross-platform
+  const curlCommand = curlCommandBash;
 
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
 
@@ -558,29 +567,68 @@ const StrategyDetail = () => {
             {/* Test with cURL */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Test with cURL</CardTitle>
+                <CardTitle className="text-lg">4. Test Your Webhook</CardTitle>
                 <CardDescription>
-                  Test your webhook integration from the command line
+                  Test your webhook integration before setting up TradingView alerts
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="relative">
-                  <pre className="bg-muted/50 px-4 py-3 rounded-xl font-mono text-xs overflow-x-auto whitespace-pre-wrap">
-                    {curlCommand}
-                  </pre>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(curlCommand, 'cURL Command')}
-                  >
-                    {copied === 'cURL Command' ? (
-                      <Check className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Bash / Mac / Linux:</h4>
+                  <div className="relative">
+                    <pre className="bg-muted/50 px-4 py-3 rounded-xl font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                      {curlCommand}
+                    </pre>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyToClipboard(curlCommand, 'cURL Command')}
+                    >
+                      {copied === 'cURL Command' ? (
+                        <Check className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Windows (Command Prompt):</h4>
+                  <div className="relative">
+                    <pre className="bg-muted/50 px-4 py-3 rounded-xl font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                      {curlCommandWindows}
+                    </pre>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyToClipboard(curlCommandWindows, 'Windows cURL')}
+                    >
+                      {copied === 'Windows cURL' ? (
+                        <Check className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                  <h4 className="font-medium text-emerald-600 dark:text-emerald-400 mb-2">Using Postman?</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p><strong>Method:</strong> POST</p>
+                    <p><strong>URL:</strong> {webhookUrl}</p>
+                    <p><strong>Headers:</strong> Content-Type: application/json</p>
+                    <p><strong>Body:</strong> Copy the JSON template from step 2 (replace TradingView variables with test values)</p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                  <strong>Expected response:</strong>{' '}
+                  <code className="bg-muted px-1.5 py-0.5 rounded">{'{"success":true,"message":"Signal received"}'}</code>
+                </p>
               </CardContent>
             </Card>
           </TabsContent>

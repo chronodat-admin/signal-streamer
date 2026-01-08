@@ -17,7 +17,7 @@ You need your strategy's secret token. You can get it from:
 
 **URL:**
 ```
-https://signal-streamer-btgso6013-chronodat.vercel.app/api/tradingview
+https://signal-streamer.vercel.app/api/tradingview
 ```
 
 **Headers:**
@@ -28,8 +28,8 @@ Content-Type: application/json
 **Body (raw JSON):**
 ```json
 {
-  "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
-  "strategyId": "6fa876bc-cd7e-4d88-8780-00bbd979fb16",
+  "token": "YOUR_STRATEGY_TOKEN",
+  "strategyId": "YOUR_STRATEGY_ID",
   "signal": "BUY",
   "symbol": "AAPL",
   "price": 192.34,
@@ -37,6 +37,7 @@ Content-Type: application/json
   "interval": "5"
 }
 ```
+**Note:** Replace `YOUR_STRATEGY_TOKEN` and `YOUR_STRATEGY_ID` with values from your Strategy Detail page → Setup tab.
 
 ## Step 3: Postman Setup Details
 
@@ -46,7 +47,7 @@ Content-Type: application/json
 
 2. **Set Method and URL**
    - Method: `POST`
-   - URL: `https://signal-streamer-btgso6013-chronodat.vercel.app/api/tradingview`
+   - URL: `https://signal-streamer.vercel.app/api/tradingview`
 
 3. **Add Headers**
    - Go to "Headers" tab
@@ -100,16 +101,16 @@ Content-Type: application/json
 On Windows Command Prompt, you need to use double quotes and escape inner quotes:
 
 ```cmd
-curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview -H "Content-Type: application/json" -d "{\"token\": \"86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b\", \"strategyId\": \"6fa876bc-cd7e-4d88-8780-00bbd979fb16\", \"signal\": \"BUY\", \"symbol\": \"AAPL\", \"price\": 192.34, \"time\": \"2026-01-08T20:48:30.608Z\", \"interval\": \"5\"}"
+curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" -H "Content-Type: application/json" -d "{\"token\": \"YOUR_STRATEGY_TOKEN\", \"strategyId\": \"YOUR_STRATEGY_ID\", \"signal\": \"BUY\", \"symbol\": \"AAPL\", \"price\": 192.34, \"time\": \"2026-01-08T20:48:30.608Z\", \"interval\": \"5\"}"
 ```
 
 **Or use a JSON file** (recommended for Windows cmd.exe):
 
-1. Create a file `test-payload.json`:
+1. Create a file `test-payload.json` with your strategy's token and ID:
 ```json
 {
-  "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
-  "strategyId": "6fa876bc-cd7e-4d88-8780-00bbd979fb16",
+  "token": "YOUR_STRATEGY_TOKEN",
+  "strategyId": "YOUR_STRATEGY_ID",
   "signal": "BUY",
   "symbol": "AAPL",
   "price": 192.34,
@@ -117,10 +118,11 @@ curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingv
   "interval": "5"
 }
 ```
+**Note:** Get your token and strategyId from the Strategy Detail page → Setup tab.
 
 2. Then run:
 ```cmd
-curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
+curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" -H "Content-Type: application/json" -d @test-payload.json
 ```
 
 ### For PowerShell (Windows)
@@ -128,11 +130,11 @@ curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingv
 PowerShell supports single quotes, so you can use:
 
 ```powershell
-curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview `
+curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" `
   -H "Content-Type: application/json" `
   -d '{
-    "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
-    "strategyId": "6fa876bc-cd7e-4d88-8780-00bbd979fb16",
+    "token": "YOUR_STRATEGY_TOKEN",
+    "strategyId": "YOUR_STRATEGY_ID",
     "signal": "BUY",
     "symbol": "AAPL",
     "price": 192.34,
@@ -144,11 +146,11 @@ curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingv
 ### For Bash/Git Bash/Linux/Mac
 
 ```bash
-curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview \
+curl -X POST https://signal-streamer.vercel.app/api/tradingview \
   -H "Content-Type: application/json" \
   -d '{
-    "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
-    "strategyId": "6fa876bc-cd7e-4d88-8780-00bbd979fb16",
+    "token": "YOUR_STRATEGY_TOKEN",
+    "strategyId": "YOUR_STRATEGY_ID",
     "signal": "BUY",
     "symbol": "AAPL",
     "price": 192.34,
