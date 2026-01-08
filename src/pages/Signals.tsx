@@ -13,6 +13,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 interface Signal {
   id: string;

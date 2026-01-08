@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Layers, Settings, Eye, EyeOff, Trash2, Loader2, ExternalLink, Copy, Check, AlertCircle, Info } from 'lucide-react';
+import { Plus, Layers, Settings, Eye, EyeOff, Trash2, Loader2, ExternalLink, Copy, Check, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate } from '@/lib/formatUtils';
@@ -445,40 +445,6 @@ const Strategies = () => {
             </DialogContent>
           </Dialog>
         </div>
-
-        {/* Webhook Security Notice */}
-        <Alert className="border-primary/20 bg-primary/5">
-          <Info className="h-4 w-4 text-primary" />
-          <AlertTitle className="text-base font-semibold">Update Your TradingView Alerts</AlertTitle>
-          <AlertDescription className="mt-2 space-y-2">
-            <p className="text-sm">
-              We've upgraded to a secure webhook proxy. Please update your TradingView alerts:
-            </p>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-start gap-2">
-                <span className="font-semibold text-primary">1.</span>
-                <div>
-                  <span className="font-medium">Change webhook URL to:</span>
-                  <code className="ml-2 px-2 py-1 bg-background border rounded text-xs font-mono">
-                    https://{window.location.hostname}/api/tradingview
-                  </code>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-semibold text-primary">2.</span>
-                <div>
-                  <span className="font-medium">Add <code className="px-1.5 py-0.5 bg-background border rounded text-xs">secret</code> field to your alert JSON.</span>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    See the updated template in the Strategy Detail page (click "Setup" on any strategy).
-                  </p>
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-              <strong>Note:</strong> The <code className="px-1.5 py-0.5 bg-background border rounded">secret</code> value must match your <code className="px-1.5 py-0.5 bg-background border rounded">TRADINGVIEW_SECRET</code> environment variable in Vercel.
-            </p>
-          </AlertDescription>
-        </Alert>
 
         {/* Plan Info */}
         <Card className="border-primary/20">
