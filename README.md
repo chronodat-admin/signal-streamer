@@ -64,6 +64,26 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+## Webhook Security Setup
+
+This project uses a secure Vercel proxy for TradingView webhooks. See [WEBHOOK_SECURITY.md](./WEBHOOK_SECURITY.md) for complete setup instructions.
+
+### Quick Setup
+
+1. **Set Vercel Environment Variables:**
+   - `TRADINGVIEW_SECRET` - Secret for TradingView webhook validation
+   - `SUPABASE_EDGE_FUNCTION_URL` - Your Supabase Edge Function URL
+   - `VERCEL_PROXY_SECRET` - Secret for proxy authentication
+
+2. **Set Supabase Edge Function Secret:**
+   - `VERCEL_PROXY_SECRET` - Must match the Vercel value
+
+3. **Update TradingView Alerts:**
+   - Use webhook URL: `https://<your-vercel-domain>/api/tradingview`
+   - Include `secret` field in alert JSON payload
+
+See [WEBHOOK_SECURITY.md](./WEBHOOK_SECURITY.md) for detailed instructions.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

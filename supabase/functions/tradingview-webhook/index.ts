@@ -14,7 +14,28 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const vercelProxySecret = Deno.env.get("VERCEL_PROXY_SECRET");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check for Vercel proxy secret if configured
+    // If VERCEL_PROXY_SECRET is set, require it; otherwise allow direct access (backward compatibility)
+    if (vercelProxySecret) {
+      const proxySecretHeader = req.headers.get("x-vercel-proxy-secret");
+      if (proxySecretHeader !== vercelProxySecret) {
+        console.warn("Request rejected: Missing or invalid x-vercel-proxy-secret header");
+        return new Response(
+          JSON.stringify({ 
+            error: "Unauthorized",
+            message: "Request must come through Vercel proxy"
+          }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      console.log("Request validated: Valid Vercel proxy secret");
+    }
 
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {

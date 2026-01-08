@@ -49,11 +49,9 @@ const StrategyDetail = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [pnlData, setPnlData] = useState<ReturnType<typeof calculateSignalPnL> | null>(null);
 
-  // Get webhook URL from environment or construct from Supabase URL
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  const webhookUrl = supabaseUrl 
-    ? `${supabaseUrl}/functions/v1/tradingview-webhook`
-    : 'https://YOUR_PROJECT.supabase.co/functions/v1/tradingview-webhook';
+  // Get webhook URL - use Vercel proxy if available, otherwise fallback to Supabase
+  const vercelUrl = import.meta.env.VITE_VERCEL_URL || window.location.origin;
+  const webhookUrl = `${vercelUrl}/api/tradingview`;
 
   useEffect(() => {
     if (user && id) {
@@ -143,12 +141,13 @@ const StrategyDetail = () => {
   const jsonTemplate = strategy
     ? JSON.stringify(
         {
+          secret: 'YOUR_TRADINGVIEW_SECRET',
           token: strategy.secret_token,
           strategyId: strategy.id,
-          signal: 'BUY',
+          signal: '{{strategy.order.action}}',
           symbol: '{{ticker}}',
           price: '{{close}}',
-          time: '{{time}}',
+          time: '{{timenow}}',
           interval: '{{interval}}',
         },
         null,
@@ -160,6 +159,7 @@ const StrategyDetail = () => {
     ? `curl -X POST ${webhookUrl} \\
   -H "Content-Type: application/json" \\
   -d '{
+    "secret": "YOUR_TRADINGVIEW_SECRET",
     "token": "${strategy.secret_token}",
     "strategyId": "${strategy.id}",
     "signal": "BUY",
@@ -511,10 +511,16 @@ const StrategyDetail = () => {
                     )}
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground mt-3">
-                  <strong>Note:</strong> Replace <code className="bg-muted px-1.5 py-0.5 rounded">BUY</code> with 
-                  {' '}<code className="bg-muted px-1.5 py-0.5 rounded">SELL</code> or 
-                  {' '}<code className="bg-muted px-1.5 py-0.5 rounded">EXIT</code> as needed.
+                <p className="text-sm text-muted-foreground mt-3 space-y-1">
+                  <div>
+                    <strong>Important:</strong> Replace <code className="bg-muted px-1.5 py-0.5 rounded">YOUR_TRADINGVIEW_SECRET</code> with 
+                    {' '}your actual secret (must match <code className="bg-muted px-1.5 py-0.5 rounded">TRADINGVIEW_SECRET</code> in Vercel).
+                  </div>
+                  <div>
+                    The <code className="bg-muted px-1.5 py-0.5 rounded">signal</code> field uses 
+                    {' '}<code className="bg-muted px-1.5 py-0.5 rounded">{{strategy.order.action}}</code> which will automatically 
+                    {' '}be replaced with BUY, SELL, etc. by TradingView.
+                  </div>
                 </p>
               </CardContent>
             </Card>
