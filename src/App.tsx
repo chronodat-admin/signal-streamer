@@ -18,6 +18,8 @@ import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Preferences from "./pages/Preferences";
 import AlertLogs from "./pages/AlertLogs";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,8 @@ const App = () => (
               <Route path="/dashboard/logs" element={<AlertLogs />} />
               <Route path="/s/:slug" element={<PublicStrategy />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="/dashboard/billing" element={<Billing />} />
               <Route path="/dashboard/preferences" element={<Preferences />} />
               <Route path="*" element={<NotFound />} />

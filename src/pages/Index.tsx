@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { 
@@ -195,14 +195,14 @@ const Index = () => {
           <div className="hidden md:flex items-center gap-1">
             <a href="#features" className="nav-link">Features</a>
             <a href="#how-it-works" className="nav-link">How It Works</a>
-            <Link to="/pricing" className="nav-link">Pricing</Link>
+            <a href="#pricing" className="nav-link">Pricing</a>
           </div>
           
           <div className="flex items-center gap-2">
             <ColorSchemePicker />
             <ThemeToggle />
             {user ? (
-              <Link to="/dashboard">
+              <Link to="/dashboard" >
                 <Button className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow">
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="hidden sm:inline">Dashboard</span>
@@ -210,10 +210,10 @@ const Index = () => {
               </Link>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/auth">
+                <Link to="/auth" >
                   <Button variant="ghost" size="sm" className="hidden sm:flex">Sign In</Button>
                 </Link>
-                <Link to="/auth">
+                <Link to="/auth" >
                   <Button className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow">
                     Get Started
                     <ArrowRight className="h-4 w-4" />
@@ -253,7 +253,7 @@ const Index = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-slide-up" style={{ animationDelay: '300ms' }}>
-                <Link to="/auth">
+                <Link to="/auth" >
                   <Button size="lg" className="gap-2 h-12 px-8 shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5">
                     <Play className="h-4 w-4 fill-current" />
                     Start Free Trial
@@ -581,7 +581,7 @@ const Index = () => {
       </section>
 
       {/* Pricing Preview */}
-      <section className="py-24 px-6 relative">
+      <section id="pricing" className="py-24 px-6 relative">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-medium mb-4">
@@ -651,7 +651,7 @@ const Index = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth" className="block">
+                <Link to="/auth"  className="block">
                   <Button 
                     variant={plan.popular ? 'default' : 'outline'} 
                     className={`w-full ${plan.popular ? 'shadow-lg shadow-primary/25' : ''}`}
@@ -712,7 +712,7 @@ const Index = () => {
               <h4 className="font-heading font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-                <li><Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
                 <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</a></li>
               </ul>
             </div>
@@ -730,8 +730,8 @@ const Index = () => {
               © 2026 SignalPulse. All rights reserved.
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             </div>
           </div>
         </div>
