@@ -40,15 +40,24 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     try {
       // Only stringify plain object data, not React components or DOM elements
-      const serializable = {
+      // Create a fresh object with only the serializable properties
+      const serializable: Preferences = {
         currency: preferences.currency,
         dateFormat: preferences.dateFormat,
       };
       localStorage.setItem('signalpulse-preferences', JSON.stringify(serializable));
     } catch (error) {
       console.error('Error saving preferences to localStorage:', error);
+      // If there's an error, try to save with default values as fallback
+      try {
+        localStorage.setItem('signalpulse-preferences', JSON.stringify(defaultPreferences));
+      } catch (fallbackError) {
+        console.error('Error saving default preferences:', fallbackError);
+      }
     }
-  }, [preferences]);
+    // Only depend on the actual values, not the object reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences.currency, preferences.dateFormat]);
 
   const setCurrency = (currency: Currency) => {
     setPreferencesState((prev) => ({ ...prev, currency }));
