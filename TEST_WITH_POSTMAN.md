@@ -159,12 +159,50 @@ curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingv
 
 ## Troubleshooting
 
-1. **"Invalid token" error:**
-   - Get your strategy token from the Strategy Detail page in your app
+### Request Hangs or Never Completes
+
+If your request shows "Sending request..." and never finishes:
+
+1. **Check Environment Variables in Vercel:**
+   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   - Verify these are set:
+     - `SUPABASE_EDGE_FUNCTION_URL` (should be: `https://<project-ref>.supabase.co/functions/v1/tradingview-webhook`)
+     - `VERCEL_PROXY_SECRET` (any secure random string)
+
+2. **Check Supabase Edge Function:**
+   - Go to Supabase Dashboard → Edge Functions
+   - Verify `tradingview-webhook` is deployed
+   - Go to Edge Functions → Secrets
+   - Verify `VERCEL_PROXY_SECRET` is set (must match Vercel value)
+
+3. **Check Vercel Function Logs:**
+   - Go to Vercel Dashboard → Your Project → Functions → `/api/tradingview`
+   - Look for error messages in the logs
+
+4. **Check Supabase Edge Function Logs:**
+   - Go to Supabase Dashboard → Edge Functions → `tradingview-webhook` → Logs
+   - Look for error messages
+
+### Common Error Responses
+
+1. **"Invalid token" error (401):**
+   - Get your strategy token from the Strategy Detail page in your app (`/dashboard/strategies/:id` → Setup tab)
    - Make sure there are no extra spaces or quotes
    - The token must match exactly (case-sensitive)
 
-2. **Still not working?**
-   - Check Vercel function logs for detailed error messages
-   - Verify all environment variables are set correctly
+2. **"Strategy not found" error (404):**
+   - Verify the `strategyId` is a valid UUID
+   - Make sure the strategy exists in your database
+
+3. **"Server configuration error" (500):**
+   - Missing `SUPABASE_EDGE_FUNCTION_URL` or `VERCEL_PROXY_SECRET` in Vercel
+   - Check Vercel environment variables
+
+4. **"Request must come through Vercel proxy" (401):**
+   - `VERCEL_PROXY_SECRET` is set in Supabase but doesn't match Vercel
+   - Or the header is missing (should be added automatically by Vercel)
+
+### Still Not Working?
+
+See `TROUBLESHOOTING_WEBHOOK.md` for detailed debugging steps.
 
