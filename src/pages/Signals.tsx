@@ -14,6 +14,8 @@ import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { SignalsPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { EmptySignals, NoSearchResults } from '@/components/dashboard/EmptyState';
 
 interface Signal {
   id: string;
@@ -216,13 +218,21 @@ const Signals = () => {
     }).length,
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <SignalsPageSkeleton />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">All Signals</h1>
+            <h1 className="text-3xl font-display font-bold">All Signals</h1>
             <p className="text-muted-foreground">View and filter all your trading signals</p>
           </div>
           <Button onClick={exportCSV} className="gap-2">
@@ -357,21 +367,12 @@ const Signals = () => {
             <CardTitle className="text-base">Signals ({filteredSignals.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <Activity className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-                <p className="text-muted-foreground">Loading signals...</p>
-              </div>
-            ) : filteredSignals.length === 0 ? (
-              <div className="text-center py-12">
-                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No signals found</h3>
-                <p className="text-muted-foreground">
-                  {signals.length === 0
-                    ? "You haven't received any signals yet"
-                    : 'Try adjusting your filters'}
-                </p>
-              </div>
+            {filteredSignals.length === 0 ? (
+              filters.search || filters.strategy !== 'all' || filters.symbol || filters.signalType !== 'all' ? (
+                <NoSearchResults query={filters.search || 'your filters'} />
+              ) : (
+                <EmptySignals hasStrategies={strategies.length > 0} />
+              )
             ) : (
               <div className="overflow-x-auto">
                 <Table>

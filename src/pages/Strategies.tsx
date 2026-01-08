@@ -24,6 +24,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate } from '@/lib/formatUtils';
 import { canCreateStrategy, getUserPlan, getPlanLimits } from '@/lib/planUtils';
+import { StrategiesPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { EmptyStrategies } from '@/components/dashboard/EmptyState';
 
 interface Strategy {
   id: string;
@@ -372,13 +374,21 @@ const Strategies = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <StrategiesPageSkeleton />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Strategies</h1>
+            <h1 className="text-3xl font-display font-bold">Strategies</h1>
             <p className="text-muted-foreground">Manage your trading strategies</p>
           </div>
           
@@ -466,22 +476,10 @@ const Strategies = () => {
         </Card>
 
         {/* Strategies List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          </div>
-        ) : strategies.length === 0 ? (
+        {strategies.length === 0 ? (
           <Card>
-            <CardContent className="p-12 text-center">
-              <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No strategies yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first strategy to start receiving TradingView signals
-              </p>
-              <Button onClick={() => setDialogOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Strategy
-              </Button>
+            <CardContent className="p-0">
+              <EmptyStrategies onCreateClick={() => setDialogOpen(true)} />
             </CardContent>
           </Card>
         ) : (

@@ -11,6 +11,8 @@ import { Loader2, Search, Filter, RefreshCw, AlertCircle, CheckCircle2, Clock, X
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate, formatDateTime } from '@/lib/formatUtils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyAlertLogs } from '@/components/dashboard/EmptyState';
 
 interface AlertLog {
   id: string;
@@ -129,7 +131,7 @@ export default function AlertLogs() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Alert Logs</h1>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Alert Logs</h1>
           <p className="text-muted-foreground mt-2">
             View and debug alert delivery attempts to your integrations
           </p>
@@ -212,17 +214,20 @@ export default function AlertLogs() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="space-y-4 py-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex gap-4 items-center">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
               </div>
             ) : logs.length === 0 ? (
-              <div className="text-center py-16">
-                <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No logs found</h3>
-                <p className="text-muted-foreground">
-                  Alert logs will appear here when signals are sent to your integrations
-                </p>
-              </div>
+              <EmptyAlertLogs />
             ) : (
               <>
                 <div className="rounded-md border">

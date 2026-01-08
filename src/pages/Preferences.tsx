@@ -29,7 +29,7 @@ const Preferences = () => {
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold tracking-tight mb-2">Preferences</h1>
+          <h1 className="text-4xl font-display font-bold tracking-tight mb-2">Preferences</h1>
           <p className="text-muted-foreground text-lg">Customize your app experience</p>
         </div>
 

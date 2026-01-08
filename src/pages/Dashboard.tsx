@@ -12,6 +12,8 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { formatPnL } from '@/lib/pnlUtils';
+import { DashboardPageSkeleton, StatsCardSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { EmptyTrades } from '@/components/dashboard/EmptyState';
 
 interface Signal {
   id: string;
@@ -224,13 +226,21 @@ const Dashboard = () => {
     return <Badge variant="outline" className="signal-neutral border px-3 py-1">{upperType}</Badge>;
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <DashboardPageSkeleton />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight mb-2">Dashboard</h1>
+            <h1 className="text-4xl font-display font-bold tracking-tight mb-2">Dashboard</h1>
             <p className="text-muted-foreground text-lg">Track and manage your trading signals</p>
           </div>
           <Link to="/dashboard/strategies">
@@ -353,23 +363,8 @@ const Dashboard = () => {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <p className="text-sm text-muted-foreground">Loading trades...</p>
-                </div>
-              </div>
-            ) : trades.filter(t => t.status === 'open').length === 0 ? (
-              <div className="text-center py-12 px-6">
-                <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
-                  <Activity className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-base font-semibold mb-1">No open trades</h3>
-                <p className="text-sm text-muted-foreground">
-                  Open positions will appear here
-                </p>
-              </div>
+            {trades.filter(t => t.status === 'open').length === 0 ? (
+              <EmptyTrades type="open" />
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -443,23 +438,8 @@ const Dashboard = () => {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <p className="text-sm text-muted-foreground">Loading trades...</p>
-                </div>
-              </div>
-            ) : trades.filter(t => t.status === 'closed').length === 0 ? (
-              <div className="text-center py-12 px-6">
-                <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
-                  <Clock className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-base font-semibold mb-1">No closed trades</h3>
-                <p className="text-sm text-muted-foreground">
-                  Completed trades will appear here
-                </p>
-              </div>
+            {trades.filter(t => t.status === 'closed').length === 0 ? (
+              <EmptyTrades type="closed" />
             ) : (
               <div className="overflow-x-auto">
                 <Table>

@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, MessageSquare, Hash, Send, Phone, Loader2, ExternalLink, Settings, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate, formatDateTime } from '@/lib/formatUtils';
+import { IntegrationsPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
 
 type IntegrationType = 'discord' | 'slack' | 'telegram' | 'whatsapp' | 'email' | 'webhook' | 'pushover' | 'ntfy' | 'zapier' | 'ifttt' | 'microsoft-teams' | 'google-chat';
 type IntegrationStatus = 'active' | 'inactive' | 'error';
@@ -457,11 +458,19 @@ const Integrations = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <IntegrationsPageSkeleton />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Integrations</h1>
           <p className="text-muted-foreground mt-2">
             Connect your trading signals to Discord, Slack, Telegram, WhatsApp, and more
           </p>

@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { CreditCard, Calendar, ArrowUpRight, Loader2 } from 'lucide-react';
+import { CreditCard, Calendar, ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -66,15 +67,42 @@ const Billing = () => {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Billing</h1>
+          <h1 className="text-3xl font-display font-bold">Billing</h1>
           <p className="text-muted-foreground mt-1">
             Manage your subscription and payment methods
           </p>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-5 w-12 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-32 mt-1" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-8 w-28" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-36" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <Skeleton className="h-10 w-full mt-4" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-40 mt-1" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full" />
+              </CardContent>
+            </Card>
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-2">
