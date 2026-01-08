@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Target, Trophy } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
@@ -52,6 +52,8 @@ interface DashboardStats {
   totalPnL: number;
   totalTrades: number;
   winRate: number;
+  openPositions: number;
+  bestTrade: number | null;
 }
 
 const Dashboard = () => {
@@ -67,6 +69,8 @@ const Dashboard = () => {
     totalPnL: 0,
     totalTrades: 0,
     winRate: 0,
+    openPositions: 0,
+    bestTrade: null,
   });
   const [loading, setLoading] = useState(true);
   const [strategiesCount, setStrategiesCount] = useState(0);
@@ -199,6 +203,18 @@ const Dashboard = () => {
       const winningTrades = closedTrades.filter((t) => (t.pnl_percent || 0) > 0).length;
       const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
+      // Count open positions
+      const { count: openCount } = await supabase
+        .from('trades')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'open');
+
+      // Find best trade
+      const bestTrade = closedTrades.length > 0
+        ? Math.max(...closedTrades.map(t => t.pnl_percent || 0))
+        : null;
+
       setStats({
         signalsToday,
         signalsWeek,
@@ -207,6 +223,8 @@ const Dashboard = () => {
         totalPnL,
         totalTrades,
         winRate,
+        openPositions: openCount || 0,
+        bestTrade,
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -341,6 +359,38 @@ const Dashboard = () => {
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
                   <BarChart3 className="h-5 w-5 text-amber-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Open Positions</p>
+                  <p className="text-3xl font-semibold tracking-tight">{stats.openPositions}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Active trades</p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Target className="h-5 w-5 text-blue-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Best Trade</p>
+                  <p className={`text-3xl font-semibold tracking-tight ${stats.bestTrade !== null && stats.bestTrade > 0 ? 'text-buy' : ''}`}>
+                    {stats.bestTrade !== null ? `+${stats.bestTrade.toFixed(2)}%` : '—'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Top performer</p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
                 </div>
               </div>
             </CardContent>
