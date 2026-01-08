@@ -113,10 +113,10 @@ export default function ApiKeys() {
       if (error) throw error;
       setApiKeys(data || []);
     } catch (error: any) {
-      console.error('Error fetching API keys:', error);
+      console.error('Error fetching API keys:', error?.message || error);
       toast({
         title: 'Error',
-        description: 'Failed to load API keys',
+        description: error?.message || 'Failed to load API keys',
         variant: 'destructive',
       });
     } finally {
@@ -281,7 +281,14 @@ export default function ApiKeys() {
   };
 
   const getApiEndpoint = () => {
-    // Use environment variable or construct from window location
+    // Use configured app URL or fallback to current origin
+    // In production: VITE_APP_URL = https://your-domain.com
+    // Locally: falls back to window.location.origin (http://localhost:8080)
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    return `${appUrl}/api/signal`;
+  };
+
+  const getDirectSupabaseEndpoint = () => {
     const baseUrl = import.meta.env.VITE_SUPABASE_URL || '';
     return `${baseUrl}/functions/v1/signal-api`;
   };
@@ -382,14 +389,14 @@ export default function ApiKeys() {
                 <div className="space-y-2">
                   <Label>Link to Strategy (Optional)</Label>
                   <Select
-                    value={formData.strategy_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, strategy_id: value }))}
+                    value={formData.strategy_id || '_auto'}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, strategy_id: value === '_auto' ? '' : value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Auto (uses first active strategy)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Auto (first active strategy)</SelectItem>
+                      <SelectItem value="_auto">Auto (first active strategy)</SelectItem>
                       {strategies.map((s) => (
                         <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
@@ -525,10 +532,19 @@ export default function ApiKeys() {
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Code className="h-5 w-5 text-primary" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">API Endpoint</p>
-                <code className="text-sm text-muted-foreground break-all">{getApiEndpoint()}</code>
-                <p className="text-sm text-muted-foreground mt-2">
+              <div className="flex-1 min-w-0 space-y-3">
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    API Endpoint
+                    <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                  </p>
+                  <code className="text-sm text-primary break-all">{getApiEndpoint()}</code>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p className="mb-1">Alternative (direct Supabase):</p>
+                  <code className="text-xs break-all opacity-70">{getDirectSupabaseEndpoint()}</code>
+                </div>
+                <p className="text-sm text-muted-foreground">
                   Send a POST request with your API key in the <code className="text-primary">x-api-key</code> header
                 </p>
               </div>
