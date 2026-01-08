@@ -281,7 +281,27 @@ const Strategies = () => {
         // Fallback: try the old method if the new function doesn't exist
         console.warn('Trying fallback method...');
         
-        // Try to delete signals first
+        // Delete alert logs first
+        const { error: alertLogsError } = await supabase
+          .from('alert_logs')
+          .delete()
+          .eq('strategy_id', strategyToDelete.id);
+
+        if (alertLogsError && alertLogsError.code !== 'PGRST116') {
+          console.warn('Alert logs deletion warning (may not exist):', alertLogsError);
+        }
+
+        // Delete trades (open and closed)
+        const { error: tradesError } = await supabase
+          .from('trades')
+          .delete()
+          .eq('strategy_id', strategyToDelete.id);
+
+        if (tradesError && tradesError.code !== 'PGRST116') {
+          console.warn('Trades deletion warning (may not exist):', tradesError);
+        }
+
+        // Delete signals
         const { error: signalsError } = await supabase
           .from('signals')
           .delete()
@@ -289,6 +309,26 @@ const Strategies = () => {
 
         if (signalsError && signalsError.code !== 'PGRST116') {
           console.warn('Signals deletion warning (may not exist):', signalsError);
+        }
+
+        // Delete strategy stats
+        const { error: strategyStatsError } = await supabase
+          .from('strategy_stats')
+          .delete()
+          .eq('strategy_id', strategyToDelete.id);
+
+        if (strategyStatsError && strategyStatsError.code !== 'PGRST116') {
+          console.warn('Strategy stats deletion warning (may not exist):', strategyStatsError);
+        }
+
+        // Delete daily trade stats
+        const { error: tradeStatsDailyError } = await supabase
+          .from('trade_stats_daily')
+          .delete()
+          .eq('strategy_id', strategyToDelete.id);
+
+        if (tradeStatsDailyError && tradeStatsDailyError.code !== 'PGRST116') {
+          console.warn('Daily trade stats deletion warning (may not exist):', tradeStatsDailyError);
         }
 
         // Then try to update strategy (without user_id filter to let RLS handle it)
@@ -577,14 +617,33 @@ const Strategies = () => {
             <DialogHeader>
               <DialogTitle>Delete Strategy</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this strategy? This will also delete all associated signals.
-                This action cannot be undone.
+                Are you sure you want to delete this strategy?
               </DialogDescription>
             </DialogHeader>
             {strategyToDelete && (
-              <div className="py-4">
-                <p className="text-sm font-medium mb-1">Strategy:</p>
-                <p className="text-sm text-muted-foreground">{strategyToDelete.name}</p>
+              <div className="py-4 space-y-4">
+                <div>
+                  <p className="text-sm font-medium mb-1">Strategy:</p>
+                  <p className="text-sm text-muted-foreground">{strategyToDelete.name}</p>
+                </div>
+                
+                {/* Warning Alert */}
+                <Alert variant="destructive" className="border-destructive/50">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle className="text-base font-semibold">Warning: This action cannot be undone</AlertTitle>
+                  <AlertDescription className="mt-2">
+                    <p className="text-sm font-medium mb-2">Deleting this strategy will permanently delete all related entries:</p>
+                    <ul className="text-sm list-disc list-inside space-y-1 ml-2">
+                      <li>All signals associated with this strategy</li>
+                      <li>All trades (both open and closed)</li>
+                      <li>All alert logs</li>
+                      <li>All strategy statistics and daily trade stats</li>
+                    </ul>
+                    <p className="text-sm font-semibold mt-3 text-destructive">
+                      This action is permanent and cannot be reversed.
+                    </p>
+                  </AlertDescription>
+                </Alert>
               </div>
             )}
             <div className="flex justify-end gap-3 mt-4">

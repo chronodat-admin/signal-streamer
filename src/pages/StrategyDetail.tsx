@@ -53,9 +53,17 @@ const StrategyDetail = () => {
   const [tradingviewSecret, setTradingviewSecret] = useState<string | null>(null);
   const [secretLoading, setSecretLoading] = useState(true);
 
-  // Get webhook URL - use Vercel proxy if available, otherwise fallback to Supabase
-  const vercelUrl = import.meta.env.VITE_VERCEL_URL || window.location.origin;
-  const webhookUrl = `${vercelUrl}/api/tradingview`;
+  // Get base URL with protocol - use Vercel URL if available, otherwise fallback to current origin
+  const getBaseUrl = () => {
+    const vercelUrl = import.meta.env.VITE_VERCEL_URL || window.location.origin;
+    // Ensure URL has protocol
+    if (!vercelUrl.startsWith('http://') && !vercelUrl.startsWith('https://')) {
+      return `https://${vercelUrl}`;
+    }
+    return vercelUrl;
+  };
+  const baseUrl = getBaseUrl();
+  const webhookUrl = `${baseUrl}/api/tradingview`;
 
   useEffect(() => {
     if (user && id) {
@@ -69,7 +77,7 @@ const StrategyDetail = () => {
   const fetchTradingviewSecret = async () => {
     try {
       setSecretLoading(true);
-      const response = await fetch(`${vercelUrl}/api/tradingview-secret`);
+      const response = await fetch(`${baseUrl}/api/tradingview-secret`);
       const data = await response.json();
       if (data.secret) {
         setTradingviewSecret(data.secret);
