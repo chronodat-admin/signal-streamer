@@ -231,6 +231,19 @@ const Strategies = () => {
   };
 
   const togglePublic = async (strategy: Strategy) => {
+    // Check if user can use public pages (only when trying to make public)
+    if (!strategy.is_public) {
+      const limits = getPlanLimits(userPlan);
+      if (!limits.publicPages) {
+        toast({
+          title: 'Upgrade Required',
+          description: 'Public pages are available on Pro and Elite plans. Upgrade to share your strategy publicly.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     try {
       const { error } = await supabase
         .from('strategies')

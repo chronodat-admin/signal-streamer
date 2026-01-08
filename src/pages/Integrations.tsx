@@ -15,6 +15,7 @@ import { Plus, Trash2, MessageSquare, Hash, Send, Phone, Loader2, ExternalLink, 
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate, formatDateTime } from '@/lib/formatUtils';
 import { IntegrationsPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { getUserPlan, getPlanLimits } from '@/lib/planUtils';
 
 type IntegrationType = 'discord' | 'slack' | 'telegram' | 'whatsapp' | 'email' | 'webhook' | 'pushover' | 'ntfy' | 'zapier' | 'ifttt' | 'microsoft-teams' | 'google-chat';
 type IntegrationStatus = 'active' | 'inactive' | 'error';
@@ -197,6 +198,7 @@ const Integrations = () => {
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationOption | null>(null);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
   const [formData, setFormData] = useState({
     integration_type: 'discord' as IntegrationType,
     name: '',
@@ -227,8 +229,15 @@ const Integrations = () => {
     if (user) {
       fetchIntegrations();
       fetchStrategies();
+      fetchUserPlan();
     }
   }, [user]);
+
+  const fetchUserPlan = async () => {
+    if (!user) return;
+    const plan = await getUserPlan(user.id);
+    setUserPlan(plan);
+  };
 
   const fetchIntegrations = async () => {
     if (!user) return;
@@ -276,6 +285,19 @@ const Integrations = () => {
   };
 
   const handleCreateIntegration = (integration: IntegrationOption) => {
+    // Check plan limits
+    const limits = getPlanLimits(userPlan);
+    if (limits.integrations !== -1 && integrations.length >= limits.integrations) {
+      toast({
+        title: 'Upgrade Required',
+        description: limits.integrations === 0 
+          ? 'Integrations are available on Pro and Elite plans. Upgrade to connect Discord, Slack, and more.'
+          : `Your ${userPlan} plan allows ${limits.integrations} integrations. Upgrade to Elite for unlimited integrations.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSelectedIntegration(integration);
     setEditingIntegration(null);
     setFormData({

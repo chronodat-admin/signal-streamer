@@ -20,6 +20,7 @@ import {
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { formatDateTime } from '@/lib/formatUtils';
 import { usePreferences } from '@/hooks/usePreferences';
+import { getUserPlan, getPlanLimits } from '@/lib/planUtils';
 
 interface ApiKey {
   id: string;
@@ -84,6 +85,7 @@ export default function ApiKeys() {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -100,8 +102,15 @@ export default function ApiKeys() {
     if (user) {
       fetchApiKeys();
       fetchStrategies();
+      fetchUserPlan();
     }
   }, [user]);
+
+  const fetchUserPlan = async () => {
+    if (!user) return;
+    const plan = await getUserPlan(user.id);
+    setUserPlan(plan);
+  };
 
   const fetchApiKeys = async () => {
     try {
@@ -138,6 +147,19 @@ export default function ApiKeys() {
   const handleCreate = async () => {
     if (!formData.name.trim()) {
       toast({ title: 'Error', description: 'Name is required', variant: 'destructive' });
+      return;
+    }
+
+    // Check plan limits (API keys use same limit as integrations)
+    const limits = getPlanLimits(userPlan);
+    if (limits.integrations !== -1 && apiKeys.length >= limits.integrations) {
+      toast({
+        title: 'Upgrade Required',
+        description: limits.integrations === 0 
+          ? 'API Keys are available on Pro and Elite plans. Upgrade to create custom API integrations.'
+          : `Your ${userPlan} plan allows ${limits.integrations} API keys. Upgrade to Elite for unlimited API keys.`,
+        variant: 'destructive',
+      });
       return;
     }
 
