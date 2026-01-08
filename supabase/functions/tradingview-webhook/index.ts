@@ -183,7 +183,7 @@ serve(async (req) => {
     }
 
     // Get the inserted signal ID to trigger alerts
-    const { data: insertedSignal } = await supabase
+    const { data: insertedSignal, error: signalFetchError } = await supabase
       .from("signals")
       .select("id")
       .eq("strategy_id", strategyId)
@@ -193,9 +193,17 @@ serve(async (req) => {
       .limit(1)
       .single();
 
+    if (signalFetchError) {
+      console.error("Error fetching inserted signal:", signalFetchError);
+    }
+
     // Trigger alerts asynchronously (don't wait for response)
-    if (insertedSignal) {
-      fetch(`${supabaseUrl}/functions/v1/send-alerts`, {
+    if (insertedSignal && insertedSignal.id) {
+      const alertUrl = `${supabaseUrl}/functions/v1/send-alerts`;
+      console.log(`Triggering alerts for signal ${insertedSignal.id}, strategy ${strategyId}`);
+      console.log(`Calling send-alerts at: ${alertUrl}`);
+      
+      fetch(alertUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -205,10 +213,23 @@ serve(async (req) => {
           signal_id: insertedSignal.id,
           strategy_id: strategyId,
         }),
-      }).catch((error) => {
+      })
+      .then(async (response) => {
+        const text = await response.text();
+        console.log(`send-alerts response status: ${response.status}`);
+        if (!response.ok) {
+          console.error(`send-alerts function returned error: ${response.status} ${response.statusText} - ${text}`);
+        } else {
+          console.log(`send-alerts function called successfully: ${text.substring(0, 200)}`);
+        }
+      })
+      .catch((error) => {
         console.error("Error triggering alerts:", error);
+        console.error("Error details:", error.message, error.stack);
         // Don't fail the webhook if alerts fail
       });
+    } else {
+      console.warn("No signal ID found, cannot trigger alerts. insertedSignal:", insertedSignal);
     }
 
     console.log("Signal stored successfully for strategy:", strategy.name);

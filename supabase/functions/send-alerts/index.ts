@@ -345,9 +345,11 @@ serve(async (req) => {
     // Log if no integrations found
     if (filteredIntegrations.length === 0) {
       console.log(`No active integrations found for strategy ${strategy_id}, user ${userId}`);
+      console.log(`Strategy integrations: ${strategyIntegrations?.length || 0}, User integrations: ${userIntegrations?.length || 0}`);
+      
       // Create a log entry even when no integrations are found
       try {
-        await supabase
+        const { error: logError } = await supabase
           .from("alert_logs")
           .insert({
             user_id: userId,
@@ -359,8 +361,14 @@ serve(async (req) => {
             message: `No active integrations found for strategy ${strategy_id}`,
             error_message: "No integrations configured or enabled",
           });
+        
+        if (logError) {
+          console.error("Error creating log entry:", logError);
+        } else {
+          console.log("Created log entry for no integrations found");
+        }
       } catch (logError) {
-        console.error("Error creating log entry:", logError);
+        console.error("Exception creating log entry:", logError);
       }
       
       return new Response(JSON.stringify({ 
