@@ -411,6 +411,133 @@ async function sendEmailAlert(
   }
 }
 
+// Custom Webhook - Send signal to any external API with customizable payload
+async function sendCustomWebhook(
+  config: { 
+    webhook_url: string;
+    method?: string;  // GET, POST, PUT (default: POST)
+    headers?: Record<string, string>;  // Custom headers (e.g., Authorization)
+    payload_template?: string;  // JSON template with {{placeholders}}
+    content_type?: string;  // default: application/json
+  },
+  payload: AlertPayload,
+  supabase: any,
+  logData: { userId: string; strategyId: string; signalId: string; integrationId: string }
+): Promise<{ success: boolean; error?: string; responseStatus?: number; responseBody?: string }> {
+  
+  // Log the attempt
+  let logEntry: any = null;
+  try {
+    const { data, error } = await supabase
+      .from("alert_logs")
+      .insert({
+        user_id: logData.userId,
+        strategy_id: logData.strategyId,
+        signal_id: logData.signalId,
+        integration_id: logData.integrationId,
+        integration_type: "webhook",
+        status: "pending",
+        message: `Sending webhook for ${payload.signal_type} ${payload.symbol}`,
+        webhook_url: config.webhook_url.substring(0, 100),
+      })
+      .select()
+      .single();
+    
+    if (!error) logEntry = data;
+  } catch (logError) {
+    console.error("Exception creating webhook log entry:", logError);
+  }
+
+  try {
+    // Build request body - use template or default format
+    let requestBody: string;
+    
+    if (config.payload_template) {
+      // Replace placeholders in template: {{signal}}, {{symbol}}, {{price}}, etc.
+      requestBody = config.payload_template
+        .replace(/\{\{signal\}\}/g, payload.signal_type)
+        .replace(/\{\{signal_type\}\}/g, payload.signal_type)
+        .replace(/\{\{symbol\}\}/g, payload.symbol)
+        .replace(/\{\{ticker\}\}/g, payload.symbol)
+        .replace(/\{\{price\}\}/g, String(payload.price))
+        .replace(/\{\{time\}\}/g, payload.signal_time)
+        .replace(/\{\{timestamp\}\}/g, payload.signal_time)
+        .replace(/\{\{strategy\}\}/g, payload.strategy_name)
+        .replace(/\{\{strategy_name\}\}/g, payload.strategy_name)
+        .replace(/\{\{strategy_id\}\}/g, payload.strategy_id)
+        .replace(/\{\{action\}\}/g, payload.signal_type.toUpperCase() === 'BUY' || payload.signal_type.toUpperCase() === 'LONG' ? 'buy' : 'sell');
+    } else {
+      // Default JSON payload
+      requestBody = JSON.stringify({
+        signal: payload.signal_type,
+        symbol: payload.symbol,
+        price: payload.price,
+        time: payload.signal_time,
+        strategy: payload.strategy_name,
+        strategy_id: payload.strategy_id,
+        action: payload.signal_type.toUpperCase() === 'BUY' || payload.signal_type.toUpperCase() === 'LONG' ? 'buy' : 'sell',
+      });
+    }
+
+    // Build headers
+    const headers: Record<string, string> = {
+      'Content-Type': config.content_type || 'application/json',
+      ...config.headers,
+    };
+
+    console.log(`Sending custom webhook to: ${config.webhook_url}`);
+    console.log(`Method: ${config.method || 'POST'}, Body: ${requestBody.substring(0, 200)}`);
+
+    const response = await fetch(config.webhook_url, {
+      method: config.method || 'POST',
+      headers,
+      body: requestBody,
+    });
+
+    const responseBody = await response.text();
+    const success = response.ok;
+
+    console.log(`Custom webhook response: ${response.status} - ${responseBody.substring(0, 200)}`);
+
+    // Update log entry
+    if (logEntry?.id) {
+      await supabase
+        .from("alert_logs")
+        .update({
+          status: success ? "success" : "error",
+          message: success ? "Webhook sent successfully" : `Webhook failed: ${response.status}`,
+          response_status: response.status,
+          response_body: responseBody.substring(0, 1000),
+          error_message: success ? null : `HTTP ${response.status}: ${responseBody.substring(0, 500)}`,
+        })
+        .eq("id", logEntry.id);
+    }
+
+    return { 
+      success, 
+      responseStatus: response.status,
+      responseBody: responseBody.substring(0, 500),
+      error: success ? undefined : `HTTP ${response.status}`
+    };
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Custom webhook error:", errorMessage);
+    
+    if (logEntry?.id) {
+      await supabase
+        .from("alert_logs")
+        .update({
+          status: "error",
+          error_message: errorMessage.substring(0, 500),
+        })
+        .eq("id", logEntry.id);
+    }
+    
+    return { success: false, error: errorMessage };
+  }
+}
+
 // WhatsApp (using Twilio API or similar)
 async function sendWhatsAppAlert(config: { api_key: string; phone_number: string; from_number?: string }, payload: AlertPayload): Promise<boolean> {
   // Using Twilio API format - adjust based on your WhatsApp provider
@@ -683,6 +810,33 @@ serve(async (req) => {
               success = emailResult.success;
             } else {
               console.error(`Email integration ${integration.id} has no recipient email or API key configured`);
+              success = false;
+            }
+            break;
+          case "webhook":
+            const webhookConfig = integration.config as {
+              webhook_url?: string;
+              method?: string;
+              headers?: Record<string, string>;
+              payload_template?: string;
+              content_type?: string;
+            };
+            const customWebhookUrl = webhookUrl || webhookConfig.webhook_url;
+            if (customWebhookUrl) {
+              const webhookResult = await sendCustomWebhook(
+                { ...webhookConfig, webhook_url: customWebhookUrl },
+                payload,
+                supabase,
+                {
+                  userId: userId,
+                  strategyId: strategy_id,
+                  signalId: signal_id,
+                  integrationId: integration.id
+                }
+              );
+              success = webhookResult.success;
+            } else {
+              console.error(`Webhook integration ${integration.id} has no webhook_url configured`);
               success = false;
             }
             break;

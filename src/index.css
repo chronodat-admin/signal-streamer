@@ -403,6 +403,68 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Custom styled scrollbar */
+  .scrollbar-styled {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .scrollbar-styled::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-styled::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+    margin: 4px;
+  }
+
+  .scrollbar-styled::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .scrollbar-styled::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+    background-clip: content-box;
+  }
+
+  /* Minimal scrollbar for dialogs */
+  .scrollbar-minimal {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+  }
+
+  .scrollbar-minimal::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-minimal::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.2);
+    border-radius: 3px;
+  }
+
+  .scrollbar-minimal::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.4),
+      hsl(var(--primary) / 0.2)
+    );
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+
+  .scrollbar-minimal::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.6),
+      hsl(var(--primary) / 0.4)
+    );
+  }
   
   /* Landing page specific styles */
   .font-display {

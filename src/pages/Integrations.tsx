@@ -212,6 +212,10 @@ const Integrations = () => {
     to_email: '',
     from_email: '',
     api_service: 'resend', // 'resend', 'sendgrid', or webhook
+    // Custom webhook specific
+    http_method: 'POST',
+    auth_header: '',
+    payload_template: '',
   });
 
   useEffect(() => {
@@ -283,6 +287,9 @@ const Integrations = () => {
       to_email: '',
       from_email: '',
       api_service: 'resend',
+      http_method: 'POST',
+      auth_header: '',
+      payload_template: '',
     });
     setDialogOpen(true);
   };
@@ -305,6 +312,14 @@ const Integrations = () => {
         config.from_email = formData.from_email;
         config.api_key = formData.api_key;
         config.api_service = formData.api_service;
+      } else if (formData.integration_type === 'webhook') {
+        config.method = formData.http_method || 'POST';
+        if (formData.auth_header) {
+          config.headers = { 'Authorization': formData.auth_header };
+        }
+        if (formData.payload_template) {
+          config.payload_template = formData.payload_template;
+        }
       }
 
       const payload: any = {
@@ -417,6 +432,10 @@ const Integrations = () => {
       to_email: integration.config?.to_email || '',
       from_email: integration.config?.from_email || '',
       api_service: (integration.config?.api_service || 'resend') as 'resend' | 'sendgrid' | 'webhook',
+      // Custom webhook fields
+      http_method: integration.config?.method || 'POST',
+      auth_header: integration.config?.headers?.Authorization || '',
+      payload_template: integration.config?.payload_template || '',
     });
     setDialogOpen(true);
   };
@@ -438,6 +457,9 @@ const Integrations = () => {
       to_email: '',
       from_email: '',
       api_service: 'resend',
+      http_method: 'POST',
+      auth_header: '',
+      payload_template: '',
     });
   };
 
@@ -662,16 +684,17 @@ const Integrations = () => {
 
         {/* Configuration Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
+          <DialogContent className="max-w-2xl max-h-[85vh] p-0 flex flex-col overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shrink-0">
+              <DialogTitle className="font-display">
                 {editingIntegration ? 'Edit Integration' : `Configure ${selectedIntegration?.name || 'Integration'}`}
               </DialogTitle>
               <DialogDescription>
                 {selectedIntegration?.description || 'Configure your integration settings'}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scrollbar-minimal">
               <div>
                 <Label htmlFor="name">Name</Label>
                 <Input
@@ -726,6 +749,58 @@ const Integrations = () => {
                     </p>
                   )}
                 </div>
+              )}
+
+              {/* Custom Webhook Advanced Options */}
+              {formData.integration_type === 'webhook' && (
+                <>
+                  <div>
+                    <Label htmlFor="http_method">HTTP Method</Label>
+                    <Select
+                      value={formData.http_method || 'POST'}
+                      onValueChange={(value) => setFormData({ ...formData, http_method: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="POST" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="PUT">PUT</SelectItem>
+                        <SelectItem value="PATCH">PATCH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="auth_header">Authorization Header (Optional)</Label>
+                    <Input
+                      id="auth_header"
+                      value={formData.auth_header || ''}
+                      onChange={(e) => setFormData({ ...formData, auth_header: e.target.value })}
+                      placeholder="Bearer your-api-key or Basic base64..."
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Add authentication header value (e.g., "Bearer your-token")
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="payload_template">Payload Template (Optional)</Label>
+                    <textarea
+                      id="payload_template"
+                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                      value={formData.payload_template || ''}
+                      onChange={(e) => setFormData({ ...formData, payload_template: e.target.value })}
+                      placeholder={`{
+  "action": "{{signal}}",
+  "ticker": "{{symbol}}",
+  "price": {{price}},
+  "time": "{{time}}"
+}`}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Use placeholders: <code className="text-primary">{'{{signal}}'}</code>, <code className="text-primary">{'{{symbol}}'}</code>, <code className="text-primary">{'{{price}}'}</code>, <code className="text-primary">{'{{time}}'}</code>, <code className="text-primary">{'{{strategy}}'}</code>, <code className="text-primary">{'{{action}}'}</code>
+                    </p>
+                  </div>
+                </>
               )}
 
               {formData.integration_type === 'telegram' && (
@@ -861,21 +936,25 @@ const Integrations = () => {
                 </>
               )}
 
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={formData.enabled}
-                    onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
-                  />
-                  <Label>Enabled</Label>
-                </div>
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingIntegration ? 'Update' : 'Create'} Integration
-                  </Button>
+              </div>
+              {/* Sticky Footer */}
+              <div className="px-6 py-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={formData.enabled}
+                      onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
+                    />
+                    <Label>Enabled</Label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      {editingIntegration ? 'Update' : 'Create'} Integration
+                    </Button>
+                  </div>
                 </div>
               </div>
             </form>
