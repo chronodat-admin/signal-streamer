@@ -93,12 +93,58 @@ Content-Type: application/json
 ```
 **Fix:** Make sure you included the `token` field in your JSON body.
 
-## Quick Test Command
+## Quick Test Command (cURL)
 
-If you prefer command line, use this (replace `YOUR_SECRET` with actual value):
+### For Windows cmd.exe (Command Prompt)
+
+On Windows Command Prompt, you need to use double quotes and escape inner quotes:
+
+```cmd
+curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview -H "Content-Type: application/json" -d "{\"token\": \"86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b\", \"strategyId\": \"6fa876bc-cd7e-4d88-8780-00bbd979fb16\", \"signal\": \"BUY\", \"symbol\": \"AAPL\", \"price\": 192.34, \"time\": \"2026-01-08T20:48:30.608Z\", \"interval\": \"5\"}"
+```
+
+**Or use a JSON file** (recommended for Windows cmd.exe):
+
+1. Create a file `test-payload.json`:
+```json
+{
+  "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
+  "strategyId": "6fa876bc-cd7e-4d88-8780-00bbd979fb16",
+  "signal": "BUY",
+  "symbol": "AAPL",
+  "price": 192.34,
+  "time": "2026-01-08T20:48:30.608Z",
+  "interval": "5"
+}
+```
+
+2. Then run:
+```cmd
+curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
+```
+
+### For PowerShell (Windows)
+
+PowerShell supports single quotes, so you can use:
+
+```powershell
+curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview `
+  -H "Content-Type: application/json" `
+  -d '{
+    "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
+    "strategyId": "6fa876bc-cd7e-4d88-8780-00bbd979fb16",
+    "signal": "BUY",
+    "symbol": "AAPL",
+    "price": 192.34,
+    "time": "2026-01-08T20:48:30.608Z",
+    "interval": "5"
+  }'
+```
+
+### For Bash/Git Bash/Linux/Mac
 
 ```bash
-curl -X POST https://signal-streamer-btgso6013-chronodat.vercel.app/api/tradingview \
+curl -X POST https://signal-streamer-q4xlfsoyz-chronodat.vercel.app/api/tradingview \
   -H "Content-Type: application/json" \
   -d '{
     "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
@@ -106,7 +152,7 @@ curl -X POST https://signal-streamer-btgso6013-chronodat.vercel.app/api/tradingv
     "signal": "BUY",
     "symbol": "AAPL",
     "price": 192.34,
-    "time": "2026-01-08T03:00:22.156Z",
+    "time": "2026-01-08T20:48:30.608Z",
     "interval": "5"
   }'
 ```
