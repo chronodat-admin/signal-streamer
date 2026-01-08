@@ -50,6 +50,8 @@ const StrategyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [pnlData, setPnlData] = useState<ReturnType<typeof calculateSignalPnL> | null>(null);
+  const [tradingviewSecret, setTradingviewSecret] = useState<string | null>(null);
+  const [secretLoading, setSecretLoading] = useState(true);
 
   // Get webhook URL - use Vercel proxy if available, otherwise fallback to Supabase
   const vercelUrl = import.meta.env.VITE_VERCEL_URL || window.location.origin;
@@ -60,8 +62,27 @@ const StrategyDetail = () => {
       fetchStrategy();
       fetchSignals();
       fetchAllSignals();
+      fetchTradingviewSecret();
     }
   }, [user, id]);
+
+  const fetchTradingviewSecret = async () => {
+    try {
+      setSecretLoading(true);
+      const response = await fetch(`${vercelUrl}/api/tradingview-secret`);
+      const data = await response.json();
+      if (data.secret) {
+        setTradingviewSecret(data.secret);
+      } else {
+        setTradingviewSecret(null);
+      }
+    } catch (error) {
+      console.error('Error fetching TradingView secret:', error);
+      setTradingviewSecret(null);
+    } finally {
+      setSecretLoading(false);
+    }
+  };
 
   const fetchStrategy = async () => {
     if (!id) return;
@@ -140,10 +161,10 @@ const StrategyDetail = () => {
     }
   };
 
-  const jsonTemplate = strategy
+  // Create JSON template without secret for display, but with secret for copying
+  const jsonTemplateForDisplay = strategy
     ? JSON.stringify(
         {
-          secret: 'YOUR_TRADINGVIEW_SECRET',
           token: strategy.secret_token,
           strategyId: strategy.id,
           signal: '{{strategy.order.action}}',
@@ -157,11 +178,42 @@ const StrategyDetail = () => {
       )
     : '';
 
-  const curlCommand = strategy
+  const jsonTemplateForCopy = strategy
+    ? JSON.stringify(
+        {
+          secret: tradingviewSecret || 'YOUR_TRADINGVIEW_SECRET',
+          token: strategy.secret_token,
+          strategyId: strategy.id,
+          signal: '{{strategy.order.action}}',
+          symbol: '{{ticker}}',
+          price: '{{close}}',
+          time: '{{timenow}}',
+          interval: '{{interval}}',
+        },
+        null,
+        2
+      )
+    : '';
+
+  const curlCommandForDisplay = strategy
     ? `curl -X POST ${webhookUrl} \\
   -H "Content-Type: application/json" \\
   -d '{
-    "secret": "YOUR_TRADINGVIEW_SECRET",
+    "token": "${strategy.secret_token}",
+    "strategyId": "${strategy.id}",
+    "signal": "BUY",
+    "symbol": "AAPL",
+    "price": 192.34,
+    "time": "${new Date().toISOString()}",
+    "interval": "5"
+  }'`
+    : '';
+
+  const curlCommandForCopy = strategy
+    ? `curl -X POST ${webhookUrl} \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "secret": "${tradingviewSecret || 'YOUR_TRADINGVIEW_SECRET'}",
     "token": "${strategy.secret_token}",
     "strategyId": "${strategy.id}",
     "signal": "BUY",
@@ -498,13 +550,13 @@ const StrategyDetail = () => {
               <CardContent>
                 <div className="relative">
                   <pre className="bg-muted/50 px-4 py-3 rounded-xl font-mono text-sm overflow-x-auto">
-                    {jsonTemplate}
+                    {jsonTemplateForDisplay}
                   </pre>
                   <Button
                     variant="outline"
                     size="icon"
                     className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(jsonTemplate, 'JSON Template')}
+                    onClick={() => copyToClipboard(jsonTemplateForCopy, 'JSON Template')}
                   >
                     {copied === 'JSON Template' ? (
                       <Check className="h-4 w-4 text-emerald-500" />
@@ -514,10 +566,21 @@ const StrategyDetail = () => {
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-3 space-y-1">
-                  <div>
-                    <strong>Important:</strong> Replace <code className="bg-muted px-1.5 py-0.5 rounded">YOUR_TRADINGVIEW_SECRET</code> with 
-                    {' '}your actual secret (must match <code className="bg-muted px-1.5 py-0.5 rounded">TRADINGVIEW_SECRET</code> in Vercel).
-                  </div>
+                  {secretLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading TradingView secret...</span>
+                    </div>
+                  ) : tradingviewSecret ? (
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                      <Check className="h-4 w-4" />
+                      <span>The secret field is hidden for security but will be automatically included when you copy the template.</span>
+                    </div>
+                  ) : (
+                    <div className="text-amber-600 dark:text-amber-400">
+                      <strong>Warning:</strong> TradingView secret is not configured. Please set <code className="bg-muted px-1.5 py-0.5 rounded">TRADINGVIEW_SECRET</code> in Vercel environment variables. The secret field will be included when you copy the template.
+                    </div>
+                  )}
                   <div>
                     The <code className="bg-muted px-1.5 py-0.5 rounded">signal</code> field uses 
                     {' '}<code className="bg-muted px-1.5 py-0.5 rounded">{'{{strategy.order.action}}'}</code> which will automatically 
@@ -563,13 +626,13 @@ const StrategyDetail = () => {
               <CardContent>
                 <div className="relative">
                   <pre className="bg-muted/50 px-4 py-3 rounded-xl font-mono text-xs overflow-x-auto whitespace-pre-wrap">
-                    {curlCommand}
+                    {curlCommandForDisplay}
                   </pre>
                   <Button
                     variant="outline"
                     size="icon"
                     className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(curlCommand, 'cURL Command')}
+                    onClick={() => copyToClipboard(curlCommandForCopy, 'cURL Command')}
                   >
                     {copied === 'cURL Command' ? (
                       <Check className="h-4 w-4 text-emerald-500" />

@@ -54,6 +54,33 @@ Add this in your Supabase project (Settings → Edge Functions → Secrets):
 
 ## TradingView Alert Configuration
 
+### Getting Your TradingView Secret
+
+The `TRADINGVIEW_SECRET` value is required in your TradingView alert JSON. You can get it in several ways:
+
+1. **From the UI (Recommended)**
+   - Go to any Strategy Detail page (`/dashboard/strategies/:id`)
+   - Click on the "Setup" tab
+   - The secret value will be automatically populated in the JSON template
+   - Simply copy the JSON template with the secret already filled in
+
+2. **Via API Endpoint**
+   ```bash
+   curl https://<your-vercel-domain>/api/tradingview-secret
+   ```
+   Returns:
+   ```json
+   {
+     "secret": "your-secret-value",
+     "message": "TradingView secret retrieved successfully"
+   }
+   ```
+
+3. **From Vercel Dashboard**
+   - Go to your Vercel project settings
+   - Navigate to Settings → Environment Variables
+   - Find `TRADINGVIEW_SECRET` and copy its value
+
 ### Webhook URL
 
 Use your Vercel domain:
@@ -80,7 +107,7 @@ Your TradingView alert must include the `secret` field:
 ```
 
 **Important Fields:**
-- `secret`: Must match `TRADINGVIEW_SECRET` in Vercel
+- `secret`: Must match `TRADINGVIEW_SECRET` in Vercel. This value is automatically populated in the UI, or you can fetch it from `/api/tradingview-secret`
 - `token`: Your strategy's secret token (from the strategy detail page)
 - `strategyId`: Your strategy ID (UUID)
 - `signal`: Trading action (BUY, SELL, LONG, SHORT)
@@ -99,7 +126,10 @@ Your TradingView alert must include the `secret` field:
    - Check "Webhook URL"
    - Enter: `https://<your-vercel-domain>/api/tradingview`
    - In the message field, use the JSON template above
-   - Replace `YOUR_TRADINGVIEW_SECRET` with your actual secret
+   - **Getting the Secret:** The secret value is automatically populated in the JSON template on the Strategy Detail page. If it's not showing, you can:
+     - View it in the Strategy Detail page (`/dashboard/strategies/:id`) - it will be automatically filled in
+     - Or fetch it via API: `GET https://<your-vercel-domain>/api/tradingview-secret`
+     - Or manually replace `YOUR_TRADINGVIEW_SECRET` with the value from your Vercel environment variables
 
 3. **Test the Alert**
    - Save the alert
