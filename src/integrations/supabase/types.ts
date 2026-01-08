@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          id: string
+          user_id: string
+          strategy_id: string | null
+          name: string
+          description: string | null
+          api_key: string
+          payload_mapping: Json
+          default_values: Json
+          rate_limit_per_minute: number
+          is_active: boolean
+          last_used_at: string | null
+          request_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          strategy_id?: string | null
+          name: string
+          description?: string | null
+          api_key: string
+          payload_mapping?: Json
+          default_values?: Json
+          rate_limit_per_minute?: number
+          is_active?: boolean
+          last_used_at?: string | null
+          request_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          strategy_id?: string | null
+          name?: string
+          description?: string | null
+          api_key?: string
+          payload_mapping?: Json
+          default_values?: Json
+          rate_limit_per_minute?: number
+          is_active?: boolean
+          last_used_at?: string | null
+          request_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       audit_events: {
         Row: {
           created_at: string
@@ -657,6 +716,7 @@ export type Database = {
     Functions: {
       check_rate_limit: { Args: { p_strategy_id: string }; Returns: boolean }
       count_user_strategies: { Args: { uid: string }; Returns: number }
+      generate_api_key: { Args: Record<string, never>; Returns: string }
       get_plan_limits: {
         Args: { plan_name: Database["public"]["Enums"]["plan_type"] }
         Returns: Json

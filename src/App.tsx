@@ -18,6 +18,7 @@ import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Preferences from "./pages/Preferences";
 import AlertLogs from "./pages/AlertLogs";
+import ApiKeys from "./pages/ApiKeys";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/dashboard/signals" element={<Signals />} />
               <Route path="/dashboard/integrations" element={<Integrations />} />
               <Route path="/dashboard/logs" element={<AlertLogs />} />
+              <Route path="/dashboard/api-keys" element={<ApiKeys />} />
               <Route path="/s/:slug" element={<PublicStrategy />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacy" element={<Privacy />} />
