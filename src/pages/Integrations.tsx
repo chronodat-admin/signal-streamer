@@ -211,7 +211,12 @@ const Integrations = () => {
     // Email specific
     to_email: '',
     from_email: '',
-    api_service: 'resend', // 'resend', 'sendgrid', or webhook
+    api_service: 'smtp', // 'smtp', 'resend', 'sendgrid', or webhook
+    // SMTP specific
+    smtp_host: '',
+    smtp_port: '587',
+    smtp_user: '',
+    smtp_password: '',
     // Custom webhook specific
     http_method: 'POST',
     auth_header: '',
@@ -286,7 +291,11 @@ const Integrations = () => {
       from_number: '',
       to_email: '',
       from_email: '',
-      api_service: 'resend',
+      api_service: 'smtp',
+      smtp_host: '',
+      smtp_port: '587',
+      smtp_user: '',
+      smtp_password: '',
       http_method: 'POST',
       auth_header: '',
       payload_template: '',
@@ -310,8 +319,15 @@ const Integrations = () => {
       } else if (formData.integration_type === 'email') {
         config.to_email = formData.to_email;
         config.from_email = formData.from_email;
-        config.api_key = formData.api_key;
         config.api_service = formData.api_service;
+        if (formData.api_service === 'smtp') {
+          config.smtp_host = formData.smtp_host;
+          config.smtp_port = parseInt(formData.smtp_port) || 587;
+          config.smtp_user = formData.smtp_user;
+          config.smtp_password = formData.smtp_password;
+        } else {
+          config.api_key = formData.api_key;
+        }
       } else if (formData.integration_type === 'webhook') {
         config.method = formData.http_method || 'POST';
         if (formData.auth_header) {
@@ -431,7 +447,12 @@ const Integrations = () => {
       from_number: integration.config?.from_number || '',
       to_email: integration.config?.to_email || '',
       from_email: integration.config?.from_email || '',
-      api_service: (integration.config?.api_service || 'resend') as 'resend' | 'sendgrid' | 'webhook',
+      api_service: (integration.config?.api_service || 'smtp') as string,
+      // SMTP fields
+      smtp_host: integration.config?.smtp_host || '',
+      smtp_port: String(integration.config?.smtp_port || 587),
+      smtp_user: integration.config?.smtp_user || '',
+      smtp_password: integration.config?.smtp_password || '',
       // Custom webhook fields
       http_method: integration.config?.method || 'POST',
       auth_header: integration.config?.headers?.Authorization || '',
@@ -456,7 +477,11 @@ const Integrations = () => {
       from_number: '',
       to_email: '',
       from_email: '',
-      api_service: 'resend',
+      api_service: 'smtp',
+      smtp_host: '',
+      smtp_port: '587',
+      smtp_user: '',
+      smtp_password: '',
       http_method: 'POST',
       auth_header: '',
       payload_template: '',
@@ -896,7 +921,7 @@ const Integrations = () => {
                       type="email"
                       value={formData.from_email}
                       onChange={(e) => setFormData({ ...formData, from_email: e.target.value })}
-                      placeholder="noreply@signalpulse.com"
+                      placeholder="noreply@yourdomain.com"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Leave empty to use default
@@ -912,27 +937,100 @@ const Integrations = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="resend">Resend (Recommended)</SelectItem>
-                        <SelectItem value="sendgrid">SendGrid</SelectItem>
+                        <SelectItem value="smtp">SMTP Server</SelectItem>
+                        <SelectItem value="resend">Resend API</SelectItem>
+                        <SelectItem value="sendgrid">SendGrid API</SelectItem>
                         <SelectItem value="webhook">Webhook/API</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="api_key_email">API Key or Webhook URL</Label>
-                    <Input
-                      id="api_key_email"
-                      value={formData.api_key}
-                      onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                      placeholder={formData.api_service === 'webhook' ? 'https://api.example.com/send-email' : 're_... or SG....'}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formData.api_service === 'resend' && 'Get your API key from resend.com'}
-                      {formData.api_service === 'sendgrid' && 'Get your API key from sendgrid.com'}
-                      {formData.api_service === 'webhook' && 'Enter your email webhook URL'}
-                    </p>
-                  </div>
+
+                  {/* SMTP Configuration */}
+                  {formData.api_service === 'smtp' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="smtp_host">SMTP Host</Label>
+                          <Input
+                            id="smtp_host"
+                            value={formData.smtp_host || ''}
+                            onChange={(e) => setFormData({ ...formData, smtp_host: e.target.value })}
+                            placeholder="smtp.gmail.com"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="smtp_port">Port</Label>
+                          <Input
+                            id="smtp_port"
+                            type="number"
+                            value={formData.smtp_port || '587'}
+                            onChange={(e) => setFormData({ ...formData, smtp_port: e.target.value })}
+                            placeholder="587"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="smtp_user">SMTP Username</Label>
+                        <Input
+                          id="smtp_user"
+                          value={formData.smtp_user || ''}
+                          onChange={(e) => setFormData({ ...formData, smtp_user: e.target.value })}
+                          placeholder="your-email@gmail.com"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="smtp_password">SMTP Password / App Password</Label>
+                        <Input
+                          id="smtp_password"
+                          type="password"
+                          value={formData.smtp_password || ''}
+                          onChange={(e) => setFormData({ ...formData, smtp_password: e.target.value })}
+                          placeholder="••••••••••••••••"
+                          required
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          For Gmail, use an App Password (not your regular password)
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {/* API Key for Resend/SendGrid/Webhook */}
+                  {(formData.api_service === 'resend' || formData.api_service === 'sendgrid' || formData.api_service === 'webhook') && (
+                    <div>
+                      <Label htmlFor="api_key_email">
+                        {formData.api_service === 'webhook' ? 'Webhook URL' : 'API Key'}
+                      </Label>
+                      <Input
+                        id="api_key_email"
+                        value={formData.api_key}
+                        onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                        placeholder={
+                          formData.api_service === 'webhook' 
+                            ? 'https://api.example.com/send-email' 
+                            : formData.api_service === 'resend'
+                            ? 're_...'
+                            : 'SG....'
+                        }
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formData.api_service === 'resend' && (
+                          <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                            Get your API key from resend.com →
+                          </a>
+                        )}
+                        {formData.api_service === 'sendgrid' && (
+                          <a href="https://app.sendgrid.com/settings/api_keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                            Get your API key from sendgrid.com →
+                          </a>
+                        )}
+                        {formData.api_service === 'webhook' && 'Enter your email webhook URL'}
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
 

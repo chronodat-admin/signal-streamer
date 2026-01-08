@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface NotificationPayload {
-  integration_type: 'discord' | 'slack' | 'telegram' | 'whatsapp';
+  integration_type: 'discord' | 'slack' | 'telegram' | 'whatsapp' | 'email' | 'webhook' | 'pushover' | 'ntfy' | 'zapier' | 'ifttt' | 'microsoft-teams' | 'google-chat';
   strategy_name: string;
   signal_type: string;
   symbol: string;

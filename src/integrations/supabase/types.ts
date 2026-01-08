@@ -772,7 +772,7 @@ export type Database = {
         | "PAYMENT_SUCCEEDED"
         | "PAYMENT_FAILED"
       integration_status: "active" | "paused" | "error" | "deleted"
-      integration_type: "telegram" | "discord" | "email" | "webhook"
+      integration_type: "discord" | "slack" | "telegram" | "whatsapp" | "email" | "webhook" | "pushover" | "ntfy" | "zapier" | "ifttt" | "microsoft-teams" | "google-chat"
       job_status: "pending" | "processing" | "completed" | "failed" | "dead"
       plan_type: "FREE" | "PRO" | "ELITE"
       trade_direction: "long" | "short"
@@ -921,7 +921,7 @@ export const Constants = {
         "PAYMENT_FAILED",
       ],
       integration_status: ["active", "paused", "error", "deleted"],
-      integration_type: ["telegram", "discord", "email", "webhook"],
+      integration_type: ["discord", "slack", "telegram", "whatsapp", "email", "webhook", "pushover", "ntfy", "zapier", "ifttt", "microsoft-teams", "google-chat"],
       job_status: ["pending", "processing", "completed", "failed", "dead"],
       plan_type: ["FREE", "PRO", "ELITE"],
       trade_direction: ["long", "short"],

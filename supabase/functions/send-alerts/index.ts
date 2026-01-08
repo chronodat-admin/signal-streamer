@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -356,9 +357,58 @@ async function sendEmailAlert(
       return { success: true };
     }
 
+    // Try SMTP (if smtp_host is configured)
+    if (config.smtp_host && config.api_service === 'smtp') {
+      console.log("Sending email via SMTP");
+      
+      const client = new SmtpClient();
+      
+      try {
+        // Connect to SMTP server
+        const connectConfig: any = {
+          hostname: config.smtp_host,
+          port: config.smtp_port || 587,
+        };
+
+        // Add authentication if provided
+        if (config.smtp_user && config.smtp_password) {
+          connectConfig.username = config.smtp_user;
+          connectConfig.password = config.smtp_password;
+        }
+
+        await client.connectTLS(connectConfig);
+
+        // Send the email
+        await client.send({
+          from: config.from_email || config.smtp_user || "alerts@signalpulse.com",
+          to: toEmail,
+          subject: subject,
+          content: textBody,
+          html: htmlBody,
+        });
+
+        await client.close();
+
+        if (logEntry?.id) {
+          await supabase
+            .from("alert_logs")
+            .update({
+              status: "success",
+              message: `Email sent successfully via SMTP (${config.smtp_host})`,
+            })
+            .eq("id", logEntry.id);
+        }
+
+        return { success: true };
+      } catch (smtpError) {
+        await client.close().catch(() => {});
+        throw new Error(`SMTP error: ${smtpError instanceof Error ? smtpError.message : String(smtpError)}`);
+      }
+    }
+
     // Fallback: Use webhook URL if provided (for services like Zapier, IFTTT, etc.)
-    if (config.api_key && !config.api_service) {
-      // Assume it's a generic webhook-based email service
+    if (config.api_key && config.api_service === 'webhook') {
+      // Generic webhook-based email service
       console.log("Sending email via webhook");
       const response = await fetch(config.api_key, {
         method: "POST",
@@ -391,7 +441,7 @@ async function sendEmailAlert(
     }
 
     // If no API service configured, return error
-    throw new Error("No email service configured. Please configure Resend, SendGrid, or a webhook URL.");
+    throw new Error("No email service configured. Please configure SMTP, Resend, SendGrid, or a webhook URL.");
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
