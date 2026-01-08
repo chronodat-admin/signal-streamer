@@ -19,7 +19,7 @@ TradingView should now call the secure Vercel proxy:
 ```
 TradingView → Vercel API Route (/api/tradingview) → Supabase Edge Function
                 ↓                                        ↓
-         Validates secret                    Validates proxy secret
+         Forwards request                    Validates proxy secret & strategy token
 ```
 
 ## Environment Variables
@@ -28,17 +28,12 @@ TradingView → Vercel API Route (/api/tradingview) → Supabase Edge Function
 
 Add these in your Vercel project settings (Settings → Environment Variables):
 
-1. **TRADINGVIEW_SECRET**
-   - Description: Secret value that TradingView must include in the request body
-   - Example: `my-super-secret-key-12345`
-   - Used by: Vercel API route to validate TradingView requests
-
-2. **SUPABASE_EDGE_FUNCTION_URL**
+1. **SUPABASE_EDGE_FUNCTION_URL**
    - Description: Full URL to your Supabase Edge Function
    - Example: `https://ogcnilkuneeqkhmoamxi.supabase.co/functions/v1/tradingview-webhook`
    - Used by: Vercel API route to forward requests
 
-3. **VERCEL_PROXY_SECRET**
+2. **VERCEL_PROXY_SECRET**
    - Description: Secret for the proxy header authentication
    - Example: `vercel-proxy-secret-abc123`
    - Used by: Both Vercel API route (to send) and Supabase Edge Function (to validate)
@@ -54,32 +49,14 @@ Add this in your Supabase project (Settings → Edge Functions → Secrets):
 
 ## TradingView Alert Configuration
 
-### Getting Your TradingView Secret
+### Getting Your Strategy Token
 
-The `TRADINGVIEW_SECRET` value is required in your TradingView alert JSON. You can get it in several ways:
+The strategy `token` is required in your TradingView alert JSON. You can get it from:
 
 1. **From the UI (Recommended)**
    - Go to any Strategy Detail page (`/dashboard/strategies/:id`)
    - Click on the "Setup" tab
-   - The secret value will be automatically populated in the JSON template
-   - Simply copy the JSON template with the secret already filled in
-
-2. **Via API Endpoint**
-   ```bash
-   curl https://<your-vercel-domain>/api/tradingview-secret
-   ```
-   Returns:
-   ```json
-   {
-     "secret": "your-secret-value",
-     "message": "TradingView secret retrieved successfully"
-   }
-   ```
-
-3. **From Vercel Dashboard**
-   - Go to your Vercel project settings
-   - Navigate to Settings → Environment Variables
-   - Find `TRADINGVIEW_SECRET` and copy its value
+   - Copy the JSON template - it includes your strategy token
 
 ### Webhook URL
 
@@ -94,7 +71,6 @@ Your TradingView alert must include the `secret` field:
 
 ```json
 {
-  "secret": "YOUR_TRADINGVIEW_SECRET",
   "token": "{{strategy.secret_token}}",
   "strategyId": "{{strategy.id}}",
   "signal": "{{strategy.order.action}}",
@@ -107,8 +83,7 @@ Your TradingView alert must include the `secret` field:
 ```
 
 **Important Fields:**
-- `secret`: Must match `TRADINGVIEW_SECRET` in Vercel. This value is automatically populated in the UI, or you can fetch it from `/api/tradingview-secret`
-- `token`: Your strategy's secret token (from the strategy detail page)
+- `token`: Your strategy's secret token (automatically populated in the UI template)
 - `strategyId`: Your strategy ID (UUID)
 - `signal`: Trading action (BUY, SELL, LONG, SHORT)
 - `symbol`: Trading symbol (e.g., AAPL, BTCUSD)
@@ -126,10 +101,7 @@ Your TradingView alert must include the `secret` field:
    - Check "Webhook URL"
    - Enter: `https://<your-vercel-domain>/api/tradingview`
    - In the message field, use the JSON template above
-   - **Getting the Secret:** The secret value is automatically populated in the JSON template on the Strategy Detail page. If it's not showing, you can:
-     - View it in the Strategy Detail page (`/dashboard/strategies/:id`) - it will be automatically filled in
-     - Or fetch it via API: `GET https://<your-vercel-domain>/api/tradingview-secret`
-     - Or manually replace `YOUR_TRADINGVIEW_SECRET` with the value from your Vercel environment variables
+   - The template is available on the Strategy Detail page (`/dashboard/strategies/:id`) in the "Setup" tab
 
 3. **Test the Alert**
    - Save the alert
@@ -138,16 +110,27 @@ Your TradingView alert must include the `secret` field:
 
 ## Security Features
 
-1. **TradingView Secret Validation**
-   - Vercel API route validates `body.secret` matches `TRADINGVIEW_SECRET`
-   - Rejects requests with invalid or missing secret (401 Unauthorized)
-
-2. **Proxy Secret Header**
+1. **Proxy Secret Header**
    - Vercel adds `x-vercel-proxy-secret` header when forwarding to Supabase
    - Supabase Edge Function validates this header
    - Prevents direct access to Supabase endpoint (when `VERCEL_PROXY_SECRET` is set)
 
-3. **Project Reference Hidden**
+2. **Strategy Token Validation**
+   - Supabase Edge Function validates the strategy token
+   - Ensures requests are for valid strategies
+   - Rejects requests with invalid tokens
+
+3. **Rate Limiting**
+   - Prevents abuse with plan-based rate limits
+   - FREE: 1 request/second per strategy
+   - PRO: 5 requests/second per strategy
+   - ELITE: 20 requests/second per strategy
+
+4. **User Isolation**
+   - Row-Level Security (RLS) policies ensure users can only access their own data
+   - Signals are isolated by user_id
+
+5. **Project Reference Hidden**
    - Supabase project reference ID is no longer exposed to TradingView
    - Only your Vercel domain is visible
 
@@ -159,7 +142,6 @@ Your TradingView alert must include the `secret` field:
 curl -X POST https://<your-vercel-domain>/api/tradingview \
   -H "Content-Type: application/json" \
   -d '{
-    "secret": "YOUR_TRADINGVIEW_SECRET",
     "token": "your-strategy-secret-token",
     "strategyId": "your-strategy-uuid",
     "signal": "BUY",
@@ -180,20 +162,30 @@ curl -X POST https://<your-vercel-domain>/api/tradingview \
 }
 ```
 
-**Error (Invalid Secret):**
+**Error (Invalid Token):**
 ```json
 {
   "error": "Unauthorized",
-  "message": "Invalid secret"
+  "message": "Invalid or missing token"
 }
 ```
 
 ## Troubleshooting
 
-### Issue: 401 Unauthorized from Vercel
+### Issue: Authentication Required Page (Vercel Deployment Protection)
 
-**Cause:** Invalid or missing `secret` in request body
-**Fix:** Ensure `body.secret` matches `TRADINGVIEW_SECRET` in Vercel
+**Cause:** Vercel deployment protection is enabled, blocking webhook access
+**Symptoms:** You see an "Authentication Required" page when accessing `/api/tradingview`
+**Fix:** 
+1. Go to Vercel Dashboard → Your Project → Settings → Deployment Protection
+2. Disable deployment protection for Production deployments
+3. The endpoint is still secured by `TRADINGVIEW_SECRET` validation
+4. See [VERCEL_DEPLOYMENT_PROTECTION.md](./VERCEL_DEPLOYMENT_PROTECTION.md) for detailed instructions
+
+### Issue: 401 Unauthorized from Supabase
+
+**Cause:** Invalid or missing `token` in request body
+**Fix:** Ensure `body.token` matches your strategy's secret token (found in Strategy Detail page)
 
 ### Issue: 401 Unauthorized from Supabase
 

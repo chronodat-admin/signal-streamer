@@ -4,12 +4,16 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * Secure proxy endpoint for TradingView webhooks
  * 
  * This endpoint:
- * 1. Validates the TradingView secret from the request body
- * 2. Forwards the request to Supabase Edge Function with proxy secret header
- * 3. Returns the Supabase response to TradingView
+ * 1. Forwards the request to Supabase Edge Function with proxy secret header
+ * 2. Returns the Supabase response to TradingView
+ * 
+ * Security: The endpoint is protected by:
+ * - Proxy secret header validation (VERCEL_PROXY_SECRET)
+ * - Strategy token validation (in Supabase)
+ * - Rate limiting (in Supabase)
+ * - User isolation (RLS policies)
  * 
  * Environment Variables Required:
- * - TRADINGVIEW_SECRET: Secret value that TradingView must include in body.secret
  * - SUPABASE_EDGE_FUNCTION_URL: Full URL to Supabase Edge Function
  * - VERCEL_PROXY_SECRET: Secret for x-vercel-proxy-secret header
  */
@@ -28,19 +32,10 @@ export default async function handler(
 
   try {
     // Get environment variables
-    const tradingviewSecret = process.env.TRADINGVIEW_SECRET;
     const supabaseUrl = process.env.SUPABASE_EDGE_FUNCTION_URL;
     const proxySecret = process.env.VERCEL_PROXY_SECRET;
 
     // Validate environment variables
-    if (!tradingviewSecret) {
-      console.error('TRADINGVIEW_SECRET environment variable is not set');
-      return res.status(500).json({ 
-        error: 'Server configuration error',
-        message: 'TRADINGVIEW_SECRET is not configured'
-      });
-    }
-
     if (!supabaseUrl) {
       console.error('SUPABASE_EDGE_FUNCTION_URL environment variable is not set');
       return res.status(500).json({ 
@@ -69,17 +64,8 @@ export default async function handler(
       });
     }
 
-    // Validate TradingView secret
-    if (!body.secret || body.secret !== tradingviewSecret) {
-      console.warn('Invalid or missing TradingView secret');
-      return res.status(401).json({ 
-        error: 'Unauthorized',
-        message: 'Invalid secret'
-      });
-    }
-
-    // Remove secret from body before forwarding (optional, for security)
-    const { secret, ...forwardBody } = body;
+    // Forward the entire body (no secret validation needed)
+    const forwardBody = body;
 
     // Forward request to Supabase Edge Function
     console.log(`Forwarding request to Supabase: ${supabaseUrl}`);
