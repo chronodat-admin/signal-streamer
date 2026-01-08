@@ -37,20 +37,32 @@ async function sendDiscordAlert(
   };
 
   // Log the attempt
-  const { data: logEntry } = await supabase
-    .from("alert_logs")
-    .insert({
-      user_id: logData.userId,
-      strategy_id: logData.strategyId,
-      signal_id: logData.signalId,
-      integration_id: logData.integrationId,
-      integration_type: "discord",
-      status: "pending",
-      message: `Sending Discord alert for ${payload.signal_type} ${payload.symbol}`,
-      webhook_url: webhookUrl.substring(0, 100), // Truncate for storage
-    })
-    .select()
-    .single();
+  let logEntry: any = null;
+  try {
+    const { data, error } = await supabase
+      .from("alert_logs")
+      .insert({
+        user_id: logData.userId,
+        strategy_id: logData.strategyId,
+        signal_id: logData.signalId,
+        integration_id: logData.integrationId,
+        integration_type: "discord",
+        status: "pending",
+        message: `Sending Discord alert for ${payload.signal_type} ${payload.symbol}`,
+        webhook_url: webhookUrl.substring(0, 100), // Truncate for storage
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating log entry:", error);
+    } else {
+      logEntry = data;
+      console.log("Created log entry:", logEntry?.id);
+    }
+  } catch (logError) {
+    console.error("Exception creating log entry:", logError);
+  }
 
   try {
     console.log(`Sending Discord webhook to: ${webhookUrl.substring(0, 50)}...`);
@@ -246,6 +258,8 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log("send-alerts function called");
+
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
         status: 405,
@@ -254,8 +268,10 @@ serve(async (req) => {
     }
 
     const { signal_id, strategy_id } = await req.json();
+    console.log("Received request:", { signal_id, strategy_id });
 
     if (!signal_id || !strategy_id) {
+      console.error("Missing signal_id or strategy_id");
       return new Response(JSON.stringify({ error: "Missing signal_id or strategy_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -325,6 +341,39 @@ serve(async (req) => {
     ];
 
     console.log(`Found ${filteredIntegrations.length} active integrations for strategy ${strategy_id} (${strategyIntegrations?.length || 0} strategy-specific, ${userIntegrations?.length || 0} user-level)`);
+
+    // Log if no integrations found
+    if (filteredIntegrations.length === 0) {
+      console.log(`No active integrations found for strategy ${strategy_id}, user ${userId}`);
+      // Create a log entry even when no integrations are found
+      try {
+        await supabase
+          .from("alert_logs")
+          .insert({
+            user_id: userId,
+            strategy_id: strategy_id,
+            signal_id: signal_id,
+            integration_id: null,
+            integration_type: "none",
+            status: "error",
+            message: `No active integrations found for strategy ${strategy_id}`,
+            error_message: "No integrations configured or enabled",
+          });
+      } catch (logError) {
+        console.error("Error creating log entry:", logError);
+      }
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "No active integrations found",
+        results: [],
+        sent: 0,
+        total: 0
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const payload: AlertPayload = {
       signal_type: signal.signal_type,

@@ -58,6 +58,8 @@ export default function AlertLogs() {
         .order('created_at', { ascending: false })
         .range((page - 1) * logsPerPage, page * logsPerPage - 1);
 
+      console.log('Fetching logs for user:', user.id);
+
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
@@ -72,8 +74,12 @@ export default function AlertLogs() {
 
       const { data, error, count } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching logs:', error);
+        throw error;
+      }
 
+      console.log('Fetched logs:', data?.length || 0, 'total:', count);
       setLogs(data || []);
       setTotalCount(count || 0);
     } catch (error) {
@@ -125,6 +131,21 @@ export default function AlertLogs() {
           <p className="text-muted-foreground mt-2">
             View and debug alert delivery attempts to your integrations
           </p>
+          {logs.length === 0 && !loading && (
+            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                <strong>No logs found.</strong> This could mean:
+              </p>
+              <ul className="list-disc list-inside mt-2 text-sm text-yellow-600 dark:text-yellow-400 space-y-1">
+                <li>No signals have been sent yet</li>
+                <li>The send-alerts function hasn't been triggered</li>
+                <li>No integrations are configured or enabled</li>
+              </ul>
+              <p className="text-xs mt-2 text-muted-foreground">
+                Check Supabase Edge Function logs to see if the function is being called.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
