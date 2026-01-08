@@ -26,6 +26,7 @@ interface Signal {
   created_at: string;
   strategy_id: string;
   alert_id: string | null;
+  source: string | null;
   raw_payload: any;
   strategies?: {
     name: string;
@@ -170,8 +171,24 @@ const Signals = () => {
     return <Badge variant="outline" className="signal-neutral border px-3 py-1">{upperType}</Badge>;
   };
 
+  const getSourceBadge = (source: string | null) => {
+    const sourceLabels: Record<string, { label: string; className: string }> = {
+      tradingview: { label: 'TradingView', className: 'bg-blue-500/10 text-blue-500 border-blue-500/30' },
+      trendspider: { label: 'TrendSpider', className: 'bg-purple-500/10 text-purple-500 border-purple-500/30' },
+      api: { label: 'API', className: 'bg-amber-500/10 text-amber-500 border-amber-500/30' },
+      manual: { label: 'Manual', className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' },
+      other: { label: 'Other', className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' },
+    };
+    const config = sourceLabels[source?.toLowerCase() || ''] || { label: source || 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' };
+    return (
+      <Badge variant="outline" className={`text-xs ${config.className}`}>
+        {config.label}
+      </Badge>
+    );
+  };
+
   const exportCSV = () => {
-    const headers = ['Date', 'Time', 'Strategy', 'Signal', 'Symbol', 'Price', 'Alert ID'];
+    const headers = ['Date', 'Time', 'Strategy', 'Signal', 'Symbol', 'Price', 'Source'];
     const rows = filteredSignals.map((s) => [
       format(new Date(s.created_at), 'yyyy-MM-dd'),
       format(new Date(s.created_at), 'HH:mm:ss'),
@@ -179,7 +196,7 @@ const Signals = () => {
       s.signal_type,
       s.symbol,
       s.price.toString(),
-      s.alert_id || '',
+      s.source || 'unknown',
     ]);
 
     const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
@@ -383,7 +400,7 @@ const Signals = () => {
                       <TableHead>Signal</TableHead>
                       <TableHead>Symbol</TableHead>
                       <TableHead>Price</TableHead>
-                      <TableHead>Alert ID</TableHead>
+                      <TableHead>Source</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -410,13 +427,7 @@ const Signals = () => {
                           <span className="font-mono">{formatCurrency(Number(signal.price), preferences.currency)}</span>
                         </TableCell>
                         <TableCell>
-                          {signal.alert_id ? (
-                            <span className="font-mono text-xs text-muted-foreground">
-                              {signal.alert_id}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">-</span>
-                          )}
+                          {getSourceBadge(signal.source)}
                         </TableCell>
                       </TableRow>
                     ))}

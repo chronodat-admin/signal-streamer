@@ -55,7 +55,7 @@ serve(async (req) => {
     const payload = await req.json();
     console.log("Received webhook payload:", JSON.stringify(payload));
 
-    const { token, strategyId, signal, symbol, price, time, interval, alertId } = payload;
+    const { token, strategyId, signal, symbol, price, time, interval, alertId, source: payloadSource } = payload;
 
     if (!token || !strategyId || !signal || !symbol || !price || !time) {
       return new Response(
@@ -182,6 +182,13 @@ serve(async (req) => {
       );
     }
 
+    // Determine signal source (default to 'tradingview' for this webhook)
+    // Supported sources: tradingview, trendspider, api, manual, other
+    const validSources = ['tradingview', 'trendspider', 'api', 'manual', 'other'];
+    const signalSource = payloadSource && validSources.includes(payloadSource.toLowerCase()) 
+      ? payloadSource.toLowerCase() 
+      : 'tradingview';
+
     // Insert signal
     const { error: insertError } = await supabase.from("signals").insert({
       user_id: strategy.user_id,
@@ -193,6 +200,7 @@ serve(async (req) => {
       interval: interval || null,
       raw_payload: payload,
       alert_id: alertId || null,
+      source: signalSource,
     });
 
     if (insertError) {

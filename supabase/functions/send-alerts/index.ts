@@ -720,34 +720,10 @@ serve(async (req) => {
 
     console.log(`Found ${filteredIntegrations.length} active integrations for strategy ${strategy_id} (${strategyIntegrations?.length || 0} strategy-specific, ${userIntegrations?.length || 0} user-level)`);
 
-    // Log if no integrations found
+    // Return early if no integrations found (don't create alert log)
     if (filteredIntegrations.length === 0) {
       console.log(`No active integrations found for strategy ${strategy_id}, user ${userId}`);
       console.log(`Strategy integrations: ${strategyIntegrations?.length || 0}, User integrations: ${userIntegrations?.length || 0}`);
-      
-      // Create a log entry even when no integrations are found
-      try {
-        const { error: logError } = await supabase
-          .from("alert_logs")
-          .insert({
-            user_id: userId,
-            strategy_id: strategy_id,
-            signal_id: signal_id,
-            integration_id: null,
-            integration_type: "none",
-            status: "error",
-            message: `No active integrations found for strategy ${strategy_id}`,
-            error_message: "No integrations configured or enabled",
-          });
-        
-        if (logError) {
-          console.error("Error creating log entry:", logError);
-        } else {
-          console.log("Created log entry for no integrations found");
-        }
-      } catch (logError) {
-        console.error("Exception creating log entry:", logError);
-      }
       
       return new Response(JSON.stringify({ 
         success: true, 

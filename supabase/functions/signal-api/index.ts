@@ -14,12 +14,14 @@ interface PayloadMapping {
   time?: string;
   interval?: string;
   alertId?: string;
+  source?: string;
 }
 
 interface DefaultValues {
   signal?: string;
   symbol?: string;
   interval?: string;
+  source?: string;
 }
 
 /**
@@ -60,7 +62,13 @@ function transformPayload(
   time?: string;
   interval?: string;
   alertId?: string;
+  source?: string;
 } {
+  // Validate source - only allow known sources
+  const validSources = ['tradingview', 'trendspider', 'api', 'manual', 'other'];
+  const rawSource = extractValue(payload, mapping.source || 'source') || defaults.source || 'api';
+  const source = validSources.includes(rawSource?.toLowerCase()) ? rawSource.toLowerCase() : 'api';
+
   return {
     signal: extractValue(payload, mapping.signal || 'signal') || defaults.signal,
     symbol: extractValue(payload, mapping.symbol || 'symbol') || defaults.symbol,
@@ -68,6 +76,7 @@ function transformPayload(
     time: extractValue(payload, mapping.time || 'time') || new Date().toISOString(),
     interval: extractValue(payload, mapping.interval || 'interval') || defaults.interval,
     alertId: extractValue(payload, mapping.alertId || 'alertId'),
+    source,
   };
 }
 
@@ -294,6 +303,7 @@ serve(async (req) => {
         interval: transformedPayload.interval || null,
         raw_payload: rawPayload,
         alert_id: transformedPayload.alertId || null,
+        source: transformedPayload.source || 'api',
       })
       .select("id")
       .single();

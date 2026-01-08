@@ -83,6 +83,7 @@ export default function ApiKeys() {
   const [creating, setCreating] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -245,6 +246,13 @@ export default function ApiKeys() {
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
     toast({ title: 'Copied!', description: 'API key copied to clipboard' });
+  };
+
+  const copyCodeToClipboard = async (code: string, codeId: string) => {
+    await navigator.clipboard.writeText(code);
+    setCopiedCode(codeId);
+    setTimeout(() => setCopiedCode(null), 2000);
+    toast({ title: 'Copied!', description: 'Code copied to clipboard' });
   };
 
   const resetForm = () => {
@@ -534,10 +542,10 @@ export default function ApiKeys() {
               </div>
               <div className="flex-1 min-w-0 space-y-3">
                 <div>
-                  <p className="font-medium flex items-center gap-2">
+                  <div className="font-medium flex items-center gap-2">
                     API Endpoint
                     <Badge variant="secondary" className="text-xs">Recommended</Badge>
-                  </p>
+                  </div>
                   <code className="text-sm text-primary break-all">{getApiEndpoint()}</code>
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -675,45 +683,183 @@ export default function ApiKeys() {
               Quick Start Guide
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <h4 className="font-medium">Example cURL Request</h4>
-              <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto">
-{`curl -X POST "${getApiEndpoint()}" \\
-  -H "Content-Type: application/json" \\
-  -H "x-api-key: YOUR_API_KEY" \\
-  -d '{
+          <CardContent className="space-y-6">
+            {/* cURL Example */}
+            {(() => {
+              const curlCode = `curl -X POST "${getApiEndpoint()}" \\
+  --header "Content-Type: application/json" \\
+  --header "x-api-key: YOUR_API_KEY" \\
+  --data '{
     "signal": "BUY",
     "symbol": "AAPL",
     "price": 150.25,
     "time": "${new Date().toISOString()}"
-  }'`}
-              </pre>
-            </div>
+  }'`;
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-xs">cURL</Badge>
+                      Example Request
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-xs"
+                      onClick={() => copyCodeToClipboard(curlCode, 'curl')}
+                    >
+                      {copiedCode === 'curl' ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-green-500" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="relative group">
+                    <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto border">
+                      <code>{curlCode}</code>
+                    </pre>
+                  </div>
+                </div>
+              );
+            })()}
 
-            <div className="space-y-2">
-              <h4 className="font-medium">Example Python Request</h4>
-              <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto">
-{`import requests
+            {/* Python Example */}
+            {(() => {
+              const pythonCode = `import requests
 
 response = requests.post(
     "${getApiEndpoint()}",
-    headers={"x-api-key": "YOUR_API_KEY"},
+    headers={
+        "Content-Type": "application/json",
+        "x-api-key": "YOUR_API_KEY"
+    },
     json={
         "signal": "BUY",
         "symbol": "AAPL",
         "price": 150.25
     }
 )
-print(response.json())`}
+
+print(response.status_code)
+print(response.json())`;
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-xs">Python</Badge>
+                      Example Request
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-xs"
+                      onClick={() => copyCodeToClipboard(pythonCode, 'python')}
+                    >
+                      {copiedCode === 'python' ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-green-500" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="relative group">
+                    <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto border">
+                      <code>{pythonCode}</code>
+                    </pre>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* JavaScript/Node.js Example */}
+            {(() => {
+              const jsCode = `const response = await fetch("${getApiEndpoint()}", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "YOUR_API_KEY"
+  },
+  body: JSON.stringify({
+    signal: "BUY",
+    symbol: "AAPL",
+    price: 150.25
+  })
+});
+
+const data = await response.json();
+console.log(data);`;
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-xs">JavaScript</Badge>
+                      Example Request
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-xs"
+                      onClick={() => copyCodeToClipboard(jsCode, 'js')}
+                    >
+                      {copiedCode === 'js' ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-green-500" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="relative group">
+                    <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto border">
+                      <code>{jsCode}</code>
+                    </pre>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Response Example */}
+            <div className="space-y-2">
+              <h4 className="font-medium">Expected Response</h4>
+              <pre className="bg-green-500/10 border-green-500/20 p-4 rounded-lg text-sm overflow-x-auto border">
+                <code className="text-green-600 dark:text-green-400">{`{
+  "success": true,
+  "signal_id": "uuid-...",
+  "message": "Signal received successfully"
+}`}</code>
               </pre>
             </div>
 
-            <div className="text-sm text-muted-foreground">
-              <p>
-                <strong>Note:</strong> Configure payload mapping to match your data format. 
-                The API supports nested fields using dot notation (e.g., <code>data.ticker</code>).
+            {/* Notes */}
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 text-sm space-y-2">
+              <p className="font-medium text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                Important Notes
               </p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>Replace <code className="bg-muted px-1 py-0.5 rounded text-xs">YOUR_API_KEY</code> with your actual API key</li>
+                <li>Configure <strong>payload mapping</strong> if your data format differs</li>
+                <li>Use dot notation for nested fields (e.g., <code className="bg-muted px-1 py-0.5 rounded text-xs">data.ticker</code>)</li>
+                <li>The <code className="bg-muted px-1 py-0.5 rounded text-xs">time</code> field is optional (defaults to current time)</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
