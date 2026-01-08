@@ -6,18 +6,21 @@ export type DateFormat = 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD' | 'DD MMM YY
 interface Preferences {
   currency: Currency;
   dateFormat: DateFormat;
+  signalNotifications: boolean;
 }
 
 interface PreferencesContextType {
   preferences: Preferences;
   setCurrency: (currency: Currency) => void;
   setDateFormat: (format: DateFormat) => void;
+  setSignalNotifications: (enabled: boolean) => void;
   updatePreferences: (prefs: Partial<Preferences>) => void;
 }
 
 const defaultPreferences: Preferences = {
   currency: 'USD',
   dateFormat: 'MMM DD, YYYY',
+  signalNotifications: true,
 };
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
@@ -37,6 +40,9 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
             dateFormat: (typeof parsed.dateFormat === 'string' && parsed.dateFormat)
               ? (parsed.dateFormat as DateFormat)
               : defaultPreferences.dateFormat,
+            signalNotifications: typeof parsed.signalNotifications === 'boolean'
+              ? parsed.signalNotifications
+              : defaultPreferences.signalNotifications,
           };
           return loaded;
         } catch {
@@ -66,6 +72,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       const serializable: Preferences = {
         currency: currency as Currency,
         dateFormat: dateFormat as DateFormat,
+        signalNotifications: preferences.signalNotifications,
       };
       
       // Double-check that the object is serializable
@@ -87,7 +94,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     }
     // Only depend on the actual values, not the object reference
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preferences.currency, preferences.dateFormat]);
+  }, [preferences.currency, preferences.dateFormat, preferences.signalNotifications]);
 
   const setCurrency = (currency: Currency) => {
     // Validate that currency is a valid string value
@@ -99,6 +106,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     setPreferencesState((prev) => ({
       currency: currency as Currency,
       dateFormat: prev.dateFormat,
+      signalNotifications: prev.signalNotifications,
     }));
   };
 
@@ -112,6 +120,15 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     setPreferencesState((prev) => ({
       currency: prev.currency,
       dateFormat: format as DateFormat,
+      signalNotifications: prev.signalNotifications,
+    }));
+  };
+
+  const setSignalNotifications = (enabled: boolean) => {
+    setPreferencesState((prev) => ({
+      currency: prev.currency,
+      dateFormat: prev.dateFormat,
+      signalNotifications: enabled,
     }));
   };
 
@@ -126,6 +143,9 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         dateFormat: (prefs.dateFormat && typeof prefs.dateFormat === 'string')
           ? (prefs.dateFormat as DateFormat)
           : prev.dateFormat,
+        signalNotifications: typeof prefs.signalNotifications === 'boolean'
+          ? prefs.signalNotifications
+          : prev.signalNotifications,
       };
       return updated;
     });
@@ -135,6 +155,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   const cleanPreferences: Preferences = {
     currency: preferences.currency,
     dateFormat: preferences.dateFormat,
+    signalNotifications: preferences.signalNotifications,
   };
 
   return (
@@ -143,6 +164,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         preferences: cleanPreferences,
         setCurrency,
         setDateFormat,
+        setSignalNotifications,
         updatePreferences,
       }}
     >

@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSignalNotifications } from '@/hooks/useSignalNotifications';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -45,6 +46,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return false;
   });
   const [userPlan, setUserPlan] = useState<PlanType>('FREE');
+
+  // Enable real-time signal notifications
+  useSignalNotifications();
 
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', String(collapsed));

@@ -7,14 +7,15 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette, Moon, Sun, Save, DollarSign, Calendar } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Palette, Moon, Sun, Save, DollarSign, Calendar, Bell } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { usePreferences, type Currency, type DateFormat } from '@/hooks/usePreferences';
 import { toast } from '@/hooks/use-toast';
 
 const Preferences = () => {
   const { theme, setTheme } = useTheme();
-  const { preferences, setCurrency, setDateFormat } = usePreferences();
+  const { preferences, setCurrency, setDateFormat, setSignalNotifications } = usePreferences();
 
   const handleSave = (e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
@@ -83,6 +84,35 @@ const Preferences = () => {
                     Select your preferred color scheme
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notifications Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Notifications
+              </CardTitle>
+              <CardDescription>
+                Configure how you receive notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Signal Notifications */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="signal-notifications">Real-time Signal Notifications</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show a toast notification when a new trading signal is received
+                  </p>
+                </div>
+                <Switch
+                  id="signal-notifications"
+                  checked={preferences.signalNotifications}
+                  onCheckedChange={setSignalNotifications}
+                />
               </div>
             </CardContent>
           </Card>
