@@ -8,7 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Activity, Filter, Download, Search, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { Activity, Filter, Download, Search, AlertCircle, CheckCircle2, XCircle, Plus, Loader2 } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
@@ -40,6 +50,24 @@ interface SignalFilters {
   search: string;
 }
 
+interface ManualSignalForm {
+  strategy_id: string;
+  signal_type: string;
+  symbol: string;
+  price: string;
+  signal_time: string;
+  notes: string;
+}
+
+const initialFormState: ManualSignalForm = {
+  strategy_id: '',
+  signal_type: '',
+  symbol: '',
+  price: '',
+  signal_time: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+  notes: '',
+};
+
 const Signals = () => {
   const { user } = useAuth();
   const { preferences } = usePreferences();
@@ -54,6 +82,11 @@ const Signals = () => {
     signalType: 'all',
     search: '',
   });
+
+  // Manual signal entry state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState<ManualSignalForm>(initialFormState);
 
   useEffect(() => {
     if (user) {
@@ -214,6 +247,99 @@ const Signals = () => {
     });
   };
 
+  const resetForm = () => {
+    setFormData({
+      ...initialFormState,
+      signal_time: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    });
+  };
+
+  const handleSubmitManualSignal = async () => {
+    if (!user) return;
+
+    // Validation
+    if (!formData.strategy_id) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a strategy',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!formData.signal_type) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a signal type',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!formData.symbol.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a symbol',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!formData.price || isNaN(parseFloat(formData.price))) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a valid price',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const signalTime = new Date(formData.signal_time).toISOString();
+      
+      const { data, error } = await supabase
+        .from('signals')
+        .insert({
+          user_id: user.id,
+          strategy_id: formData.strategy_id,
+          signal_type: formData.signal_type.toUpperCase(),
+          symbol: formData.symbol.toUpperCase().trim(),
+          price: parseFloat(formData.price),
+          signal_time: signalTime,
+          source: 'manual',
+          raw_payload: {
+            notes: formData.notes,
+            entered_at: new Date().toISOString(),
+            manual_entry: true,
+          },
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Signal Added',
+        description: `Manual ${formData.signal_type.toUpperCase()} signal for ${formData.symbol.toUpperCase()} added successfully`,
+      });
+
+      // Refresh signals list
+      await fetchSignals();
+      
+      // Close dialog and reset form
+      setDialogOpen(false);
+      resetForm();
+    } catch (error: any) {
+      console.error('Error adding manual signal:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add signal',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const stats = {
     total: filteredSignals.length,
     buys: filteredSignals.filter((s) => {
@@ -252,10 +378,184 @@ const Signals = () => {
             <h1 className="text-3xl font-display font-bold">All Signals</h1>
             <p className="text-muted-foreground">View and filter all your trading signals</p>
           </div>
-          <Button onClick={exportCSV} className="gap-2">
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2">
+            {/* Manual Signal Entry Dialog */}
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Signal
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Add Manual Signal</DialogTitle>
+                  <DialogDescription>
+                    Enter a signal manually to track your trades. This works the same as signals from TradingView.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  {/* Strategy Selection */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="strategy">Strategy *</Label>
+                    <Select
+                      value={formData.strategy_id}
+                      onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}
+                    >
+                      <SelectTrigger id="strategy">
+                        <SelectValue placeholder="Select a strategy" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {strategies.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {strategies.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        No strategies found. Create a strategy first.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Signal Type */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="signal_type">Signal Type *</Label>
+                    <Select
+                      value={formData.signal_type}
+                      onValueChange={(value) => setFormData({ ...formData, signal_type: value })}
+                    >
+                      <SelectTrigger id="signal_type">
+                        <SelectValue placeholder="Select signal type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BUY">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500" />
+                            BUY (Long Entry)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="SELL">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500" />
+                            SELL (Short Entry / Exit Long)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="LONG">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500" />
+                            LONG (Open Long Position)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="SHORT">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500" />
+                            SHORT (Open Short Position)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="CLOSE">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-gray-500" />
+                            CLOSE (Close Position)
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Symbol and Price Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="symbol">Symbol *</Label>
+                      <Input
+                        id="symbol"
+                        placeholder="e.g., AAPL, BTCUSD"
+                        value={formData.symbol}
+                        onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
+                        className="uppercase"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="price">Price *</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.00001"
+                        placeholder="e.g., 150.25"
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Signal Time */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="signal_time">Signal Time *</Label>
+                    <Input
+                      id="signal_time"
+                      type="datetime-local"
+                      value={formData.signal_time}
+                      onChange={(e) => setFormData({ ...formData, signal_time: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      When did this signal occur? Defaults to now.
+                    </p>
+                  </div>
+
+                  {/* Notes (Optional) */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="notes">Notes (Optional)</Label>
+                    <Input
+                      id="notes"
+                      placeholder="e.g., RSI oversold, support level"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setDialogOpen(false);
+                      resetForm();
+                    }}
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSubmitManualSignal}
+                    disabled={submitting || strategies.length === 0}
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Signal
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Button onClick={exportCSV} variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
