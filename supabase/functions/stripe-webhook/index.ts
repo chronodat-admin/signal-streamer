@@ -9,11 +9,29 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    console.log("[stripe-webhook] Environment check:", {
+      hasStripeKey: !!stripeSecretKey,
+      hasWebhookSecret: !!webhookSecret,
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+    });
+
     if (!stripeSecretKey || !webhookSecret) {
-      console.error("Stripe environment variables not configured");
+      const missing = [];
+      if (!stripeSecretKey) missing.push("STRIPE_SECRET_KEY");
+      if (!webhookSecret) missing.push("STRIPE_WEBHOOK_SECRET");
+      
+      console.error(`[stripe-webhook] Missing environment variables: ${missing.join(", ")}`);
       return new Response(
-        JSON.stringify({ error: "Stripe not configured" }),
-        { status: 500 }
+        JSON.stringify({ 
+          error: "Stripe not configured",
+          missing: missing,
+          message: `Please set the following secrets in Supabase Edge Functions: ${missing.join(", ")}`
+        }),
+        { 
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
       );
     }
 
@@ -332,10 +350,24 @@ serve(async (req) => {
     return new Response(JSON.stringify({ received: true }), { status: 200 });
 
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("[stripe-webhook] Unhandled error:", error);
+    console.error("[stripe-webhook] Error stack:", error?.stack);
+    console.error("[stripe-webhook] Error details:", {
+      message: error?.message,
+      name: error?.name,
+      cause: error?.cause,
+    });
+    
     return new Response(
-      JSON.stringify({ error: error.message || "Webhook handler failed" }),
-      { status: 500 }
+      JSON.stringify({ 
+        error: error?.message || "Webhook handler failed",
+        type: error?.name || "UnknownError",
+        details: process.env.DENO_ENV === "development" ? error?.stack : undefined
+      }),
+      { 
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      }
     );
   }
 });
