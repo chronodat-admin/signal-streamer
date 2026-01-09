@@ -196,10 +196,58 @@ curl -X POST https://<your-project-ref>.supabase.co/functions/v1/stripe-webhook 
 4. **Check RLS policies** haven't changed
 5. **Verify service role key** is correct in Supabase Edge Function secrets
 
+## Quick Diagnostic Checklist
+
+Run through this checklist in order:
+
+### 1. Check if migrations are applied
+```sql
+-- Run in Supabase SQL Editor
+SELECT proname FROM pg_proc WHERE proname LIKE 'update_user_plan%';
+```
+You should see:
+- `update_user_plan`
+- `update_user_plan_by_customer`
+
+### 2. Check if webhook is registered in Stripe
+1. Go to [Stripe Dashboard > Developers > Webhooks](https://dashboard.stripe.com/webhooks)
+2. Look for your endpoint URL: `https://<project-ref>.supabase.co/functions/v1/stripe-webhook`
+3. Check "Recent events" - you should see `checkout.session.completed` events
+
+### 3. Check webhook signing secret
+1. In Stripe Dashboard > Webhooks > Click your endpoint
+2. Click "Reveal" next to "Signing secret"
+3. Compare with `STRIPE_WEBHOOK_SECRET` in Supabase Edge Function secrets
+
+### 4. Check Edge Function logs after a checkout
+1. Complete a test checkout
+2. Immediately go to Supabase Dashboard > Edge Functions > `stripe-webhook` > Logs
+3. Look for:
+   - `[checkout.session.completed] Processing:` - Webhook received
+   - `Direct update succeeded` - Update worked
+   - Any errors in red
+
+### 5. Manual profile check
+```sql
+-- Check your profile after checkout
+SELECT user_id, plan, stripe_customer_id, stripe_subscription_id, updated_at
+FROM public.profiles
+WHERE email = 'your-email@example.com';
+```
+
+## Common Root Causes (in order of likelihood)
+
+1. **Webhook not registered** - Most common. Set up webhook in Stripe Dashboard.
+2. **Wrong webhook secret** - Copy from Stripe Dashboard, not from Stripe CLI.
+3. **Migrations not applied** - Run `npx supabase db push` or apply SQL manually.
+4. **Environment variables missing** - Check all required vars are set in Supabase.
+
 ## Related Files
 
 - Webhook handler: `supabase/functions/stripe-webhook/index.ts`
 - Database function: `supabase/migrations/20260109040000_create_update_plan_function.sql`
+- Permissions fix: `supabase/migrations/20260109050000_fix_update_plan_permissions.sql`
 - Checkout creation: `supabase/functions/create-checkout/index.ts`
+- Sync function: `supabase/functions/sync-subscription/index.ts`
 - Billing page: `src/pages/Billing.tsx`
 

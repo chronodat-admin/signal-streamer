@@ -140,10 +140,14 @@ const Billing = () => {
     signalsToday: 0,
   });
 
+  // Track the plan before checkout for comparison
+  const preCheckoutPlanRef = useRef<PlanType | null>(null);
+  
   // Handle success/canceled query params from Stripe checkout
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
+    const sessionId = searchParams.get('session_id');
 
     if (success === 'true') {
       toast({
@@ -154,22 +158,36 @@ const Billing = () => {
       // Clean up URL
       setSearchParams({});
       
+      // Store current plan to compare against
+      const currentPlanBeforeCheckout = profile?.plan || preCheckoutPlanRef.current || 'FREE';
+      preCheckoutPlanRef.current = currentPlanBeforeCheckout;
+      
       // Poll for profile update (webhook might take a moment)
       if (user) {
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = 15; // Increased from 10 to give webhook more time
         
         const pollForUpdate = async () => {
           attempts++;
           const { data, error } = await supabase
             .from('profiles')
-            .select('plan, stripe_subscription_id')
+            .select('plan, stripe_subscription_id, updated_at')
             .eq('user_id', user.id)
             .single();
           
-          console.log(`Polling attempt ${attempts}/${maxAttempts}:`, { plan: data?.plan, subscription_id: data?.stripe_subscription_id, error });
+          console.log(`Polling attempt ${attempts}/${maxAttempts}:`, { 
+            plan: data?.plan, 
+            subscription_id: data?.stripe_subscription_id,
+            updated_at: data?.updated_at,
+            previousPlan: currentPlanBeforeCheckout,
+            error 
+          });
           
-          if (data?.plan && data.plan !== 'FREE') {
+          // Check if plan has changed (handles FREE -> paid AND paid -> higher paid)
+          const planChanged = data?.plan && data.plan !== currentPlanBeforeCheckout;
+          const hasSubscription = !!data?.stripe_subscription_id;
+          
+          if (planChanged && hasSubscription) {
             // Plan updated!
             toast({
               title: '🎉 Subscription Activated!',
@@ -178,15 +196,48 @@ const Billing = () => {
             });
             fetchProfile();
           } else if (attempts < maxAttempts) {
-            // Keep polling
-            setTimeout(pollForUpdate, 2000);
+            // Keep polling with increasing delay
+            const delay = attempts < 5 ? 2000 : 3000;
+            setTimeout(pollForUpdate, delay);
           } else {
-            // Webhook might not be configured or delayed - show manual refresh option
-            toast({
-              title: 'Payment Successful',
-              description: 'Your payment was processed. If your plan hasn\'t updated yet, please refresh the page in a moment or contact support if it persists.',
-              duration: 10000,
-            });
+            // Webhook might not be configured or delayed - try manual sync
+            console.log('Polling timed out, attempting manual sync...');
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session) {
+                const functionUrl = `${import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co'}/functions/v1/sync-subscription`;
+                const response = await fetch(functionUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                  },
+                });
+                const syncData = await response.json();
+                console.log('Auto-sync result:', syncData);
+                
+                if (syncData.updated) {
+                  toast({
+                    title: '🎉 Subscription Activated!',
+                    description: `You're now on the ${syncData.plan} plan!`,
+                    duration: 6000,
+                  });
+                } else {
+                  toast({
+                    title: 'Payment Successful',
+                    description: 'Your payment was processed. If your plan hasn\'t updated, click "Sync Subscription Status" or contact support.',
+                    duration: 10000,
+                  });
+                }
+              }
+            } catch (syncError) {
+              console.error('Auto-sync failed:', syncError);
+              toast({
+                title: 'Payment Successful',
+                description: 'Your payment was processed. If your plan hasn\'t updated yet, click "Sync Subscription Status" below.',
+                duration: 10000,
+              });
+            }
             fetchProfile();
           }
         };
@@ -283,6 +334,13 @@ const Billing = () => {
 
   // Track previous plan to detect upgrades
   const previousPlanRef = useRef<PlanType | null>(null);
+  
+  // Also update preCheckoutPlanRef when profile loads (backup for polling comparison)
+  useEffect(() => {
+    if (profile?.plan && !preCheckoutPlanRef.current) {
+      preCheckoutPlanRef.current = profile.plan;
+    }
+  }, [profile?.plan]);
   
   // Subscribe to realtime updates for profile changes
   useEffect(() => {

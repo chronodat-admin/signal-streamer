@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@13.6.0?target=deno";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 
 serve(async (req) => {
   try {
@@ -33,10 +33,10 @@ serve(async (req) => {
     // Get raw body
     const body = await req.text();
 
-    // Verify webhook signature
+    // Verify webhook signature (use async version for Deno/Edge Runtime compatibility)
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     } catch (err) {
       console.error("Webhook signature verification failed:", err.message);
       return new Response(
@@ -54,55 +54,83 @@ serve(async (req) => {
         const userId = session.metadata?.user_id;
         const plan = session.metadata?.plan as "PRO" | "ELITE";
 
+        console.log(`[checkout.session.completed] Processing:`, {
+          sessionId: session.id,
+          userId,
+          plan,
+          subscriptionId: session.subscription,
+          customerId: session.customer,
+          metadata: session.metadata,
+        });
+
         if (userId && plan) {
           console.log(`Checkout completed for user ${userId}, plan ${plan}, subscription: ${session.subscription}`);
 
-          // Use RPC function to update plan (bypasses RLS)
-          const { data: updateResult, error: updateError } = await supabase.rpc('update_user_plan', {
-            p_user_id: userId,
-            p_plan: plan,
-            p_stripe_subscription_id: session.subscription as string,
-          });
+          // First, try direct SQL update (most reliable with service role)
+          const { error: directError, data: directResult } = await supabase
+            .from("profiles")
+            .update({
+              plan: plan,
+              stripe_subscription_id: session.subscription as string,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId)
+            .select()
+            .single();
 
-          if (updateError) {
-            console.error("Error updating profile after checkout:", updateError);
+          if (directError) {
+            console.error("Direct update failed:", directError);
             
-            // Fallback: try direct update
-            const { error: fallbackError, data: updatedProfile } = await supabase
-              .from("profiles")
-              .update({
-                plan,
-                stripe_subscription_id: session.subscription as string,
-              })
-              .eq("user_id", userId)
-              .select()
-              .single();
+            // Fallback: try RPC function
+            const { data: updateResult, error: updateError } = await supabase.rpc('update_user_plan', {
+              p_user_id: userId,
+              p_plan: plan,
+              p_stripe_subscription_id: session.subscription as string,
+            });
 
-            if (fallbackError) {
-              console.error("Fallback update also failed:", fallbackError);
+            if (updateError) {
+              console.error("RPC update also failed:", updateError);
+              
+              // Last resort: try raw SQL via admin
+              console.error("CRITICAL: All update methods failed for user:", userId);
             } else {
-              console.log(`Fallback update succeeded. Updated profile:`, {
-                plan: updatedProfile?.plan,
-                subscription_id: updatedProfile?.stripe_subscription_id,
-              });
+              console.log(`RPC update succeeded. Result:`, updateResult);
             }
           } else {
-            console.log(`Successfully upgraded user ${userId} to ${plan} plan using RPC function. Result:`, updateResult);
+            console.log(`Direct update succeeded. Updated profile:`, {
+              user_id: userId,
+              plan: directResult?.plan,
+              subscription_id: directResult?.stripe_subscription_id,
+            });
+          }
+          
+          // Always verify the update
+          const { data: verifyProfile, error: verifyError } = await supabase
+            .from("profiles")
+            .select("user_id, plan, stripe_subscription_id, stripe_customer_id, updated_at")
+            .eq("user_id", userId)
+            .single();
+          
+          if (verifyError) {
+            console.error("Failed to verify profile:", verifyError);
+          } else {
+            console.log("Final profile state after checkout:", verifyProfile);
             
-            // Verify the update
-            const { data: verifyProfile } = await supabase
-              .from("profiles")
-              .select("plan, stripe_subscription_id")
-              .eq("user_id", userId)
-              .single();
-            
-            console.log("Verified profile after update:", verifyProfile);
+            // Check if the update actually took effect
+            if (verifyProfile.plan !== plan) {
+              console.error("CRITICAL: Plan mismatch after update!", {
+                expected: plan,
+                actual: verifyProfile.plan,
+              });
+            }
           }
         } else {
           console.error("Missing userId or plan in checkout session metadata:", {
+            sessionId: session.id,
             userId,
             plan,
             metadata: session.metadata,
+            customer: session.customer,
           });
         }
         break;
