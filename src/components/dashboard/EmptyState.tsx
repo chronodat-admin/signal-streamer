@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { LucideIcon, Plus, Sparkles, Zap, TrendingUp, Radio, Plug, FileText, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n';
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -158,91 +159,109 @@ export const EmptyState = ({
 };
 
 // Pre-configured empty states for common scenarios
-export const EmptyStrategies = ({ onCreateClick }: { onCreateClick?: () => void }) => (
-  <EmptyState
-    icon={Sparkles}
-    title="No strategies yet"
-    description="Create your first strategy to start receiving TradingView signals and automate your trading alerts."
-    action={{
-      label: "Create Strategy",
-      onClick: onCreateClick,
-    }}
-    secondaryAction={{
-      label: "Learn More",
-      href: "/pricing",
-    }}
-    variant="illustration"
-  />
-);
+export const EmptyStrategies = ({ onCreateClick }: { onCreateClick?: () => void }) => {
+  const { t } = useLanguage();
+  return (
+    <EmptyState
+      icon={Sparkles}
+      title={t.empty.noStrategies}
+      description={t.empty.noStrategiesDescription}
+      action={{
+        label: t.strategies.newStrategy,
+        onClick: onCreateClick,
+      }}
+      secondaryAction={{
+        label: t.integrations.learnMore,
+        href: "/pricing",
+      }}
+      variant="illustration"
+    />
+  );
+};
 
-export const EmptySignals = ({ hasStrategies = false }: { hasStrategies?: boolean }) => (
-  <EmptyState
-    icon={Radio}
-    title="No signals received"
-    description={
-      hasStrategies
-        ? "Signals from your TradingView strategies will appear here. Make sure your webhook is configured correctly."
-        : "Create a strategy first, then configure your TradingView webhook to start receiving signals."
-    }
-    action={
-      !hasStrategies
-        ? {
-            label: "Create Strategy",
-            href: "/dashboard/strategies",
-          }
-        : undefined
-    }
-    variant="default"
-  />
-);
+export const EmptySignals = ({ hasStrategies = false }: { hasStrategies?: boolean }) => {
+  const { t } = useLanguage();
+  return (
+    <EmptyState
+      icon={Radio}
+      title={t.empty.noSignals}
+      description={
+        hasStrategies
+          ? t.empty.noSignalsDescription
+          : t.empty.noStrategiesDescription
+      }
+      action={
+        !hasStrategies
+          ? {
+              label: t.strategies.newStrategy,
+              href: "/dashboard/strategies",
+            }
+          : undefined
+      }
+      variant="default"
+    />
+  );
+};
 
-export const EmptyTrades = ({ type = 'open' }: { type?: 'open' | 'closed' }) => (
-  <EmptyState
-    icon={TrendingUp}
-    title={type === 'open' ? "No open trades" : "No closed trades"}
-    description={
-      type === 'open'
-        ? "Open positions from your signals will appear here when you receive BUY signals."
-        : "Completed trades will appear here once positions are closed."
-    }
-    variant="minimal"
-  />
-);
+export const EmptyTrades = ({ type = 'open' }: { type?: 'open' | 'closed' }) => {
+  const { t } = useLanguage();
+  return (
+    <EmptyState
+      icon={TrendingUp}
+      title={type === 'open' ? t.empty.noOpenTrades : t.empty.noClosedTrades}
+      description={
+        type === 'open'
+          ? t.empty.noOpenTradesDescription
+          : t.empty.noClosedTradesDescription
+      }
+      variant="minimal"
+    />
+  );
+};
 
-export const EmptyIntegrations = ({ onCreateClick }: { onCreateClick?: () => void }) => (
-  <EmptyState
-    icon={Plug}
-    title="No integrations configured"
-    description="Connect your signals to Discord, Slack, Telegram, and more to receive real-time alerts."
-    action={{
-      label: "Add Integration",
-      onClick: onCreateClick,
-    }}
-    variant="default"
-  />
-);
+export const EmptyIntegrations = ({ onCreateClick }: { onCreateClick?: () => void }) => {
+  const { t } = useLanguage();
+  return (
+    <EmptyState
+      icon={Plug}
+      title={t.empty.noResults}
+      description={t.integrations.tradingViewDescription}
+      action={{
+        label: t.common.add,
+        onClick: onCreateClick,
+      }}
+      variant="default"
+    />
+  );
+};
 
-export const EmptyAlertLogs = () => (
-  <EmptyState
-    icon={FileText}
-    title="No alert logs"
-    description="Alert delivery logs will appear here once you start receiving signals with active integrations."
-    secondaryAction={{
-      label: "Set Up Integrations",
-      href: "/dashboard/integrations",
-    }}
-    variant="minimal"
-  />
-);
+export const EmptyAlertLogs = () => {
+  const { t } = useLanguage();
+  return (
+    <EmptyState
+      icon={FileText}
+      title={t.empty.noResults}
+      description={t.alertLogs.title}
+      secondaryAction={{
+        label: t.integrations.configure,
+        href: "/dashboard/integrations",
+      }}
+      variant="minimal"
+    />
+  );
+};
 
-export const NoSearchResults = ({ query }: { query: string }) => (
-  <EmptyState
-    icon={Zap}
-    title="No results found"
-    description={`We couldn't find anything matching "${query}". Try adjusting your search or filters.`}
-    variant="minimal"
-  />
-);
+export const NoSearchResults = ({ query }: { query: string }) => {
+  const { t } = useLanguage();
+  return (
+    <EmptyState
+      icon={Zap}
+      title={t.empty.noResults}
+      description={t.empty.noResultsDescription.replace('{query}', query)}
+      variant="minimal"
+    />
+  );
+};
 
 
 

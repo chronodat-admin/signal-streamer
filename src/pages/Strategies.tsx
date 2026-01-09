@@ -26,6 +26,7 @@ import { formatDate } from '@/lib/formatUtils';
 import { canCreateStrategy, getUserPlan, getPlanLimits } from '@/lib/planUtils';
 import { StrategiesPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { EmptyStrategies } from '@/components/dashboard/EmptyState';
+import { useLanguage } from '@/i18n';
 
 interface Strategy {
   id: string;
@@ -43,6 +44,7 @@ const Strategies = () => {
   const { user } = useAuth();
   const { preferences } = usePreferences();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -100,8 +102,8 @@ const Strategies = () => {
     } catch (error) {
       console.error('Error fetching strategies:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load strategies',
+        title: t.common.error,
+        description: t.strategies.failedToCreate,
         variant: 'destructive',
       });
     } finally {
@@ -187,14 +189,14 @@ const Strategies = () => {
       setTimeframe('');
 
       toast({
-        title: 'Strategy Created',
-        description: 'Your strategy is ready. Set up webhooks to start receiving signals.',
+        title: t.strategies.strategyCreated,
+        description: t.strategies.strategyCreatedDescription,
       });
     } catch (error: any) {
       console.error('Error creating strategy:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create strategy',
+        title: t.common.error,
+        description: error.message || t.strategies.failedToCreate,
         variant: 'destructive',
       });
     } finally {
@@ -401,40 +403,40 @@ const Strategies = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold">Strategies</h1>
-            <p className="text-muted-foreground">Manage your trading strategies</p>
+            <h1 className="text-3xl font-display font-bold">{t.strategies.title}</h1>
+            <p className="text-muted-foreground">{t.strategies.subtitle}</p>
           </div>
           
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                New Strategy
+                {t.strategies.newStrategy}
               </Button>
             </DialogTrigger>
             <DialogContent className="glass-card">
               <DialogHeader>
-                <DialogTitle>Create Strategy</DialogTitle>
+                <DialogTitle>{t.strategies.createStrategy}</DialogTitle>
                 <DialogDescription>
-                  Set up a new strategy to receive TradingView signals
+                  {t.strategies.createStrategyDescription}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={createStrategy} className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Strategy Name *</Label>
+                  <Label htmlFor="name">{t.strategies.strategyName} *</Label>
                   <Input
                     id="name"
-                    placeholder="e.g., BTC Breakout Strategy"
+                    placeholder={t.strategies.strategyNamePlaceholder}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t.strategies.description}</Label>
                   <Textarea
                     id="description"
-                    placeholder="Describe your strategy..."
+                    placeholder={t.strategies.descriptionPlaceholder}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
@@ -462,7 +464,7 @@ const Strategies = () => {
                 </div>
                 <Button type="submit" className="w-full" disabled={creating}>
                   {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Create Strategy
+                  {creating ? t.strategies.creating : t.strategies.createStrategy}
                 </Button>
               </form>
             </DialogContent>
