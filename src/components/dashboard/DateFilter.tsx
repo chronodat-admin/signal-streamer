@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,24 @@ export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps
   const [customRange, setCustomRange] = useState<DateRange>(dateRange || { from: undefined, to: undefined });
   const [isCustomOpen, setIsCustomOpen] = useState(false);
 
+  // Sync customRange with dateRange prop
+  useEffect(() => {
+    if (dateRange) {
+      setCustomRange(dateRange);
+    }
+  }, [dateRange]);
+
+  // Auto-open popover when custom is selected without a range
+  useEffect(() => {
+    if (value === 'custom' && (!dateRange?.from || !dateRange?.to)) {
+      setIsCustomOpen(true);
+    }
+  }, [value, dateRange]);
+
   const handlePresetChange = (preset: DateFilterType) => {
     if (preset === 'custom') {
+      // First update the value to 'custom' so the calendar button appears
+      onFilterChange('custom', customRange.from && customRange.to ? customRange : undefined);
       setIsCustomOpen(true);
     } else {
       onFilterChange(preset);
@@ -36,9 +52,13 @@ export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps
   const handleCustomRangeSelect = (range: DateRange | undefined) => {
     if (range) {
       setCustomRange(range);
+      // Only close and apply when both dates are selected
       if (range.from && range.to) {
         onFilterChange('custom', range);
         setIsCustomOpen(false);
+      } else if (range.from) {
+        // Keep updating with partial selection
+        setCustomRange({ from: range.from, to: undefined });
       }
     }
   };
@@ -108,18 +128,16 @@ export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps
             <Calendar
               initialFocus
               mode="range"
-              defaultMonth={dateRange?.from}
+              defaultMonth={customRange.from || new Date()}
               selected={{
                 from: customRange.from,
                 to: customRange.to,
               }}
               onSelect={(range) => {
-                if (range) {
-                  handleCustomRangeSelect({
-                    from: range.from,
-                    to: range.to,
-                  });
-                }
+                handleCustomRangeSelect({
+                  from: range?.from,
+                  to: range?.to,
+                });
               }}
               numberOfMonths={2}
             />

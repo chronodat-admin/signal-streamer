@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { SignalsPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { EmptySignals, NoSearchResults } from '@/components/dashboard/EmptyState';
+import { DateFilter, DateFilterType, DateRange } from '@/components/dashboard/DateFilter';
 
 interface Signal {
   id: string;
@@ -88,6 +89,10 @@ const Signals = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<ManualSignalForm>(initialFormState);
 
+  // Date filter state
+  const [dateFilter, setDateFilter] = useState<DateFilterType>('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
   useEffect(() => {
     if (user) {
       fetchSignals();
@@ -97,7 +102,49 @@ const Signals = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [signals, filters]);
+  }, [signals, filters, dateFilter, dateRange]);
+
+  // Helper function to get date range based on filter type
+  const getDateRange = (filter: DateFilterType, customRange?: DateRange): { from: Date | null; to: Date | null } => {
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    switch (filter) {
+      case 'today': {
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        return { from: todayStart, to: now };
+      }
+      case 'week': {
+        const weekStart = new Date(now);
+        weekStart.setDate(weekStart.getDate() - 6);
+        weekStart.setHours(0, 0, 0, 0);
+        return { from: weekStart, to: now };
+      }
+      case 'month': {
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        monthStart.setHours(0, 0, 0, 0);
+        return { from: monthStart, to: now };
+      }
+      case 'year': {
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        yearStart.setHours(0, 0, 0, 0);
+        return { from: yearStart, to: now };
+      }
+      case 'custom': {
+        if (customRange?.from && customRange?.to) {
+          const from = new Date(customRange.from);
+          from.setHours(0, 0, 0, 0);
+          const to = new Date(customRange.to);
+          to.setHours(23, 59, 59, 999);
+          return { from, to };
+        }
+        return { from: null, to: null };
+      }
+      default:
+        return { from: null, to: null };
+    }
+  };
 
   const fetchStrategies = async () => {
     if (!user) return;
@@ -156,6 +203,17 @@ const Signals = () => {
 
   const applyFilters = () => {
     let filtered = [...signals];
+
+    // Apply date filter first
+    if (dateFilter !== 'all') {
+      const range = getDateRange(dateFilter, dateRange);
+      if (range.from && range.to) {
+        filtered = filtered.filter((s) => {
+          const signalDate = new Date(s.created_at);
+          return signalDate >= range.from! && signalDate <= range.to!;
+        });
+      }
+    }
 
     if (filters.strategy !== 'all') {
       filtered = filtered.filter((s) => s.strategy_id === filters.strategy);
@@ -378,7 +436,16 @@ const Signals = () => {
             <h1 className="text-3xl font-display font-bold">All Signals</h1>
             <p className="text-muted-foreground">View and filter all your trading signals</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            {/* Date Filter */}
+            <DateFilter
+              value={dateFilter}
+              dateRange={dateRange}
+              onFilterChange={(filter, range) => {
+                setDateFilter(filter);
+                setDateRange(range);
+              }}
+            />
             {/* Manual Signal Entry Dialog */}
             <Dialog open={dialogOpen} onOpenChange={(open) => {
               setDialogOpen(open);
@@ -552,9 +619,9 @@ const Signals = () => {
             </Dialog>
 
             <Button onClick={exportCSV} variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Export CSV
-            </Button>
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
           </div>
         </div>
 
