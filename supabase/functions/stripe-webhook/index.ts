@@ -57,24 +57,46 @@ serve(async (req) => {
         if (userId && plan) {
           console.log(`Checkout completed for user ${userId}, plan ${plan}, subscription: ${session.subscription}`);
 
-          // Update user's plan immediately
-          const { error: updateError, data: updatedProfile } = await supabase
-            .from("profiles")
-            .update({
-              plan,
-              stripe_subscription_id: session.subscription as string,
-            })
-            .eq("user_id", userId)
-            .select()
-            .single();
+          // Use RPC function to update plan (bypasses RLS)
+          const { data: updateResult, error: updateError } = await supabase.rpc('update_user_plan', {
+            p_user_id: userId,
+            p_plan: plan,
+            p_stripe_subscription_id: session.subscription as string,
+          });
 
           if (updateError) {
             console.error("Error updating profile after checkout:", updateError);
+            
+            // Fallback: try direct update
+            const { error: fallbackError, data: updatedProfile } = await supabase
+              .from("profiles")
+              .update({
+                plan,
+                stripe_subscription_id: session.subscription as string,
+              })
+              .eq("user_id", userId)
+              .select()
+              .single();
+
+            if (fallbackError) {
+              console.error("Fallback update also failed:", fallbackError);
+            } else {
+              console.log(`Fallback update succeeded. Updated profile:`, {
+                plan: updatedProfile?.plan,
+                subscription_id: updatedProfile?.stripe_subscription_id,
+              });
+            }
           } else {
-            console.log(`Successfully upgraded user ${userId} to ${plan} plan. Updated profile:`, {
-              plan: updatedProfile?.plan,
-              subscription_id: updatedProfile?.stripe_subscription_id,
-            });
+            console.log(`Successfully upgraded user ${userId} to ${plan} plan using RPC function. Result:`, updateResult);
+            
+            // Verify the update
+            const { data: verifyProfile } = await supabase
+              .from("profiles")
+              .select("plan, stripe_subscription_id")
+              .eq("user_id", userId)
+              .single();
+            
+            console.log("Verified profile after update:", verifyProfile);
           }
         } else {
           console.error("Missing userId or plan in checkout session metadata:", {
@@ -125,39 +147,86 @@ serve(async (req) => {
         const status = subscription.status;
 
         if (status === "active" || status === "trialing") {
-          // Build update object - only include plan if we determined it
-          const updateData: {
-            stripe_subscription_id: string;
-            plan_expires_at: string;
-            plan?: "PRO" | "ELITE";
-          } = {
-            stripe_subscription_id: subscription.id,
-            plan_expires_at: periodEnd,
-          };
-
-          // Only update plan if we successfully determined it
-          if (plan) {
-            updateData.plan = plan;
-            console.log(`Updating user ${profile.user_id} to plan ${plan}, expires ${periodEnd}`);
-          } else {
-            console.warn(`Could not determine plan for subscription ${subscription.id}, keeping current plan ${profile.plan}`);
+          // If we couldn't determine plan, try to get it from the current profile or subscription
+          if (!plan) {
+            // Try to get plan from subscription items by fetching the price details
+            try {
+              if (subscription.items.data.length > 0) {
+                const priceId = subscription.items.data[0].price.id;
+                const price = await stripe.prices.retrieve(priceId);
+                console.log(`Retrieved price details:`, { id: price.id, nickname: price.nickname, metadata: price.metadata });
+                
+                // Check if price has plan in metadata
+                if (price.metadata?.plan) {
+                  plan = price.metadata.plan as "PRO" | "ELITE";
+                }
+              }
+            } catch (priceError) {
+              console.error("Error retrieving price:", priceError);
+            }
           }
 
-          const { error: updateError, data: updatedProfile } = await supabase
-            .from("profiles")
-            .update(updateData)
-            .eq("user_id", profile.user_id)
-            .select()
-            .single();
+          // If still no plan, log warning but still update subscription info
+          if (!plan) {
+            console.warn(`Could not determine plan for subscription ${subscription.id}. Current profile plan: ${profile.plan}. Will update subscription info but keep current plan.`);
+          }
 
-          if (updateError) {
-            console.error("Error updating subscription:", updateError);
-          } else {
-            console.log(`Successfully updated subscription for user ${profile.user_id}:`, {
-              plan: updatedProfile?.plan,
-              expires: periodEnd,
-              subscription_id: subscription.id,
+          // Use RPC function to update (bypasses RLS)
+          if (plan) {
+            const { data: updateResult, error: rpcError } = await supabase.rpc('update_user_plan', {
+              p_user_id: profile.user_id,
+              p_plan: plan,
+              p_stripe_subscription_id: subscription.id,
+              p_plan_expires_at: periodEnd,
             });
+
+            if (rpcError) {
+              console.error("Error updating subscription via RPC:", rpcError);
+              
+              // Fallback: direct update
+              const { error: updateError, data: updatedProfile } = await supabase
+                .from("profiles")
+                .update({
+                  plan,
+                  stripe_subscription_id: subscription.id,
+                  plan_expires_at: periodEnd,
+                })
+                .eq("user_id", profile.user_id)
+                .select()
+                .single();
+
+              if (updateError) {
+                console.error("Fallback update also failed:", updateError);
+              } else {
+                console.log(`Fallback update succeeded:`, {
+                  plan: updatedProfile?.plan,
+                  expires: periodEnd,
+                  subscription_id: subscription.id,
+                });
+              }
+            } else {
+              console.log(`Successfully updated subscription via RPC for user ${profile.user_id}:`, {
+                plan,
+                expires: periodEnd,
+                subscription_id: subscription.id,
+                result: updateResult,
+              });
+            }
+          } else {
+            // Update subscription info without changing plan
+            const { error: updateError } = await supabase
+              .from("profiles")
+              .update({
+                stripe_subscription_id: subscription.id,
+                plan_expires_at: periodEnd,
+              })
+              .eq("user_id", profile.user_id);
+
+            if (updateError) {
+              console.error("Error updating subscription info:", updateError);
+            } else {
+              console.log(`Updated subscription info (without plan change) for user ${profile.user_id}`);
+            }
           }
         } else {
           console.log(`Subscription status is ${status}, not updating plan (only active/trialing subscriptions update plan)`);
