@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Target, Trophy } from 'lucide-react';
+import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Target, Trophy, Shield } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
+import { useAdmin } from '@/hooks/useAdmin';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { formatPnL } from '@/lib/pnlUtils';
@@ -60,6 +61,7 @@ interface DashboardStats {
 const Dashboard = () => {
   const { user } = useAuth();
   const { preferences } = usePreferences();
+  const { isAdmin } = useAdmin();
   const [signals, setSignals] = useState<Signal[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [allTrades, setAllTrades] = useState<Trade[]>([]);
@@ -330,6 +332,14 @@ const Dashboard = () => {
                 setDateRange(range);
               }}
             />
+            {isAdmin && (
+              <Link to="/admin/users">
+                <Button variant="outline" className="gap-2 border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 dark:hover:bg-purple-500/10">
+                  <Shield className="h-4 w-4" />
+                  Admin Panel
+                </Button>
+              </Link>
+            )}
             <Link to="/dashboard/strategies">
               <Button className="gap-2 shadow-md hover:shadow-lg transition-all">
                 <Plus className="h-4 w-4" />
