@@ -17,7 +17,6 @@ serve(async (req) => {
     // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAnonKey = Deno.env.get("ANON_KEY"); // Secret name: ANON_KEY (no SUPABASE_ prefix allowed)
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     const proPriceId = Deno.env.get("STRIPE_PRO_PRICE_ID");
     const elitePriceId = Deno.env.get("STRIPE_ELITE_PRICE_ID");
@@ -41,37 +40,20 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
 
-    // Get anon key from header or env
-    const apikeyFromHeader = req.headers.get("apikey");
-    const anonKey = apikeyFromHeader || supabaseAnonKey;
+    // Create Supabase client with service role key
+    // This is the same pattern used in sync-subscription and create-portal functions
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!anonKey) {
-      // Fallback: try to validate with service role (less ideal but might work)
-      console.log("No anon key available, using service role for validation");
-    }
+    // Validate user token using service role client
+    // This works because getUser() validates the JWT signature
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
-    // Create client with anon key for token validation (preferred)
-    // If no anon key, use service role as fallback
-    const authClient = createClient(
-      supabaseUrl,
-      anonKey || supabaseServiceKey,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      }
-    );
-
-    // Validate user token
-    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
-
-    if (authError || !user) {
-      console.error("Auth error:", authError?.message);
+    if (userError || !user) {
+      console.error("Auth error:", userError?.message);
       return new Response(
         JSON.stringify({ 
           error: "Authentication failed",
-          message: authError?.message || "Invalid token"
+          message: userError?.message || "Invalid token"
         }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -96,8 +78,7 @@ serve(async (req) => {
       );
     }
 
-    // Create service role client for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Create Stripe client
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
     // Get user profile
