@@ -5,11 +5,10 @@ import { Activity, Users, TrendingUp, Shield } from 'lucide-react';
 export const AdminDashboard = () => {
   return (
     <AdminLayout>
-      <div className="mb-8 -mx-6 lg:-mx-8 -mt-6 lg:-mt-8">
-        <div className="bg-gradient-to-r from-purple-500 to-blue-500 px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-white/90 text-lg">System overview and statistics</p>
-        </div>
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Admin Dashboard</h1>
+        <p className="text-muted-foreground">System overview and statistics</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

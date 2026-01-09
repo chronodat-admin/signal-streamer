@@ -192,12 +192,10 @@ export const UserManagement = () => {
 
   return (
     <AdminLayout>
-      {/* Page Title Banner */}
-      <div className="mb-8 -mx-6 lg:-mx-8 -mt-6 lg:-mt-8">
-        <div className="bg-gradient-to-r from-green-500 to-blue-500 px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold text-white mb-2">User Management</h1>
-          <p className="text-white/90 text-lg">Manage user roles, permissions, and view analytics</p>
-        </div>
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">User Management</h1>
+        <p className="text-muted-foreground">Manage user roles, permissions, and view analytics</p>
       </div>
 
       {/* User Statistics Cards */}
