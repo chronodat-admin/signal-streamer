@@ -7,9 +7,7 @@ import {
   LayoutDashboard, 
   Users, 
   CreditCard, 
-  Crown, 
   MessageSquare, 
-  Globe, 
   LogOut, 
   Loader2, 
   Menu, 
@@ -49,18 +47,6 @@ const adminNavigation = [
     description: 'View and manage user subscriptions'
   },
   { 
-    name: 'User Quotas', 
-    href: '/admin/quotas', 
-    icon: Crown,
-    description: 'Manage user quiz limits'
-  },
-  { 
-    name: 'Stripe Products', 
-    href: '/admin/stripe', 
-    icon: CreditCard,
-    description: 'Manage Stripe products and sync with sub...'
-  },
-  { 
     name: 'Contact Messages', 
     href: '/admin/contact', 
     icon: MessageSquare,
@@ -71,12 +57,6 @@ const adminNavigation = [
     href: '/admin/feedback', 
     icon: MessageSquare,
     description: 'View and manage user feedback submissi...'
-  },
-  { 
-    name: 'Quiz Gallery', 
-    href: '/admin/gallery', 
-    icon: Globe,
-    description: 'Manage quiz gallery and control visibility'
   },
 ];
 
