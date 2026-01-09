@@ -560,22 +560,26 @@ const Billing = () => {
         // Extract actual error message from Edge Function response
         let errorMessage = 'Failed to create checkout session';
         
+        console.log('Error data from Edge Function:', data);
+        
         if (data?.error) {
-          errorMessage = data.error;
+          // Show the actual error with details for debugging
           if (data.details) {
             errorMessage = `${data.error}: ${data.details}`;
+            console.error('Auth error details:', data.details, 'Code:', data.code);
+          } else {
+            errorMessage = data.error;
           }
           
-          // Handle specific error types
-          if (data.error === 'Unauthorized' || data.error === 'Invalid JWT' || data.error.includes('JWT')) {
+          // Only show user-friendly message for specific known errors
+          if (data.details?.includes('expired') || data.details?.includes('invalid signature')) {
             errorMessage = 'Your session has expired. Please sign in again.';
           } else if (data.error === 'No authorization header') {
             errorMessage = 'Authentication failed. Please sign in again.';
-          } else if (data.error.includes('Stripe') || data.error.includes('configured')) {
-            errorMessage = data.error;
           }
+          // For other errors, show the actual error message to help debug
         } else if (response.status === 401) {
-          errorMessage = 'Your session has expired. Please sign in again.';
+          errorMessage = `Authentication failed (${response.status}). Please sign in again.`;
         } else if (response.status === 500) {
           errorMessage = 'Payment processing is not yet configured. Please contact support.';
         }

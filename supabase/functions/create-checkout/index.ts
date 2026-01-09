@@ -69,12 +69,47 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     console.log("[create-checkout] Validating user token...");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    console.log("[create-checkout] Token length:", token.length);
+    console.log("[create-checkout] Token preview:", token.substring(0, 50) + "...");
+    
+    // Create a separate client with the anon key for auth validation
+    // This is more reliable for validating user tokens
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    let authClient;
+    if (supabaseAnonKey) {
+      // Use anon key client for auth (more reliable for user token validation)
+      authClient = createClient(supabaseUrl, supabaseAnonKey);
+      console.log("[create-checkout] Using anon key for auth validation");
+    } else {
+      // Fallback to service role client
+      authClient = supabase;
+      console.log("[create-checkout] Using service role key for auth validation (anon key not set)");
+    }
+    
+    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
 
-    if (userError || !user) {
-      console.error("[create-checkout] Auth error:", userError?.message || "No user found");
+    if (userError) {
+      console.error("[create-checkout] Auth error details:", {
+        message: userError.message,
+        status: userError.status,
+        name: userError.name,
+        code: userError.code,
+      });
       return new Response(
-        JSON.stringify({ error: "Unauthorized", details: userError?.message }),
+        JSON.stringify({ 
+          error: "Unauthorized", 
+          details: userError.message,
+          code: userError.code || userError.status,
+        }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    if (!user) {
+      console.error("[create-checkout] No user returned from getUser");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", details: "No user found for token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
