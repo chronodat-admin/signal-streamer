@@ -3,1253 +3,285 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-import { useSearchParams } from 'react-router-dom';
-import { 
-  CreditCard, 
-  Calendar, 
-  ArrowUpRight, 
-  Settings, 
-  Loader2, 
-  Check, 
-  X, 
-  Zap,
-  Crown,
-  Sparkles,
-  Shield,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-  Layers,
-  Download,
-  Globe,
-  Key,
-  Infinity,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-  Receipt,
-  History
-} from 'lucide-react';
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CreditCard, Calendar, ArrowUpRight, Loader2, ExternalLink, RefreshCw, CheckCircle } from 'lucide-react';
+import { useEffect } from 'react';
+import { useSubscription } from '@/hooks/useSubscription';
+import { STRIPE_PLANS } from '@/lib/stripe';
+import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { getPlanLimits } from '@/lib/planUtils';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
-interface Profile {
-  plan: PlanType;
-  plan_expires_at: string | null;
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
-}
-
-interface UsageStats {
-  strategiesCount: number;
-  integrationsCount: number;
-  signalsToday: number;
-}
-
-const planDetails: Record<PlanType, { 
-  name: string; 
-  price: string;
-  monthlyPrice: number;
-  description: string;
-  icon: React.ElementType;
-  color: string;
-  gradient: string;
-  features: { name: string; included: boolean; highlight?: boolean }[];
-}> = {
+const planDetails: Record<PlanType, { name: string; price: string; features: string[] }> = {
   FREE: {
     name: 'Free',
-    price: '$0',
-    monthlyPrice: 0,
-    description: 'Perfect for getting started',
-    icon: Zap,
-    color: 'text-muted-foreground',
-    gradient: 'from-slate-500/20 to-slate-600/20',
-    features: [
-      { name: '1 Strategy', included: true },
-      { name: '7-day signal history', included: true },
-      { name: 'Webhook integration', included: true },
-      { name: 'Email support', included: true },
-      { name: 'CSV export', included: false },
-      { name: 'Public strategy pages', included: false },
-      { name: 'API access', included: false },
-      { name: 'Priority support', included: false },
-    ],
+    price: '$0/forever',
+    features: ['1 Strategy', '7-day signal history', 'Email support'],
   },
   PRO: {
     name: 'Pro',
-    price: '$19',
-    monthlyPrice: 19,
-    description: 'For active traders',
-    icon: Crown,
-    color: 'text-primary',
-    gradient: 'from-primary/20 to-primary/10',
-    features: [
-      { name: '10 Strategies', included: true, highlight: true },
-      { name: '90-day signal history', included: true, highlight: true },
-      { name: 'Webhook integration', included: true },
-      { name: 'Priority support', included: true },
-      { name: 'CSV export', included: true, highlight: true },
-      { name: 'Public strategy pages', included: true, highlight: true },
-      { name: 'API access', included: false },
-      { name: 'Dedicated support', included: false },
-    ],
+    price: '$19/month',
+    features: ['10 Strategies', '90-day signal history', 'CSV export', 'Public pages'],
   },
   ELITE: {
     name: 'Elite',
-    price: '$49',
-    monthlyPrice: 49,
-    description: 'For professional traders',
-    icon: Sparkles,
-    color: 'text-amber-500',
-    gradient: 'from-amber-500/20 to-orange-500/20',
-    features: [
-      { name: 'Unlimited strategies', included: true, highlight: true },
-      { name: 'Unlimited signal history', included: true, highlight: true },
-      { name: 'Webhook integration', included: true },
-      { name: 'Dedicated support', included: true, highlight: true },
-      { name: 'CSV export', included: true },
-      { name: 'Public strategy pages', included: true },
-      { name: 'Full API access', included: true, highlight: true },
-      { name: 'Custom integrations', included: true, highlight: true },
-    ],
+    price: '$49/month',
+    features: ['Unlimited strategies', 'Unlimited history', 'API access', 'Dedicated support'],
   },
 };
 
-const planOrder: PlanType[] = ['FREE', 'PRO', 'ELITE'];
-
 const Billing = () => {
-  const { user, session } = useAuth();
-  const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState<'PRO' | 'ELITE' | null>(null);
-  const [usageStats, setUsageStats] = useState<UsageStats>({
-    strategiesCount: 0,
-    integrationsCount: 0,
-    signalsToday: 0,
-  });
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { 
+    plan, 
+    subscribed, 
+    subscriptionEnd, 
+    loading, 
+    checkSubscription, 
+    createCheckout,
+    openCustomerPortal 
+  } = useSubscription();
 
-  // Track the plan before checkout for comparison
-  const preCheckoutPlanRef = useRef<PlanType | null>(null);
-  
-  // Handle success/canceled query params from Stripe checkout
+  // Handle success/cancel redirects
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
-    const sessionId = searchParams.get('session_id');
 
     if (success === 'true') {
-      toast({
-        title: '🎉 Payment Successful!',
-        description: 'Processing your subscription... This may take a moment.',
-        duration: 6000,
-      });
-      // Clean up URL
-      setSearchParams({});
-      
-      // Store current plan to compare against
-      const currentPlanBeforeCheckout = profile?.plan || preCheckoutPlanRef.current || 'FREE';
-      preCheckoutPlanRef.current = currentPlanBeforeCheckout;
-      
-      // Poll for profile update (webhook might take a moment)
-      if (user) {
-        let attempts = 0;
-        const maxAttempts = 15; // Increased from 10 to give webhook more time
-        
-        const pollForUpdate = async () => {
-          attempts++;
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('plan, stripe_subscription_id, updated_at')
-            .eq('user_id', user.id)
-            .single();
-          
-          console.log(`Polling attempt ${attempts}/${maxAttempts}:`, { 
-            plan: data?.plan, 
-            subscription_id: data?.stripe_subscription_id,
-            updated_at: data?.updated_at,
-            previousPlan: currentPlanBeforeCheckout,
-            error 
-          });
-          
-          // Check if plan has changed (handles FREE -> paid AND paid -> higher paid)
-          const planChanged = data?.plan && data.plan !== currentPlanBeforeCheckout;
-          const hasSubscription = !!data?.stripe_subscription_id;
-          
-          if (planChanged && hasSubscription) {
-            // Plan updated!
-            toast({
-              title: '🎉 Subscription Activated!',
-              description: `You're now on the ${data.plan} plan! Enjoy your upgraded features.`,
-              duration: 6000,
-            });
-            fetchProfile();
-          } else if (attempts < maxAttempts) {
-            // Keep polling with increasing delay
-            const delay = attempts < 5 ? 2000 : 3000;
-            setTimeout(pollForUpdate, delay);
-          } else {
-            // Webhook might not be configured or delayed - try manual sync
-            console.log('Polling timed out, attempting manual sync...');
-            try {
-              const syncResponse = await supabase.functions.invoke('sync-subscription', {
-                body: {},
-              });
-              
-              console.log('Auto-sync result:', syncResponse);
-              
-              if (syncResponse.error) {
-                throw syncResponse.error;
-              }
-              
-              const syncData = syncResponse.data;
-              
-              if (syncData?.updated) {
-                toast({
-                  title: '🎉 Subscription Activated!',
-                  description: `You're now on the ${syncData.plan} plan!`,
-                  duration: 6000,
-                });
-              } else {
-                toast({
-                  title: 'Payment Successful',
-                  description: 'Your payment was processed. If your plan hasn\'t updated, click "Sync Subscription Status" or contact support.',
-                  duration: 10000,
-                });
-              }
-            } catch (syncError) {
-              console.error('Auto-sync failed:', syncError);
-              toast({
-                title: 'Payment Successful',
-                description: 'Your payment was processed. If your plan hasn\'t updated yet, click "Sync Subscription Status" below.',
-                duration: 10000,
-              });
-            }
-            fetchProfile();
-          }
-        };
-        
-        // Start polling after a short delay
-        setTimeout(pollForUpdate, 2000);
-      }
+      toast.success('Subscription activated! Thank you for upgrading.');
+      // Refresh subscription status
+      checkSubscription();
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard/billing');
     } else if (canceled === 'true') {
-      toast({
-        title: 'Checkout Canceled',
-        description: 'Your subscription remains unchanged. Feel free to upgrade anytime.',
-        variant: 'destructive',
-        duration: 5000,
-      });
-      // Clean up URL
-      setSearchParams({});
+      toast.info('Checkout was canceled. No charges were made.');
+      window.history.replaceState({}, '', '/dashboard/billing');
     }
-  }, [searchParams, setSearchParams, toast, user]);
+  }, [searchParams, checkSubscription]);
 
-  const fetchProfile = useCallback(async () => {
-    if (!user) return;
+  const details = planDetails[plan];
 
-    try {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('plan, plan_expires_at, stripe_customer_id, stripe_subscription_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileData) {
-        setProfile(profileData as Profile);
-      }
-
-      // Fetch usage stats
-      const { count: strategiesCount } = await supabase
-        .from('strategies')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_deleted', false);
-
-      const { count: integrationsCount } = await supabase
-        .from('integrations')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .neq('status', 'deleted');
-
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      
-      const { count: signalsToday } = await supabase
-        .from('signals')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .gte('created_at', todayStart.toISOString());
-
-      setUsageStats({
-        strategiesCount: strategiesCount || 0,
-        integrationsCount: integrationsCount || 0,
-        signalsToday: signalsToday || 0,
-      });
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchProfile();
-    
-    // Check if user has a subscription that should update their plan
-    // This handles cases where redirect doesn't include query params
-    if (user) {
-      const checkSubscription = async () => {
-        // Only check if currently on FREE plan
-        const { data: currentProfile } = await supabase
-          .from('profiles')
-          .select('plan, stripe_customer_id, stripe_subscription_id')
-          .eq('user_id', user.id)
-          .single();
-        
-        // If user has a Stripe customer ID but is on FREE plan, try to sync
-        if (currentProfile?.stripe_customer_id && currentProfile?.plan === 'FREE') {
-          console.log('User has Stripe customer but is on FREE plan, checking subscription...');
-          // Don't auto-sync immediately, let user use manual sync button
-          // This prevents unnecessary API calls
-        }
-      };
-      
-      // Check after a delay to avoid race conditions
-      setTimeout(checkSubscription, 3000);
-    }
-  }, [fetchProfile, user]);
-
-  // Track previous plan to detect upgrades
-  const previousPlanRef = useRef<PlanType | null>(null);
-  
-  // Also update preCheckoutPlanRef when profile loads (backup for polling comparison)
-  useEffect(() => {
-    if (profile?.plan && !preCheckoutPlanRef.current) {
-      preCheckoutPlanRef.current = profile.plan;
-    }
-  }, [profile?.plan]);
-  
-  // Subscribe to realtime updates for profile changes
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`profile:${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Profile updated via realtime:', payload.new);
-          const updatedProfile = payload.new as Profile;
-          const previousPlan = previousPlanRef.current;
-          
-          // Show notification if plan was upgraded from FREE
-          if (updatedProfile.plan && updatedProfile.plan !== 'FREE' && previousPlan === 'FREE') {
-            toast({
-              title: '🎉 Subscription Activated!',
-              description: `You're now on the ${updatedProfile.plan} plan! Enjoy your upgraded features.`,
-              duration: 6000,
-            });
-          }
-          
-          // Update profile and previous plan ref
-          previousPlanRef.current = updatedProfile.plan;
-          setProfile(updatedProfile);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, toast]);
-  
-  // Update previous plan ref when profile changes
-  useEffect(() => {
-    if (profile?.plan) {
-      previousPlanRef.current = profile.plan;
-    }
-  }, [profile?.plan]);
-
-  const [syncing, setSyncing] = useState(false);
-
-  const handleSyncSubscription = async () => {
-    if (!user) return;
-
-    setSyncing(true);
-    try {
-      const response = await supabase.functions.invoke('sync-subscription', {
-        body: {},
-      });
-
-      console.log('Sync response:', response);
-
-      if (response.error) {
-        throw new Error(response.error.message || response.data?.error || 'Failed to sync subscription');
-      }
-
-      const data = response.data;
-
-      if (data?.updated) {
-        toast({
-          title: '✅ Subscription Synced!',
-          description: `Your plan has been updated to ${data.plan}.`,
-          duration: 6000,
-        });
-        fetchProfile();
-      } else {
-        toast({
-          title: 'Subscription Status',
-          description: data?.message || 'Your subscription is up to date.',
-          duration: 5000,
-        });
-        fetchProfile();
-      }
-    } catch (error: any) {
-      console.error('Sync error:', error);
-      toast({
-        title: 'Sync Failed',
-        description: error.message || 'Failed to sync subscription. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setSyncing(false);
-    }
+  const handleUpgrade = async (planKey: keyof typeof STRIPE_PLANS) => {
+    const stripePlan = STRIPE_PLANS[planKey];
+    await createCheckout(stripePlan.priceId);
   };
-
-  const handleManageSubscription = async () => {
-    if (!profile?.stripe_customer_id) {
-      toast({
-        title: 'No Subscription',
-        description: 'You don\'t have an active subscription to manage.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setPortalLoading(true);
-
-    try {
-      const response = await supabase.functions.invoke('create-portal', {
-        body: {},
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to create portal session');
-      }
-
-      const { url, error: dataError } = response.data;
-      
-      if (dataError) {
-        throw new Error(dataError);
-      }
-      
-      if (url) {
-        window.location.href = url;
-      } else {
-        throw new Error('No portal URL returned');
-      }
-    } catch (error: any) {
-      console.error('Portal error:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to open subscription management.',
-        variant: 'destructive',
-      });
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
-  const handleCheckout = async (plan: 'PRO' | 'ELITE') => {
-    if (!user) {
-      toast({
-        title: 'Authentication Required',
-        description: 'Please sign in to upgrade your plan.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setCheckoutLoading(plan);
-
-    try {
-      // Get current session for explicit auth header
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      
-      if (!currentSession?.access_token) {
-        throw new Error('Please sign in to continue.');
-      }
-
-      // Use supabase.functions.invoke with explicit Authorization header
-      // This matches the working pattern from signal-streamer-main
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan },
-        headers: {
-          Authorization: `Bearer ${currentSession.access_token}`,
-        },
-      });
-
-      if (error) {
-        // Try to extract error message
-        let errorMsg = error.message || 'Checkout failed';
-        
-        // If it's a 401, suggest re-authentication
-        if (error.message?.includes('401') || error.message?.includes('JWT') || error.message?.includes('Invalid')) {
-          errorMsg = 'Your session has expired. Please sign out and sign in again, then try checkout.';
-        }
-        
-        throw new Error(errorMsg);
-      }
-
-      if (!data) {
-        throw new Error('No response from checkout function');
-      }
-
-      const { url, error: dataError } = data;
-      
-      if (dataError) {
-        throw new Error(dataError);
-      }
-      
-      if (url) {
-        window.location.href = url;
-      } else {
-        throw new Error('No checkout URL returned. Please ensure Stripe is properly configured.');
-      }
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      
-      let errorMessage = 'Failed to start checkout.';
-      
-      if (error.message) {
-        errorMessage = error.message;
-        
-        // If it's a JWT/auth error, provide specific guidance
-        if (error.message.includes('JWT') || error.message.includes('Invalid') || error.message.includes('401')) {
-          errorMessage = 'Authentication error. Please sign out, sign back in, and try again.';
-        }
-      }
-      
-      toast({
-        title: 'Checkout Error',
-        description: errorMessage + (error.message?.includes('JWT') || error.message?.includes('Invalid') 
-          ? ' Try signing out and signing back in, then try again.' 
-          : ''),
-        variant: 'destructive',
-      });
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
-
-  const currentPlan = profile?.plan || 'FREE';
-  const details = planDetails[currentPlan];
-  const limits = getPlanLimits(currentPlan);
-  const hasActiveSubscription = currentPlan !== 'FREE' && profile?.stripe_customer_id;
-  const PlanIcon = details.icon;
-
-  // Calculate usage percentages
-  const strategiesUsage = limits.maxStrategies === -1 
-    ? 0 
-    : Math.min((usageStats.strategiesCount / limits.maxStrategies) * 100, 100);
-  const strategiesNearLimit = limits.maxStrategies !== -1 && usageStats.strategiesCount >= limits.maxStrategies * 0.8;
-  const strategiesAtLimit = limits.maxStrategies !== -1 && usageStats.strategiesCount >= limits.maxStrategies;
-
-  // Check if subscription is expiring soon (within 7 days)
-  const isExpiringSoon = profile?.plan_expires_at 
-    ? new Date(profile.plan_expires_at).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
-    : false;
-
-  // Get next plan for upgrade
-  const currentPlanIndex = planOrder.indexOf(currentPlan);
-  const nextPlan = currentPlanIndex < planOrder.length - 1 ? planOrder[currentPlanIndex + 1] : null;
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-display font-bold tracking-tight">Billing</h1>
+            <h1 className="text-3xl font-bold">Billing</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your subscription, usage, and payment methods
+              Manage your subscription and payment methods
             </p>
           </div>
-          {hasActiveSubscription && (
-            <Button 
-              variant="outline" 
-              onClick={handleManageSubscription}
-              disabled={portalLoading}
-              className="gap-2"
-            >
-              {portalLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ExternalLink className="h-4 w-4" />
-              )}
-              Manage in Stripe
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={checkSubscription}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Status
+          </Button>
         </div>
 
         {loading ? (
-          <BillingSkeleton />
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
         ) : (
-          <>
-            {/* Alerts */}
-            {strategiesAtLimit && nextPlan && (
-              <Alert className="border-amber-500/50 bg-amber-500/10">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <AlertTitle className="text-amber-600 dark:text-amber-400">Strategy Limit Reached</AlertTitle>
-                <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-3">
-                  <span>You've reached your strategy limit. Upgrade to {planDetails[nextPlan].name} to create more strategies.</span>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="gap-1 border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-                    onClick={() => handleCheckout(nextPlan as 'PRO' | 'ELITE')}
-                    disabled={checkoutLoading !== null}
-                  >
-                    {checkoutLoading === nextPlan ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <ArrowUpRight className="h-3 w-3" />
-                    )}
-                    Upgrade Now
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {isExpiringSoon && hasActiveSubscription && (
-              <Alert className="border-blue-500/50 bg-blue-500/10">
-                <Clock className="h-4 w-4 text-blue-500" />
-                <AlertTitle className="text-blue-600 dark:text-blue-400">Subscription Renewing Soon</AlertTitle>
-                <AlertDescription>
-                  Your subscription renews on {new Date(profile!.plan_expires_at!).toLocaleDateString()}. 
-                  Ensure your payment method is up to date.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Current Plan Card */}
-              <Card className={`stat-card lg:col-span-2 relative overflow-hidden`}>
-                <div className={`absolute inset-0 bg-gradient-to-br ${details.gradient} opacity-50`} />
-                <CardHeader className="relative">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${details.gradient} flex items-center justify-center shadow-lg`}>
-                        <PlanIcon className={`h-6 w-6 ${details.color}`} />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl flex items-center gap-2">
-                          {details.name} Plan
-                          {currentPlan !== 'FREE' && (
-                            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                              Active
-                            </Badge>
-                          )}
-                        </CardTitle>
-                        <CardDescription className="mt-1">{details.description}</CardDescription>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold tracking-tight">{details.price}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {currentPlan === 'FREE' ? 'forever' : '/month'}
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="relative space-y-6">
-                  {/* Usage Stats */}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <Layers className="h-4 w-4" />
-                          Strategies
-                        </span>
-                        <span className={`font-medium ${strategiesAtLimit ? 'text-amber-500' : ''}`}>
-                          {usageStats.strategiesCount}
-                          {limits.maxStrategies !== -1 && ` / ${limits.maxStrategies}`}
-                          {limits.maxStrategies === -1 && (
-                            <Infinity className="inline h-4 w-4 ml-1 text-muted-foreground" />
-                          )}
-                        </span>
-                      </div>
-                      {limits.maxStrategies !== -1 && (
-                        <Progress 
-                          value={strategiesUsage} 
-                          className={`h-2 ${strategiesNearLimit ? '[&>div]:bg-amber-500' : ''}`}
-                        />
-                      )}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <History className="h-4 w-4" />
-                          Signal History
-                        </span>
-                        <span className="font-medium">
-                          {limits.historyDays === -1 ? (
-                            <span className="flex items-center gap-1">
-                              Unlimited <Infinity className="h-4 w-4 text-muted-foreground" />
-                            </span>
-                          ) : (
-                            `${limits.historyDays} days`
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Quick Feature Overview */}
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <QuickFeature 
-                      icon={Download} 
-                      label="CSV Export" 
-                      enabled={limits.csvExport} 
-                    />
-                    <QuickFeature 
-                      icon={Globe} 
-                      label="Public Pages" 
-                      enabled={limits.publicPages} 
-                    />
-                    <QuickFeature 
-                      icon={Key} 
-                      label="API Access" 
-                      enabled={currentPlan === 'ELITE'} 
-                    />
-                    <QuickFeature 
-                      icon={Shield} 
-                      label="Priority Support" 
-                      enabled={currentPlan !== 'FREE'} 
-                    />
-                  </div>
-
-                  {/* Renewal Info */}
-                  {profile?.plan_expires_at && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {new Date(profile.plan_expires_at) > new Date() ? 'Renews' : 'Expired'} on{' '}
-                        <span className="font-medium text-foreground">
-                          {new Date(profile.plan_expires_at).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </span>
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    {currentPlan === 'FREE' ? (
-                      <div className="flex flex-1 gap-2">
-                        <Button 
-                          className="flex-1 gap-2 shadow-md hover:shadow-lg transition-all"
-                          onClick={() => handleCheckout('PRO')}
-                          disabled={checkoutLoading !== null}
-                        >
-                          {checkoutLoading === 'PRO' ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Crown className="h-4 w-4" />
-                          )}
-                          Upgrade to Pro
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          className="flex-1 gap-2"
-                          onClick={() => handleCheckout('ELITE')}
-                          disabled={checkoutLoading !== null}
-                        >
-                          {checkoutLoading === 'ELITE' ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Sparkles className="h-4 w-4" />
-                          )}
-                          Upgrade to Elite
-                        </Button>
-                      </div>
-                    ) : nextPlan ? (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          className="flex-1 gap-2"
-                          onClick={() => handleCheckout(nextPlan as 'PRO' | 'ELITE')}
-                          disabled={checkoutLoading !== null}
-                        >
-                          {checkoutLoading === nextPlan ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <TrendingUp className="h-4 w-4" />
-                          )}
-                          Upgrade to {planDetails[nextPlan].name}
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="gap-2"
-                          onClick={handleManageSubscription}
-                          disabled={portalLoading}
-                        >
-                          {portalLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Settings className="h-4 w-4" />
-                          )}
-                          Manage
-                        </Button>
-                      </>
-                    ) : (
-                      <Button 
-                        variant="outline" 
-                        className="gap-2"
-                        onClick={handleManageSubscription}
-                        disabled={portalLoading}
-                      >
-                        {portalLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Settings className="h-4 w-4" />
-                        )}
-                        Manage Subscription
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Subscription Management Card */}
-              <Card className="stat-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-muted-foreground" />
-                    Payment
-                  </CardTitle>
-                  <CardDescription>Manage billing & invoices</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {hasActiveSubscription ? (
-                    <>
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                        <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                          <CheckCircle2 className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">Subscription Active</p>
-                          <p className="text-xs text-muted-foreground">
-                            Managed via Stripe
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start gap-2"
-                          onClick={handleManageSubscription}
-                          disabled={portalLoading}
-                        >
-                          {portalLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Settings className="h-4 w-4" />
-                          )}
-                          Manage Subscription
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start gap-2 text-muted-foreground"
-                          onClick={handleSyncSubscription}
-                          disabled={syncing}
-                        >
-                          {syncing ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <ArrowUpRight className="h-4 w-4" />
-                          )}
-                          Sync Subscription Status
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start gap-2 text-muted-foreground"
-                          onClick={handleManageSubscription}
-                          disabled={portalLoading}
-                        >
-                          <Receipt className="h-4 w-4" />
-                          View Invoices
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start gap-2 text-muted-foreground"
-                          onClick={handleManageSubscription}
-                          disabled={portalLoading}
-                        >
-                          <CreditCard className="h-4 w-4" />
-                          Update Payment Method
-                        </Button>
-                      </div>
-
-                      <Separator />
-
-                      <p className="text-xs text-center text-muted-foreground">
-                        Cancel anytime from the Stripe portal. Your access continues until the billing period ends.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                          <CreditCard className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">No Active Subscription</p>
-                          <p className="text-xs text-muted-foreground">
-                            {profile?.stripe_customer_id 
-                              ? 'If you just upgraded, click Sync to update your plan'
-                              : 'Upgrade to unlock premium features'}
-                          </p>
-                        </div>
-                        {profile?.stripe_customer_id && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleSyncSubscription}
-                            disabled={syncing}
-                            className="gap-1"
-                          >
-                            {syncing ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <ArrowUpRight className="h-3 w-3" />
-                            )}
-                            Sync
-                          </Button>
-                        )}
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Crown className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-sm">Upgrade to Pro</span>
-                        </div>
-                        <ul className="space-y-1.5 text-xs text-muted-foreground mb-3">
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3 w-3 text-primary" />
-                            10 strategies
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3 w-3 text-primary" />
-                            90-day signal history
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3 w-3 text-primary" />
-                            CSV export & public pages
-                          </li>
-                        </ul>
-                        <Button 
-                          size="sm" 
-                          className="w-full gap-1"
-                          onClick={() => handleCheckout('PRO')}
-                          disabled={checkoutLoading !== null}
-                        >
-                          {checkoutLoading === 'PRO' ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <ArrowUpRight className="h-3 w-3" />
-                          )}
-                          Upgrade to Pro - $19/mo
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Plan Comparison */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Current Plan */}
             <Card className="stat-card">
               <CardHeader>
-                <CardTitle className="text-lg">Compare Plans</CardTitle>
-                <CardDescription>See what's included in each plan</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6 md:grid-cols-3">
-                  {planOrder.map((plan) => {
-                    const planInfo = planDetails[plan];
-                    const isCurrentPlan = plan === currentPlan;
-                    const PIcon = planInfo.icon;
-                    
-                    return (
-                      <div 
-                        key={plan}
-                        className={`relative p-5 rounded-xl border-2 transition-all ${
-                          isCurrentPlan 
-                            ? 'border-primary bg-primary/5 shadow-md' 
-                            : 'border-border hover:border-primary/30 hover:shadow-sm'
-                        }`}
-                      >
-                        {isCurrentPlan && (
-                          <div className="absolute -top-3 left-4">
-                            <Badge className="bg-primary text-primary-foreground text-xs">
-                              Current Plan
-                            </Badge>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${planInfo.gradient} flex items-center justify-center`}>
-                            <PIcon className={`h-5 w-5 ${planInfo.color}`} />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{planInfo.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {planInfo.price}{plan !== 'FREE' && '/mo'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <ul className="space-y-2 mb-4">
-                          {planInfo.features.slice(0, 6).map((feature, i) => (
-                            <li 
-                              key={i}
-                              className={`flex items-center gap-2 text-sm ${
-                                feature.included 
-                                  ? feature.highlight 
-                                    ? 'text-foreground font-medium' 
-                                    : 'text-muted-foreground'
-                                  : 'text-muted-foreground/50'
-                              }`}
-                            >
-                              {feature.included ? (
-                                <Check className={`h-4 w-4 flex-shrink-0 ${
-                                  feature.highlight ? 'text-primary' : 'text-muted-foreground'
-                                }`} />
-                              ) : (
-                                <X className="h-4 w-4 flex-shrink-0" />
-                              )}
-                              {feature.name}
-                            </li>
-                          ))}
-                        </ul>
-
-                        {!isCurrentPlan && planOrder.indexOf(plan) > currentPlanIndex && (
-                          <Button 
-                            variant="default"
-                            size="sm"
-                            className="w-full gap-1"
-                            onClick={() => handleCheckout(plan as 'PRO' | 'ELITE')}
-                            disabled={checkoutLoading !== null}
-                          >
-                            {checkoutLoading === plan ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <ArrowUpRight className="h-3 w-3" />
-                            )}
-                            Upgrade to {planInfo.name}
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Current Plan</CardTitle>
+                  <Badge variant={plan === 'FREE' ? 'secondary' : 'default'}>
+                    {details.name}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Usage Details */}
-            <Card className="stat-card">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                  Usage This Period
-                </CardTitle>
-                <CardDescription>Your current usage statistics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                  <UsageStat 
-                    label="Strategies"
-                    value={usageStats.strategiesCount}
-                    limit={limits.maxStrategies}
-                    icon={Layers}
-                    warning={strategiesNearLimit}
-                  />
-                  <UsageStat 
-                    label="Integrations"
-                    value={usageStats.integrationsCount}
-                    limit={limits.integrations}
-                    icon={Zap}
-                  />
-                  <UsageStat 
-                    label="Signals Today"
-                    value={usageStats.signalsToday}
-                    limit={limits.rateLimitPerDay}
-                    icon={TrendingUp}
-                  />
-                  <UsageStat 
-                    label="History Retention"
-                    value={limits.historyDays === -1 ? 'Unlimited' : `${limits.historyDays} days`}
-                    icon={History}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* FAQ / Help */}
-            <Card className="stat-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Billing FAQ</CardTitle>
+                <CardDescription>Your active subscription</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FaqItem 
-                    question="How do I cancel my subscription?"
-                    answer="Click 'Manage Subscription' to access the Stripe portal where you can cancel anytime. Your access continues until the end of your billing period."
-                  />
-                  <FaqItem 
-                    question="What happens to my data if I downgrade?"
-                    answer="Your signals and strategies are preserved, but you'll only be able to access data within your new plan's limits."
-                  />
-                  <FaqItem 
-                    question="Can I change plans mid-cycle?"
-                    answer="Yes! Upgrades take effect immediately with prorated billing. Downgrades take effect at the end of your current billing period."
-                  />
-                  <FaqItem 
-                    question="What payment methods are accepted?"
-                    answer="We accept all major credit cards (Visa, Mastercard, American Express) through our secure Stripe payment processor."
-                  />
-                </div>
+                <div className="text-3xl font-bold">{details.price}</div>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  {details.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-success" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                {subscriptionEnd && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      Renews on {new Date(subscriptionEnd).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                <Link to="/pricing">
+                  <Button className="w-full mt-4" variant="outline">
+                    {plan === 'FREE' ? 'Upgrade Plan' : 'Change Plan'}
+                    <ArrowUpRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
-          </>
+
+            {/* Subscription Management */}
+            <Card className="stat-card">
+              <CardHeader>
+                <CardTitle className="text-lg">Subscription Management</CardTitle>
+                <CardDescription>
+                  {subscribed 
+                    ? 'Manage your subscription, update payment method, or cancel'
+                    : 'Upgrade to a paid plan to unlock more features'
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {subscribed ? (
+                  <>
+                    <div className="flex items-center gap-4 p-4 rounded-lg bg-success/10 border border-success/20">
+                      <div className="p-2 rounded-md bg-success/20">
+                        <CreditCard className="h-6 w-6 text-success" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Active Subscription</p>
+                        <p className="text-xs text-muted-foreground">
+                          {details.name} plan via Stripe
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={openCustomerPortal}
+                    >
+                      Manage Subscription
+                      <ExternalLink className="h-4 w-4 ml-2" />
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground">
+                      Update payment method, change plan, or cancel subscription
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
+                      <div className="p-2 rounded-md bg-background">
+                        <CreditCard className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">No active subscription</p>
+                        <p className="text-xs text-muted-foreground">
+                          You're on the free plan
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Button 
+                        className="w-full"
+                        onClick={() => handleUpgrade('PRO')}
+                      >
+                        Upgrade to Pro - $19/mo
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleUpgrade('ELITE')}
+                      >
+                        Upgrade to Elite - $49/mo
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Quick Upgrade Options (only show for non-elite users) */}
+            {plan !== 'ELITE' && (
+              <Card className="stat-card lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg">Upgrade Your Plan</CardTitle>
+                  <CardDescription>Get more features with a paid plan</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {plan === 'FREE' && (
+                      <div className="p-4 rounded-lg border border-border hover:border-primary transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold">Pro Plan</h3>
+                          <Badge>Popular</Badge>
+                        </div>
+                        <p className="text-2xl font-bold mb-2">$19<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+                        <p className="text-sm text-muted-foreground mb-4">10 strategies, 90-day history, CSV export</p>
+                        <Button 
+                          className="w-full"
+                          onClick={() => handleUpgrade('PRO')}
+                        >
+                          Upgrade to Pro
+                        </Button>
+                      </div>
+                    )}
+                    <div className="p-4 rounded-lg border border-border hover:border-primary transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold">Elite Plan</h3>
+                        <Badge variant="secondary">Best Value</Badge>
+                      </div>
+                      <p className="text-2xl font-bold mb-2">$49<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+                      <p className="text-sm text-muted-foreground mb-4">Unlimited everything + API access</p>
+                      <Button 
+                        variant={plan === 'PRO' ? 'default' : 'outline'}
+                        className="w-full"
+                        onClick={() => handleUpgrade('ELITE')}
+                      >
+                        {plan === 'PRO' ? 'Upgrade to Elite' : 'Go Elite'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Billing History */}
+            <Card className="stat-card lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Billing History</CardTitle>
+                <CardDescription>View your past invoices and payments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {subscribed ? (
+                  <div className="text-center py-6">
+                    <p className="text-muted-foreground mb-4">
+                      View and download your invoices from the Stripe Customer Portal
+                    </p>
+                    <Button variant="outline" onClick={openCustomerPortal}>
+                      View Invoices
+                      <ExternalLink className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No billing history yet</p>
+                    <p className="text-sm mt-1">
+                      Your invoices will appear here once you upgrade
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </DashboardLayout>
   );
 };
 
-// Helper Components
-const QuickFeature = ({ icon: Icon, label, enabled }: { icon: React.ElementType; label: string; enabled: boolean }) => (
-  <div className={`flex items-center gap-2 text-sm ${enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>
-    {enabled ? (
-      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-    ) : (
-      <XCircle className="h-4 w-4 flex-shrink-0" />
-    )}
-    <span>{label}</span>
-  </div>
-);
-
-const UsageStat = ({ 
-  label, 
-  value, 
-  limit, 
-  icon: Icon,
-  warning 
-}: { 
-  label: string; 
-  value: number | string; 
-  limit?: number; 
-  icon: React.ElementType;
-  warning?: boolean;
-}) => (
-  <div className="space-y-2">
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <Icon className="h-4 w-4" />
-      {label}
-    </div>
-    <div className={`text-2xl font-semibold ${warning ? 'text-amber-500' : ''}`}>
-      {typeof value === 'number' ? value.toLocaleString() : value}
-      {limit !== undefined && limit !== -1 && (
-        <span className="text-sm font-normal text-muted-foreground">
-          {' '}/ {limit === -1 ? '∞' : limit.toLocaleString()}
-        </span>
-      )}
-    </div>
-    {limit !== undefined && limit !== -1 && typeof value === 'number' && (
-      <Progress 
-        value={Math.min((value / limit) * 100, 100)} 
-        className={`h-1.5 ${warning ? '[&>div]:bg-amber-500' : ''}`}
-      />
-    )}
-  </div>
-);
-
-const FaqItem = ({ question, answer }: { question: string; answer: string }) => (
-  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-    <h4 className="font-medium text-sm mb-1">{question}</h4>
-    <p className="text-sm text-muted-foreground">{answer}</p>
-  </div>
-);
-
-const BillingSkeleton = () => (
-  <div className="grid gap-6 lg:grid-cols-3">
-    <Card className="lg:col-span-2">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-12 w-12 rounded-xl" />
-            <div>
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-24 mt-1" />
-            </div>
-          </div>
-          <Skeleton className="h-10 w-20" />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
-        </div>
-        <Separator />
-        <div className="grid gap-3 sm:grid-cols-4">
-          <Skeleton className="h-6" />
-          <Skeleton className="h-6" />
-          <Skeleton className="h-6" />
-          <Skeleton className="h-6" />
-        </div>
-        <Skeleton className="h-10 w-full" />
-      </CardContent>
-    </Card>
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-5 w-24" />
-        <Skeleton className="h-4 w-32 mt-1" />
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Skeleton className="h-20 rounded-xl" />
-        <Skeleton className="h-10" />
-        <Skeleton className="h-10" />
-      </CardContent>
-    </Card>
-  </div>
-);
-
 export default Billing;
+

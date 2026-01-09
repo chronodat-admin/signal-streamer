@@ -15,3 +15,4 @@ UPDATE public.signals SET source = 'tradingview' WHERE source IS NULL;
 
 
 
+

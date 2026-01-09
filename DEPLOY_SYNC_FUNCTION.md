@@ -58,3 +58,4 @@ npx supabase functions deploy sync-subscription
 
 
 
+
