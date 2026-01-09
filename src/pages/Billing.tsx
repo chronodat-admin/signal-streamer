@@ -492,44 +492,77 @@ const Billing = () => {
     try {
       console.log('Starting checkout for plan:', plan);
       
-      // Ensure session is fresh
-      const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
+      // Validate session before making the call
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError || !freshSession) {
-        throw new Error('Session expired. Please sign in again.');
+      if (sessionError || !currentSession || !currentSession.access_token) {
+        throw new Error('Your session has expired. Please sign in again.');
       }
-
-      // Get Supabase URL and anon key for headers
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co';
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
-      if (!supabaseAnonKey) {
-        throw new Error('Supabase configuration error: Missing anon key');
+      // Check if token is about to expire (within 60 seconds)
+      const expiresAt = currentSession.expires_at;
+      if (expiresAt) {
+        const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
+        if (expiresIn < 60) {
+          // Token is about to expire, refresh it
+          console.log('Token expiring soon, refreshing...');
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshedSession) {
+            throw new Error('Failed to refresh session. Please sign in again.');
+          }
+        }
       }
-
-      const functionUrl = `${supabaseUrl}/functions/v1/create-checkout`;
       
-      // Use fetch with explicit headers - both Authorization and apikey are required
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${freshSession.access_token}`,
-          'apikey': supabaseAnonKey,
-        },
-        body: JSON.stringify({ plan }),
+      // Use supabase.functions.invoke which automatically handles:
+      // - Token refresh (if needed)
+      // - Authorization header with access token
+      // - apikey header with anon key
+      // This is the recommended way to call Edge Functions
+      const response = await supabase.functions.invoke('create-checkout', {
+        body: { plan },
       });
 
-      const data = await response.json();
-      console.log('Checkout response:', response.status, data);
+      console.log('Checkout response:', response);
 
-      if (!response.ok) {
-        // Show the actual error from the edge function
-        const errorMessage = data?.error || data?.details || `Server error: ${response.status}`;
+      // Handle function error (includes non-2xx responses)
+      if (response.error) {
+        console.error('Function error:', response.error);
+        console.log('Response data:', response.data);
+        
+        // Try to extract the actual error message from the response
+        let errorMessage = 'Failed to create checkout session';
+        
+        // Check if there's data with an error (edge function returned JSON error)
+        if (response.data?.error) {
+          errorMessage = response.data.error;
+          // Handle specific JWT errors
+          if (response.data.error === 'Invalid JWT' || response.data.error.includes('JWT')) {
+            errorMessage = 'Your session has expired. Please sign in again and try again.';
+          } else if (response.data.details) {
+            errorMessage = `${response.data.error}: ${response.data.details}`;
+          }
+        } else if (response.error.message) {
+          // Check for common configuration errors
+          if (response.error.message.includes('non-2xx') || response.error.message.includes('500')) {
+            // Edge function returned an error - likely Stripe not configured
+            errorMessage = 'Payment processing is not yet configured. Please contact support or try again later.';
+          } else if (response.error.message.includes('FunctionsHttpError')) {
+            errorMessage = 'Payment service temporarily unavailable. Please try again later.';
+          } else if (response.error.message.includes('JWT') || response.error.message.includes('Invalid')) {
+            errorMessage = 'Your session has expired. Please sign in again and try again.';
+          } else {
+            errorMessage = response.error.message;
+          }
+        }
+        
         throw new Error(errorMessage);
       }
 
-      const { url, error: dataError } = data;
+      if (!response.data) {
+        throw new Error('No response data from checkout function');
+      }
+
+      const { url, error: dataError } = response.data;
       
       if (dataError) {
         throw new Error(dataError);
