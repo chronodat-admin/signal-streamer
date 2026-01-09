@@ -490,35 +490,25 @@ const Billing = () => {
     setCheckoutLoading(plan);
 
     try {
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.access_token) {
-        throw new Error('Please sign in to continue.');
-      }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Configuration error: Missing Supabase credentials.');
-      }
-
-      // Call Edge Function
-      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': supabaseAnonKey,
-        },
-        body: JSON.stringify({ plan }),
+      // Use supabase.functions.invoke - it handles token refresh automatically
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan },
       });
 
-      const data = await response.json();
+      if (error) {
+        // Try to extract error message
+        let errorMsg = error.message || 'Checkout failed';
+        
+        // If it's a 401, suggest re-authentication
+        if (error.message?.includes('401') || error.message?.includes('JWT') || error.message?.includes('Invalid')) {
+          errorMsg = 'Your session has expired. Please sign out and sign in again, then try checkout.';
+        }
+        
+        throw new Error(errorMsg);
+      }
 
-      if (!response.ok) {
-        throw new Error(data?.error || data?.message || 'Checkout failed');
+      if (!data) {
+        throw new Error('No response from checkout function');
       }
 
       const { url, error: dataError } = data;
@@ -535,17 +525,22 @@ const Billing = () => {
     } catch (error: any) {
       console.error('Checkout error:', error);
       
-      let errorMessage = 'Failed to start checkout. Please try again.';
+      let errorMessage = 'Failed to start checkout.';
       
       if (error.message) {
         errorMessage = error.message;
-      } else if (error.toString().includes('fetch')) {
-        errorMessage = 'Unable to connect to payment service. Please try again later.';
+        
+        // If it's a JWT/auth error, provide specific guidance
+        if (error.message.includes('JWT') || error.message.includes('Invalid') || error.message.includes('401')) {
+          errorMessage = 'Authentication error. Please sign out, sign back in, and try again.';
+        }
       }
       
       toast({
         title: 'Checkout Error',
-        description: errorMessage,
+        description: errorMessage + (error.message?.includes('JWT') || error.message?.includes('Invalid') 
+          ? ' Try signing out and signing back in, then try again.' 
+          : ''),
         variant: 'destructive',
       });
     } finally {
