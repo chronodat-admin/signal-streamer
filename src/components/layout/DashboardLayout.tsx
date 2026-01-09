@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSignalNotifications } from '@/hooks/useSignalNotifications';
 import { useAdmin } from '@/hooks/useAdmin';
+import { FeedbackDialog } from '@/components/FeedbackDialog';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -48,6 +49,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return false;
   });
   const [userPlan, setUserPlan] = useState<PlanType>('FREE');
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Enable real-time signal notifications
   useSignalNotifications();
@@ -257,6 +259,34 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             )}
           </nav>
 
+          {/* Feedback Button */}
+          <div className="px-3 py-2 border-t border-border">
+            {collapsed ? (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setFeedbackOpen(true)}
+                    className="w-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Submit Feedback</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => setFeedbackOpen(true)}
+                className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span>Submit Feedback</span>
+              </Button>
+            )}
+          </div>
+
           {/* Appearance Controls - Desktop */}
           <div className={`px-3 py-2 border-t border-border hidden lg:flex items-center ${collapsed ? 'flex-col gap-2' : 'justify-between'}`}>
             {!collapsed && <span className="text-sm text-muted-foreground">Appearance</span>}
@@ -332,6 +362,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </div>
       </main>
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   );
 };

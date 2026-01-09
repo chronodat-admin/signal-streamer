@@ -12,8 +12,10 @@ interface UserFeedback {
   id: string;
   user_id: string | null;
   email: string | null;
+  name: string | null;
   rating: number | null;
   feedback?: string;
+  subject?: string;
   category: string | null;
   status?: 'new' | 'reviewed' | 'resolved';
   created_at: string;
@@ -75,8 +77,10 @@ export const UserFeedback = () => {
       const matchesSearch = 
         !searchQuery ||
         item.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.feedback?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSearch;
     });
@@ -182,6 +186,7 @@ export const UserFeedback = () => {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Subject</TableHead>
                     <TableHead>Rating</TableHead>
                     <TableHead>Feedback</TableHead>
                     <TableHead>Category</TableHead>
@@ -192,7 +197,7 @@ export const UserFeedback = () => {
                 <TableBody>
                   {filteredFeedback.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         No feedback matches your search
                       </TableCell>
                     </TableRow>
@@ -200,10 +205,13 @@ export const UserFeedback = () => {
                     filteredFeedback.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
-                          {item.profiles?.full_name || 'Anonymous'}
+                          {item.name || item.profiles?.full_name || 'Anonymous'}
                         </TableCell>
                         <TableCell>
                           {item.profiles?.email || item.email || 'N/A'}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {item.subject || 'N/A'}
                         </TableCell>
                         <TableCell>
                           {item.rating ? (
