@@ -478,7 +478,7 @@ const Billing = () => {
   };
 
   const handleCheckout = async (plan: 'PRO' | 'ELITE') => {
-    if (!user || !session?.access_token) {
+    if (!user) {
       toast({
         title: 'Authentication Required',
         description: 'Please sign in to upgrade your plan.',
@@ -492,107 +492,32 @@ const Billing = () => {
     try {
       console.log('Starting checkout for plan:', plan);
       
-      // Validate and refresh session before making the call
-      let currentSession = session;
-      
-      // Always try to get the latest session
-      const { data: { session: latestSession }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !latestSession || !latestSession.access_token) {
-        // Try to refresh the session
-        console.log('Session invalid, attempting refresh...');
-        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError || !refreshedSession || !refreshedSession.access_token) {
-          throw new Error('Your session has expired. Please sign in again.');
-        }
-        
-        currentSession = refreshedSession;
-      } else {
-        currentSession = latestSession;
-        
-        // Check if token is about to expire (within 5 minutes)
-        const expiresAt = currentSession.expires_at;
-        if (expiresAt) {
-          const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
-          if (expiresIn < 300) { // 5 minutes
-            // Token is about to expire, refresh it proactively
-            console.log('Token expiring soon, refreshing proactively...');
-            const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-            if (!refreshError && refreshedSession && refreshedSession.access_token) {
-              currentSession = refreshedSession;
-            }
-          }
-        }
-      }
+      // Get fresh session
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
       if (!currentSession?.access_token) {
-        throw new Error('Unable to get valid session. Please sign in again.');
+        throw new Error('Please sign in again to continue.');
       }
       
-      console.log('Using session token, expires at:', currentSession.expires_at);
-      
-      // Ensure the supabase client has the current session
-      // This is necessary because supabase.functions.invoke uses the client's internal session
-      await supabase.auth.setSession({
-        access_token: currentSession.access_token,
-        refresh_token: currentSession.refresh_token,
-      });
-      
-      // Verify the session is set
-      const { data: verifySession } = await supabase.auth.getSession();
-      console.log('Verified supabase client session:', {
-        hasSession: !!verifySession.session,
-        hasAccessToken: !!verifySession.session?.access_token,
-      });
-      
-      if (!verifySession.session?.access_token) {
-        throw new Error('Failed to set session on Supabase client. Please sign in again.');
-      }
-      
-      // Use supabase.functions.invoke - it handles auth headers automatically
-      // and is the recommended way to call Edge Functions from the Supabase client
-      console.log('Calling create-checkout via supabase.functions.invoke...');
-      
-      const { data, error: invokeError } = await supabase.functions.invoke('create-checkout', {
-        body: { plan },
-      });
-
-      console.log('Checkout invoke result:', { data, error: invokeError });
-
-      // If there was an invoke error, try to get more details
-      if (invokeError) {
-        console.error('Function invoke error:', invokeError);
-        
-        // The error object from supabase.functions.invoke
-        const errorMessage = invokeError.message || 'Function call failed';
-        const errorContext = (invokeError as any).context;
-        
-        console.log('Error context:', errorContext);
-        
-        // Try to parse the error body if available
-        if (errorContext?.body) {
-          try {
-            const errorBody = JSON.parse(errorContext.body);
-            console.log('Error body:', errorBody);
-            throw new Error(errorBody.error || errorBody.message || errorMessage);
-          } catch (parseError) {
-            console.log('Could not parse error body');
-          }
+      // Simple direct fetch with explicit headers
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentSession.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ plan }),
         }
-        
-        throw new Error(errorMessage);
-      }
-      
-      console.log('Checkout response data:', data);
+      );
 
-      if (!data) {
-        throw new Error('No response data from checkout function');
-      }
-      
-      // Check for error in response data
-      if (data.error) {
-        throw new Error(data.error);
+      const data = await response.json();
+      console.log('Checkout response:', response.status, data);
+
+      if (!response.ok) {
+        throw new Error(data?.error || data?.message || `Error ${response.status}`);
       }
 
       const { url, error: dataError } = data;
