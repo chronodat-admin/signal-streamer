@@ -144,3 +144,4 @@ If you need more help, share:
 3. **cURL verbose output** - The full output from `curl -v`
 4. **Environment variables status** - Are they set? (don't share the actual values)
 
+

@@ -102,3 +102,4 @@ Once checkout works, you'll also need to:
 2. Add `STRIPE_WEBHOOK_SECRET` to Edge Function secrets
 3. Configure webhook endpoint in Stripe Dashboard
 
+

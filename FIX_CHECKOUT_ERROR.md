@@ -115,3 +115,4 @@ If it still fails, check the browser console for the exact error message.
 If the Pricing page checkout doesn't work, you can also upgrade from:
 - `/dashboard/billing` - This page has the same checkout functionality
 
+

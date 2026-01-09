@@ -12,3 +12,4 @@ ALTER TABLE public.signals REPLICA IDENTITY FULL;
 -- Note: The RLS policies already allow users to SELECT their own signals,
 -- which is required for realtime subscriptions to work.
 
+

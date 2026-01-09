@@ -56,3 +56,4 @@ npx supabase functions deploy sync-subscription
 - Works even if webhooks haven't fired yet
 - Provides manual sync option when automatic updates fail
 
+

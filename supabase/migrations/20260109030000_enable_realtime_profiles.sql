@@ -12,3 +12,4 @@ ALTER TABLE public.profiles REPLICA IDENTITY FULL;
 -- Note: The RLS policies already allow users to SELECT their own profile,
 -- which is required for realtime subscriptions to work.
 
+

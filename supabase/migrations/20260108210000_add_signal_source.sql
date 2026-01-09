@@ -13,3 +13,4 @@ COMMENT ON COLUMN public.signals.source IS 'Source of the signal: tradingview, t
 UPDATE public.signals SET source = 'tradingview' WHERE source IS NULL;
 
 
+

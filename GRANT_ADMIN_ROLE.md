@@ -95,3 +95,4 @@ AND role = 'admin';
 - After granting the role, you may need to refresh your session or log out/in for the changes to take effect
 - Admin role grants access to `/admin` and `/admin/users` routes
 
+

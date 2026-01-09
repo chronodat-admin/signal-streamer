@@ -56,3 +56,4 @@ CREATE TRIGGER update_user_feedback_updated_at
   BEFORE UPDATE ON public.user_feedback
   FOR EACH ROW EXECUTE FUNCTION public.update_user_feedback_updated_at();
 
+

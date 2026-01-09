@@ -85,3 +85,4 @@ After fixing, check the logs:
 2. You should see: `[stripe-webhook] Environment check: { hasStripeKey: true, hasWebhookSecret: true, ... }`
 3. When Stripe sends events, you should see: `Received Stripe event: checkout.session.completed`
 
+

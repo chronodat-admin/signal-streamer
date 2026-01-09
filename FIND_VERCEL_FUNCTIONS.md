@@ -55,3 +55,4 @@ curl -v https://signal-streamer.vercel.app/api/tradingview
 3. Vercel should auto-deploy
 4. Or manually trigger a deployment in Vercel
 
+

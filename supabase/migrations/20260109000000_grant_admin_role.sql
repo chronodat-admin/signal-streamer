@@ -30,3 +30,4 @@ $$;
 -- Example usage (uncomment and replace with your email):
 -- SELECT public.grant_admin_role('your-email@example.com');
 
+

@@ -397,3 +397,4 @@ Use any future expiry date and any 3-digit CVC.
 | 9. Test in Test Mode | ⬜ |
 | 10. Switch to Live Keys | ⬜ |
 
+
