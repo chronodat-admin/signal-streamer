@@ -13,3 +13,4 @@ ALTER TABLE public.signals REPLICA IDENTITY FULL;
 -- which is required for realtime subscriptions to work.
 
 
+

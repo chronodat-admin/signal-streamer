@@ -116,3 +116,4 @@ If the Pricing page checkout doesn't work, you can also upgrade from:
 - `/dashboard/billing` - This page has the same checkout functionality
 
 
+

@@ -49,3 +49,4 @@ curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-T
 You should see a response instead of hanging.
 
 
+

@@ -57,3 +57,4 @@ npx supabase functions deploy sync-subscription
 - Provides manual sync option when automatic updates fail
 
 
+

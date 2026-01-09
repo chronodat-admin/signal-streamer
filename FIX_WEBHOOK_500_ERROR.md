@@ -86,3 +86,4 @@ After fixing, check the logs:
 3. When Stripe sends events, you should see: `Received Stripe event: checkout.session.completed`
 
 
+

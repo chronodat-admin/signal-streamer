@@ -96,3 +96,4 @@ AND role = 'admin';
 - Admin role grants access to `/admin` and `/admin/users` routes
 
 
+

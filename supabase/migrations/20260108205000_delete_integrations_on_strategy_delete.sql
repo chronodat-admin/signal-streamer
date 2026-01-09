@@ -62,3 +62,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.soft_delete_strategy(uuid) TO authenticated;
 
 
+

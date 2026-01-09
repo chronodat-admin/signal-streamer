@@ -126,3 +126,4 @@ If still not working, share:
 4. **Function file location** - Confirm `api/tradingview.ts` exists
 
 
+

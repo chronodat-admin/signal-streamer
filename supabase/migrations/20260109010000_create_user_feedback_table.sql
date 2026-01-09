@@ -57,3 +57,4 @@ CREATE TRIGGER update_user_feedback_updated_at
   FOR EACH ROW EXECUTE FUNCTION public.update_user_feedback_updated_at();
 
 
+

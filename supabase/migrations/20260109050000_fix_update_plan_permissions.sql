@@ -12,3 +12,4 @@ GRANT EXECUTE ON FUNCTION public.update_user_plan(uuid, plan_type, text, timesta
 GRANT EXECUTE ON FUNCTION public.update_user_plan_by_customer(text, plan_type, text, timestamptz) TO anon;
 
 
+
