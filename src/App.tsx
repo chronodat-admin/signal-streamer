@@ -21,6 +21,7 @@ import AlertLogs from "./pages/AlertLogs";
 import ApiKeys from "./pages/ApiKeys";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { UserManagement } from "./pages/admin/UserManagement";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/dashboard/billing" element={<Billing />} />
               <Route path="/dashboard/preferences" element={<Preferences />} />
               <Route path="/admin" element={<AdminDashboard />} />
