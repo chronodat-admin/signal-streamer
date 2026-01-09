@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("[create-checkout] Starting request processing...");
+    
     // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -21,8 +23,17 @@ serve(async (req) => {
     const proPriceId = Deno.env.get("STRIPE_PRO_PRICE_ID");
     const elitePriceId = Deno.env.get("STRIPE_ELITE_PRICE_ID");
 
+    console.log("[create-checkout] Environment check:", {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      hasStripeKey: !!stripeSecretKey,
+      hasProPrice: !!proPriceId,
+      hasElitePrice: !!elitePriceId,
+    });
+
     // Validate environment variables
     if (!stripeSecretKey) {
+      console.error("[create-checkout] Missing STRIPE_SECRET_KEY");
       return new Response(
         JSON.stringify({ error: "Stripe is not configured. Please set STRIPE_SECRET_KEY." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -30,18 +41,26 @@ serve(async (req) => {
     }
 
     if (!proPriceId || !elitePriceId) {
+      console.error("[create-checkout] Missing price IDs");
       return new Response(
         JSON.stringify({ error: "Stripe price IDs not configured." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("[create-checkout] Creating Supabase client...");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    console.log("[create-checkout] Creating Stripe client...");
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+    console.log("[create-checkout] Stripe client created successfully");
 
     // Get user from auth header
     const authHeader = req.headers.get("Authorization");
+    console.log("[create-checkout] Auth header present:", !!authHeader);
+    
     if (!authHeader) {
+      console.error("[create-checkout] No authorization header");
       return new Response(
         JSON.stringify({ error: "No authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -49,14 +68,18 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log("[create-checkout] Validating user token...");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
+      console.error("[create-checkout] Auth error:", userError?.message || "No user found");
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Unauthorized", details: userError?.message }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    console.log("[create-checkout] User authenticated:", user.id);
 
     // Parse request body
     const { plan } = await req.json();
