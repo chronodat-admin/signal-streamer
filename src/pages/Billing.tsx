@@ -4,12 +4,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CreditCard, Calendar, ArrowUpRight, Loader2, ExternalLink, RefreshCw, CheckCircle } from 'lucide-react';
-import { useEffect } from 'react';
+import { 
+  CreditCard, 
+  Calendar, 
+  ArrowUpRight, 
+  Loader2, 
+  ExternalLink, 
+  RefreshCw, 
+  CheckCircle,
+  AlertCircle 
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { STRIPE_PLANS } from '@/lib/stripe';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -33,40 +43,83 @@ const planDetails: Record<PlanType, { name: string; price: string; features: str
 
 const Billing = () => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [processingSuccess, setProcessingSuccess] = useState(false);
+  
   const { 
     plan, 
     subscribed, 
     subscriptionEnd, 
-    loading, 
+    loading,
+    error,
+    checkoutLoading,
+    portalLoading,
     checkSubscription, 
     createCheckout,
-    openCustomerPortal 
+    openCustomerPortal,
+    refetch,
   } = useSubscription();
 
-  // Handle success/cancel redirects
+  // Handle success/cancel redirects from Stripe
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
 
     if (success === 'true') {
-      toast.success('Subscription activated! Thank you for upgrading.');
-      // Refresh subscription status
-      checkSubscription();
+      setProcessingSuccess(true);
+      toast.success('Payment successful! Activating your subscription...');
+      
       // Clean URL
-      window.history.replaceState({}, '', '/dashboard/billing');
+      setSearchParams({});
+      
+      // Poll for subscription update
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      const pollForUpdate = async () => {
+        attempts++;
+        await checkSubscription();
+        
+        // After polling, refresh from database
+        setTimeout(() => {
+          refetch();
+          if (attempts >= maxAttempts) {
+            setProcessingSuccess(false);
+            toast.success('Subscription activated! Enjoy your new plan.');
+          } else {
+            setTimeout(pollForUpdate, 2000);
+          }
+        }, 1000);
+      };
+      
+      setTimeout(pollForUpdate, 2000);
     } else if (canceled === 'true') {
       toast.info('Checkout was canceled. No charges were made.');
-      window.history.replaceState({}, '', '/dashboard/billing');
+      setSearchParams({});
     }
-  }, [searchParams, checkSubscription]);
+  }, [searchParams, setSearchParams, checkSubscription, refetch]);
 
   const details = planDetails[plan];
 
   const handleUpgrade = async (planKey: keyof typeof STRIPE_PLANS) => {
     const stripePlan = STRIPE_PLANS[planKey];
+    console.log('Upgrading to:', planKey, 'priceId:', stripePlan.priceId);
     await createCheckout(stripePlan.priceId);
   };
+
+  const handleRefresh = async () => {
+    await checkSubscription();
+  };
+
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Please sign in to view billing.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -82,7 +135,7 @@ const Billing = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={checkSubscription}
+            onClick={handleRefresh}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -90,7 +143,29 @@ const Billing = () => {
           </Button>
         </div>
 
-        {loading ? (
+        {/* Processing Alert */}
+        {processingSuccess && (
+          <Alert>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <AlertTitle>Processing your subscription...</AlertTitle>
+            <AlertDescription>
+              Please wait while we activate your subscription. This may take a few moments.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error}. <Button variant="link" className="p-0 h-auto" onClick={handleRefresh}>Try again</Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {loading && !processingSuccess ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
@@ -112,7 +187,7 @@ const Billing = () => {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {details.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-success" />
+                      <CheckCircle className="h-4 w-4 text-green-500" />
                       {feature}
                     </li>
                   ))}
@@ -127,7 +202,7 @@ const Billing = () => {
                 )}
                 <Link to="/pricing">
                   <Button className="w-full mt-4" variant="outline">
-                    {plan === 'FREE' ? 'Upgrade Plan' : 'Change Plan'}
+                    {plan === 'FREE' ? 'View Plans' : 'Compare Plans'}
                     <ArrowUpRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
@@ -148,9 +223,9 @@ const Billing = () => {
               <CardContent className="space-y-4">
                 {subscribed ? (
                   <>
-                    <div className="flex items-center gap-4 p-4 rounded-lg bg-success/10 border border-success/20">
-                      <div className="p-2 rounded-md bg-success/20">
-                        <CreditCard className="h-6 w-6 text-success" />
+                    <div className="flex items-center gap-4 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <div className="p-2 rounded-md bg-green-500/20">
+                        <CreditCard className="h-6 w-6 text-green-500" />
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium">Active Subscription</p>
@@ -163,9 +238,14 @@ const Billing = () => {
                       variant="outline" 
                       className="w-full"
                       onClick={openCustomerPortal}
+                      disabled={portalLoading}
                     >
+                      {portalLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                      )}
                       Manage Subscription
-                      <ExternalLink className="h-4 w-4 ml-2" />
                     </Button>
                     <p className="text-xs text-center text-muted-foreground">
                       Update payment method, change plan, or cancel subscription
@@ -188,14 +268,22 @@ const Billing = () => {
                       <Button 
                         className="w-full"
                         onClick={() => handleUpgrade('PRO')}
+                        disabled={checkoutLoading}
                       >
+                        {checkoutLoading ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
                         Upgrade to Pro - $19/mo
                       </Button>
                       <Button 
                         variant="outline"
                         className="w-full"
                         onClick={() => handleUpgrade('ELITE')}
+                        disabled={checkoutLoading}
                       >
+                        {checkoutLoading ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
                         Upgrade to Elite - $49/mo
                       </Button>
                     </div>
@@ -224,7 +312,11 @@ const Billing = () => {
                         <Button 
                           className="w-full"
                           onClick={() => handleUpgrade('PRO')}
+                          disabled={checkoutLoading}
                         >
+                          {checkoutLoading ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : null}
                           Upgrade to Pro
                         </Button>
                       </div>
@@ -240,7 +332,11 @@ const Billing = () => {
                         variant={plan === 'PRO' ? 'default' : 'outline'}
                         className="w-full"
                         onClick={() => handleUpgrade('ELITE')}
+                        disabled={checkoutLoading}
                       >
+                        {checkoutLoading ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
                         {plan === 'PRO' ? 'Upgrade to Elite' : 'Go Elite'}
                       </Button>
                     </div>
@@ -261,9 +357,17 @@ const Billing = () => {
                     <p className="text-muted-foreground mb-4">
                       View and download your invoices from the Stripe Customer Portal
                     </p>
-                    <Button variant="outline" onClick={openCustomerPortal}>
+                    <Button 
+                      variant="outline" 
+                      onClick={openCustomerPortal}
+                      disabled={portalLoading}
+                    >
+                      {portalLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                      )}
                       View Invoices
-                      <ExternalLink className="h-4 w-4 ml-2" />
                     </Button>
                   </div>
                 ) : (
@@ -284,4 +388,3 @@ const Billing = () => {
 };
 
 export default Billing;
-

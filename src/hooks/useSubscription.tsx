@@ -11,6 +11,7 @@ interface SubscriptionState {
   subscribed: boolean;
   subscriptionEnd: string | null;
   loading: boolean;
+  error: string | null;
 }
 
 export const useSubscription = () => {
@@ -20,13 +21,55 @@ export const useSubscription = () => {
     subscribed: false,
     subscriptionEnd: null,
     loading: true,
+    error: null,
   });
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
+  // Fetch plan directly from database as primary source
+  const fetchPlanFromDatabase = useCallback(async () => {
+    if (!user) {
+      setState(prev => ({ ...prev, loading: false }));
+      return;
+    }
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('plan, plan_expires_at, stripe_subscription_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      const plan = (profile?.plan as PlanType) || 'FREE';
+      const subscribed = plan !== 'FREE' && !!profile?.stripe_subscription_id;
+
+      setState({
+        plan,
+        subscribed,
+        subscriptionEnd: profile?.plan_expires_at || null,
+        loading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('Error fetching plan from database:', error);
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: 'Failed to load subscription status'
+      }));
+    }
+  }, [user]);
+
+  // Check subscription via edge function (syncs with Stripe)
   const checkSubscription = useCallback(async () => {
     if (!session?.access_token) {
       setState(prev => ({ ...prev, loading: false }));
       return;
     }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
@@ -35,49 +78,61 @@ export const useSubscription = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        // Fall back to database
+        await fetchPlanFromDatabase();
+        return;
+      }
+
+      if (data?.error) {
+        console.error('Function returned error:', data.error);
+        // Fall back to database
+        await fetchPlanFromDatabase();
+        return;
+      }
 
       setState({
         plan: data.plan || 'FREE',
         subscribed: data.subscribed || false,
         subscriptionEnd: data.subscription_end || null,
         loading: false,
+        error: null,
       });
     } catch (error) {
       console.error('Error checking subscription:', error);
-      setState(prev => ({ ...prev, loading: false }));
+      // Fall back to database
+      await fetchPlanFromDatabase();
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, fetchPlanFromDatabase]);
 
-  // Check subscription on mount and when session changes
+  // Initial load - fetch from database first for faster UX
   useEffect(() => {
     if (user && session) {
-      checkSubscription();
+      fetchPlanFromDatabase();
     } else {
       setState({
         plan: 'FREE',
         subscribed: false,
         subscriptionEnd: null,
         loading: false,
+        error: null,
       });
     }
-  }, [user, session, checkSubscription]);
+  }, [user, session, fetchPlanFromDatabase]);
 
-  // Refresh subscription every minute
-  useEffect(() => {
-    if (!user || !session) return;
-
-    const interval = setInterval(checkSubscription, 60000);
-    return () => clearInterval(interval);
-  }, [user, session, checkSubscription]);
-
+  // Create checkout session
   const createCheckout = async (priceId: string) => {
     if (!session?.access_token) {
       toast.error('Please sign in to upgrade');
       return;
     }
 
+    setCheckoutLoading(true);
+
     try {
+      console.log('Creating checkout with priceId:', priceId);
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId },
         headers: {
@@ -85,22 +140,38 @@ export const useSubscription = () => {
         },
       });
 
-      if (error) throw error;
+      console.log('Checkout response:', { data, error });
+
+      if (error) {
+        throw new Error(error.message || 'Checkout failed');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        // Redirect in same window for better UX
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to start checkout. Please try again.');
+      toast.error(error.message || 'Failed to start checkout. Please try again.');
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
+  // Open customer portal
   const openCustomerPortal = async () => {
     if (!session?.access_token) {
       toast.error('Please sign in to manage subscription');
       return;
     }
+
+    setPortalLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal', {
@@ -109,22 +180,34 @@ export const useSubscription = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message || 'Portal access failed');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        window.location.href = data.url;
+      } else {
+        throw new Error('No portal URL returned');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error opening customer portal:', error);
-      toast.error('Failed to open subscription management. Please try again.');
+      toast.error(error.message || 'Failed to open subscription management. Please try again.');
+    } finally {
+      setPortalLoading(false);
     }
   };
 
   return {
     ...state,
+    checkoutLoading,
+    portalLoading,
     checkSubscription,
     createCheckout,
     openCustomerPortal,
+    refetch: fetchPlanFromDatabase,
   };
 };
-
