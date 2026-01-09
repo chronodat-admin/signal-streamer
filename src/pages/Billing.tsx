@@ -4,17 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { CreditCard, Calendar, ArrowUpRight } from 'lucide-react';
+import { CreditCard, Calendar, ArrowUpRight, Settings, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
 interface Profile {
   plan: PlanType;
   plan_expires_at: string | null;
+  stripe_customer_id: string | null;
 }
 
 const planDetails: Record<PlanType, { name: string; price: string; features: string[] }> = {
@@ -37,8 +39,10 @@ const planDetails: Record<PlanType, { name: string; price: string; features: str
 
 const Billing = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -46,12 +50,12 @@ const Billing = () => {
 
       const { data } = await supabase
         .from('profiles')
-        .select('plan, plan_expires_at')
+        .select('plan, plan_expires_at, stripe_customer_id')
         .eq('user_id', user.id)
         .single();
 
       if (data) {
-        setProfile(data);
+        setProfile(data as Profile);
       }
       setLoading(false);
     };
@@ -59,8 +63,53 @@ const Billing = () => {
     fetchProfile();
   }, [user]);
 
+  const handleManageSubscription = async () => {
+    if (!profile?.stripe_customer_id) {
+      toast({
+        title: 'No Subscription',
+        description: 'You don\'t have an active subscription to manage.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setPortalLoading(true);
+
+    try {
+      const response = await supabase.functions.invoke('create-portal', {
+        body: {},
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to create portal session');
+      }
+
+      const { url, error: dataError } = response.data;
+      
+      if (dataError) {
+        throw new Error(dataError);
+      }
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No portal URL returned');
+      }
+    } catch (error: any) {
+      console.error('Portal error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to open subscription management.',
+        variant: 'destructive',
+      });
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
   const currentPlan = profile?.plan || 'FREE';
   const details = planDetails[currentPlan];
+  const hasActiveSubscription = currentPlan !== 'FREE' && profile?.stripe_customer_id;
 
   return (
     <DashboardLayout>
@@ -141,30 +190,69 @@ const Billing = () => {
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
+            {/* Subscription Management */}
             <Card className="stat-card">
               <CardHeader>
-                <CardTitle className="text-lg">Payment Method</CardTitle>
-                <CardDescription>Manage your payment details</CardDescription>
+                <CardTitle className="text-lg">Subscription Management</CardTitle>
+                <CardDescription>Manage your payment and subscription</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
-                  <div className="p-2 rounded-md bg-background">
-                    <CreditCard className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">No payment method</p>
-                    <p className="text-xs text-muted-foreground">
-                      Add a payment method to upgrade
+                {hasActiveSubscription ? (
+                  <>
+                    <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
+                      <div className="p-2 rounded-md bg-background">
+                        <CreditCard className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Active Subscription</p>
+                        <p className="text-xs text-muted-foreground">
+                          Managed via Stripe
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={handleManageSubscription}
+                      disabled={portalLoading}
+                    >
+                      {portalLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Opening Portal...
+                        </>
+                      ) : (
+                        <>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Manage Subscription
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground">
+                      Update payment method, view invoices, or cancel
                     </p>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full" disabled>
-                  Add Payment Method
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  Payment processing coming soon
-                </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
+                      <div className="p-2 rounded-md bg-background">
+                        <CreditCard className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">No active subscription</p>
+                        <p className="text-xs text-muted-foreground">
+                          Upgrade to Pro or Elite to unlock features
+                        </p>
+                      </div>
+                    </div>
+                    <Link to="/pricing">
+                      <Button variant="default" className="w-full">
+                        <ArrowUpRight className="mr-2 h-4 w-4" />
+                        View Plans & Upgrade
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </CardContent>
             </Card>
 

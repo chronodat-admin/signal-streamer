@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, Settings, Radio, Plug, FileText, Key } from 'lucide-react';
+import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, Settings, Radio, Plug, FileText, Key, MessageSquare, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -10,6 +10,7 @@ import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSignalNotifications } from '@/hooks/useSignalNotifications';
+import { FeedbackDialog } from '@/components/FeedbackDialog';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -46,6 +47,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return false;
   });
   const [userPlan, setUserPlan] = useState<PlanType>('FREE');
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Enable real-time signal notifications
   useSignalNotifications();
@@ -55,16 +58,17 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [collapsed]);
 
   useEffect(() => {
-    const fetchPlan = async () => {
+    const fetchProfile = async () => {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('plan')
+        .select('plan, role')
         .eq('user_id', user.id)
         .single();
       if (data?.plan) setUserPlan(data.plan);
+      if (data?.role === 'admin') setIsAdmin(true);
     };
-    fetchPlan();
+    fetchProfile();
   }, [user]);
 
   useEffect(() => {
@@ -241,6 +245,35 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     <p className="text-xs text-muted-foreground">{userPlan} Plan</p>
                   </TooltipContent>
                 </Tooltip>
+                {isAdmin && (
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Link to="/admin">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-primary hover:bg-primary/10 mb-1"
+                        >
+                          <Shield className="h-5 w-5" />
+                        </Button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Admin Panel</TooltipContent>
+                  </Tooltip>
+                )}
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10 mb-1"
+                      onClick={() => setFeedbackOpen(true)}
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">Send Feedback</TooltipContent>
+                </Tooltip>
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
                     <Button
@@ -270,6 +303,25 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     </Badge>
                   </div>
                 </div>
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 text-muted-foreground hover:text-primary hover:bg-primary/10 mb-1"
+                    >
+                      <Shield className="h-5 w-5" />
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10 mb-1"
+                  onClick={() => setFeedbackOpen(true)}
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  Send Feedback
+                </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
@@ -290,6 +342,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </div>
       </main>
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   );
 };
