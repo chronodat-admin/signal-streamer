@@ -81,6 +81,35 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     fetchProfileAndRole();
   }, [user]);
 
+  // Subscribe to realtime updates for plan changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`layout-profile:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updatedProfile = payload.new as { plan?: PlanType };
+          if (updatedProfile?.plan) {
+            console.log('Plan updated in layout:', updatedProfile.plan);
+            setUserPlan(updatedProfile.plan);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');

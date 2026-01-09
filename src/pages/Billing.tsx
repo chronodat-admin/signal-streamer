@@ -32,7 +32,7 @@ import {
   Receipt,
   History
 } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -161,11 +161,13 @@ const Billing = () => {
         
         const pollForUpdate = async () => {
           attempts++;
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('profiles')
-            .select('plan')
+            .select('plan, stripe_subscription_id')
             .eq('user_id', user.id)
             .single();
+          
+          console.log(`Polling attempt ${attempts}/${maxAttempts}:`, { plan: data?.plan, subscription_id: data?.stripe_subscription_id, error });
           
           if (data?.plan && data.plan !== 'FREE') {
             // Plan updated!
@@ -179,11 +181,11 @@ const Billing = () => {
             // Keep polling
             setTimeout(pollForUpdate, 2000);
           } else {
-            // Webhook might not be configured - show manual refresh option
+            // Webhook might not be configured or delayed - show manual refresh option
             toast({
-              title: 'Almost there!',
-              description: 'Your payment was successful. If your plan hasn\'t updated, please refresh the page in a minute.',
-              duration: 8000,
+              title: 'Payment Successful',
+              description: 'Your payment was processed. If your plan hasn\'t updated yet, please refresh the page in a moment or contact support if it persists.',
+              duration: 10000,
             });
             fetchProfile();
           }
@@ -255,6 +257,56 @@ const Billing = () => {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  // Track previous plan to detect upgrades
+  const previousPlanRef = useRef<PlanType | null>(null);
+  
+  // Subscribe to realtime updates for profile changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`profile:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Profile updated via realtime:', payload.new);
+          const updatedProfile = payload.new as Profile;
+          const previousPlan = previousPlanRef.current;
+          
+          // Show notification if plan was upgraded from FREE
+          if (updatedProfile.plan && updatedProfile.plan !== 'FREE' && previousPlan === 'FREE') {
+            toast({
+              title: '🎉 Subscription Activated!',
+              description: `You're now on the ${updatedProfile.plan} plan! Enjoy your upgraded features.`,
+              duration: 6000,
+            });
+          }
+          
+          // Update profile and previous plan ref
+          previousPlanRef.current = updatedProfile.plan;
+          setProfile(updatedProfile);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, toast]);
+  
+  // Update previous plan ref when profile changes
+  useEffect(() => {
+    if (profile?.plan) {
+      previousPlanRef.current = profile.plan;
+    }
+  }, [profile?.plan]);
 
   const handleManageSubscription = async () => {
     if (!profile?.stripe_customer_id) {

@@ -55,22 +55,33 @@ serve(async (req) => {
         const plan = session.metadata?.plan as "PRO" | "ELITE";
 
         if (userId && plan) {
-          console.log(`Checkout completed for user ${userId}, plan ${plan}`);
+          console.log(`Checkout completed for user ${userId}, plan ${plan}, subscription: ${session.subscription}`);
 
-          // Update user's plan
-          const { error: updateError } = await supabase
+          // Update user's plan immediately
+          const { error: updateError, data: updatedProfile } = await supabase
             .from("profiles")
             .update({
               plan,
               stripe_subscription_id: session.subscription as string,
             })
-            .eq("user_id", userId);
+            .eq("user_id", userId)
+            .select()
+            .single();
 
           if (updateError) {
-            console.error("Error updating profile:", updateError);
+            console.error("Error updating profile after checkout:", updateError);
           } else {
-            console.log(`User ${userId} upgraded to ${plan}`);
+            console.log(`Successfully upgraded user ${userId} to ${plan} plan. Updated profile:`, {
+              plan: updatedProfile?.plan,
+              subscription_id: updatedProfile?.stripe_subscription_id,
+            });
           }
+        } else {
+          console.error("Missing userId or plan in checkout session metadata:", {
+            userId,
+            plan,
+            metadata: session.metadata,
+          });
         }
         break;
       }
@@ -80,17 +91,17 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
-        console.log(`Subscription ${event.type} for customer ${customerId}`);
+        console.log(`Subscription ${event.type} for customer ${customerId}, status: ${subscription.status}`);
 
         // Get user by Stripe customer ID
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("user_id")
+          .select("user_id, plan")
           .eq("stripe_customer_id", customerId)
           .single();
 
         if (profileError || !profile) {
-          console.error("Profile not found for customer:", customerId);
+          console.error("Profile not found for customer:", customerId, profileError);
           break;
         }
 
@@ -103,6 +114,8 @@ serve(async (req) => {
           const proPriceId = Deno.env.get("STRIPE_PRO_PRICE_ID");
           const elitePriceId = Deno.env.get("STRIPE_ELITE_PRICE_ID");
           
+          console.log(`Determining plan from price ID: ${priceId}, PRO: ${proPriceId}, ELITE: ${elitePriceId}`);
+          
           if (priceId === proPriceId) plan = "PRO";
           else if (priceId === elitePriceId) plan = "ELITE";
         }
@@ -112,20 +125,42 @@ serve(async (req) => {
         const status = subscription.status;
 
         if (status === "active" || status === "trialing") {
-          const { error: updateError } = await supabase
+          // Build update object - only include plan if we determined it
+          const updateData: {
+            stripe_subscription_id: string;
+            plan_expires_at: string;
+            plan?: "PRO" | "ELITE";
+          } = {
+            stripe_subscription_id: subscription.id,
+            plan_expires_at: periodEnd,
+          };
+
+          // Only update plan if we successfully determined it
+          if (plan) {
+            updateData.plan = plan;
+            console.log(`Updating user ${profile.user_id} to plan ${plan}, expires ${periodEnd}`);
+          } else {
+            console.warn(`Could not determine plan for subscription ${subscription.id}, keeping current plan ${profile.plan}`);
+          }
+
+          const { error: updateError, data: updatedProfile } = await supabase
             .from("profiles")
-            .update({
-              plan: plan || undefined,
-              stripe_subscription_id: subscription.id,
-              plan_expires_at: periodEnd,
-            })
-            .eq("user_id", profile.user_id);
+            .update(updateData)
+            .eq("user_id", profile.user_id)
+            .select()
+            .single();
 
           if (updateError) {
             console.error("Error updating subscription:", updateError);
           } else {
-            console.log(`Updated subscription for user ${profile.user_id}, expires ${periodEnd}`);
+            console.log(`Successfully updated subscription for user ${profile.user_id}:`, {
+              plan: updatedProfile?.plan,
+              expires: periodEnd,
+              subscription_id: subscription.id,
+            });
           }
+        } else {
+          console.log(`Subscription status is ${status}, not updating plan (only active/trialing subscriptions update plan)`);
         }
         break;
       }
