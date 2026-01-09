@@ -203,32 +203,30 @@ const Billing = () => {
             // Webhook might not be configured or delayed - try manual sync
             console.log('Polling timed out, attempting manual sync...');
             try {
-              const { data: { session } } = await supabase.auth.getSession();
-              if (session) {
-                const functionUrl = `${import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co'}/functions/v1/sync-subscription`;
-                const response = await fetch(functionUrl, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                  },
+              const syncResponse = await supabase.functions.invoke('sync-subscription', {
+                body: {},
+              });
+              
+              console.log('Auto-sync result:', syncResponse);
+              
+              if (syncResponse.error) {
+                throw syncResponse.error;
+              }
+              
+              const syncData = syncResponse.data;
+              
+              if (syncData?.updated) {
+                toast({
+                  title: '🎉 Subscription Activated!',
+                  description: `You're now on the ${syncData.plan} plan!`,
+                  duration: 6000,
                 });
-                const syncData = await response.json();
-                console.log('Auto-sync result:', syncData);
-                
-                if (syncData.updated) {
-                  toast({
-                    title: '🎉 Subscription Activated!',
-                    description: `You're now on the ${syncData.plan} plan!`,
-                    duration: 6000,
-                  });
-                } else {
-                  toast({
-                    title: 'Payment Successful',
-                    description: 'Your payment was processed. If your plan hasn\'t updated, click "Sync Subscription Status" or contact support.',
-                    duration: 10000,
-                  });
-                }
+              } else {
+                toast({
+                  title: 'Payment Successful',
+                  description: 'Your payment was processed. If your plan hasn\'t updated, click "Sync Subscription Status" or contact support.',
+                  duration: 10000,
+                });
               }
             } catch (syncError) {
               console.error('Auto-sync failed:', syncError);
@@ -396,29 +394,19 @@ const Billing = () => {
 
     setSyncing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co'}/functions/v1/sync-subscription`;
-      
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+      const response = await supabase.functions.invoke('sync-subscription', {
+        body: {},
       });
 
-      const data = await response.json();
-      console.log('Sync response:', data);
+      console.log('Sync response:', response);
 
-      if (!response.ok) {
-        throw new Error(data?.error || 'Failed to sync subscription');
+      if (response.error) {
+        throw new Error(response.error.message || response.data?.error || 'Failed to sync subscription');
       }
 
-      if (data.updated) {
+      const data = response.data;
+
+      if (data?.updated) {
         toast({
           title: '✅ Subscription Synced!',
           description: `Your plan has been updated to ${data.plan}.`,
@@ -428,7 +416,7 @@ const Billing = () => {
       } else {
         toast({
           title: 'Subscription Status',
-          description: data.message || 'Your subscription is up to date.',
+          description: data?.message || 'Your subscription is up to date.',
           duration: 5000,
         });
         fetchProfile();
@@ -504,34 +492,44 @@ const Billing = () => {
     try {
       console.log('Starting checkout for plan:', plan);
       
-      // Use fetch directly to get more control over the response
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co'}/functions/v1/create-checkout`;
-      
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ plan }),
+      // Use supabase.functions.invoke which automatically handles auth headers
+      const response = await supabase.functions.invoke('create-checkout', {
+        body: { plan },
       });
 
-      const data = await response.json();
-      console.log('Checkout response:', response.status, data);
+      console.log('Checkout response:', response);
 
-      if (!response.ok) {
-        // Show the actual error from the edge function
-        const errorMessage = data?.error || `Server error: ${response.status}`;
+      // Handle function error (includes non-2xx responses)
+      if (response.error) {
+        console.error('Function error:', response.error);
+        console.log('Response data:', response.data);
+        
+        // Try to extract the actual error message from the response
+        let errorMessage = 'Failed to create checkout session';
+        
+        // Check if there's data with an error (edge function returned JSON error)
+        if (response.data?.error) {
+          errorMessage = response.data.error;
+        } else if (response.error.message) {
+          // Check for common configuration errors
+          if (response.error.message.includes('non-2xx') || response.error.message.includes('500')) {
+            // Edge function returned an error - likely Stripe not configured
+            errorMessage = 'Payment processing is not yet configured. Please contact support or try again later.';
+          } else if (response.error.message.includes('FunctionsHttpError')) {
+            errorMessage = 'Payment service temporarily unavailable. Please try again later.';
+          } else {
+            errorMessage = response.error.message;
+          }
+        }
+        
         throw new Error(errorMessage);
       }
 
-      const { url, error: dataError } = data;
+      if (!response.data) {
+        throw new Error('No response data from checkout function');
+      }
+
+      const { url, error: dataError } = response.data;
       
       if (dataError) {
         throw new Error(dataError);
@@ -544,9 +542,18 @@ const Billing = () => {
       }
     } catch (error: any) {
       console.error('Checkout error:', error);
+      
+      let errorMessage = 'Failed to start checkout. Please try again.';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.toString().includes('fetch')) {
+        errorMessage = 'Unable to connect to payment service. Please try again later.';
+      }
+      
       toast({
         title: 'Checkout Error',
-        description: error.message || 'Something went wrong. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
