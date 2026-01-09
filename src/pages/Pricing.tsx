@@ -1,8 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Check, X, ArrowLeft } from 'lucide-react';
+import { Activity, Check, X, ArrowLeft, ArrowUpRight, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 const plans = [
   {
@@ -78,6 +82,65 @@ const faqs = [
 ];
 
 const Pricing = () => {
+  const { user, session } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [checkoutLoading, setCheckoutLoading] = useState<'PRO' | 'ELITE' | null>(null);
+
+  const handleCheckout = async (plan: 'PRO' | 'ELITE') => {
+    // If not logged in, redirect to auth
+    if (!user || !session?.access_token) {
+      navigate('/auth', { state: { redirect: '/pricing' } });
+      return;
+    }
+
+    setCheckoutLoading(plan);
+
+    try {
+      const response = await supabase.functions.invoke('create-checkout', {
+        body: { plan },
+      });
+
+      if (response.error) {
+        console.error('Function error:', response.error);
+        throw new Error(response.error.message || 'Failed to create checkout session');
+      }
+
+      if (!response.data) {
+        throw new Error('No response data from checkout function');
+      }
+
+      const { url, error: dataError } = response.data;
+      
+      if (dataError) {
+        throw new Error(dataError);
+      }
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      
+      let errorMessage = 'Failed to start checkout. Please try again.';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.toString().includes('fetch')) {
+        errorMessage = 'Failed to send a request to the Edge Function. Please check if the function is deployed.';
+      }
+      
+      toast({
+        title: 'Checkout Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      setCheckoutLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -148,14 +211,35 @@ const Pricing = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth" className="block">
+                {plan.name === 'Free' ? (
+                  <Link to="/auth" className="block">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                ) : (
                   <Button
                     variant={plan.popular ? 'default' : 'outline'}
                     className="w-full"
+                    onClick={() => handleCheckout(plan.name as 'PRO' | 'ELITE')}
+                    disabled={checkoutLoading === plan.name}
                   >
-                    {plan.cta}
+                    {checkoutLoading === plan.name ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <ArrowUpRight className="mr-2 h-4 w-4" />
+                        Upgrade
+                      </>
+                    )}
                   </Button>
-                </Link>
+                )}
               </CardContent>
             </Card>
           ))}

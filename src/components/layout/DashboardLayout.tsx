@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, Settings, Radio, Plug, FileText, Key, Shield, MessageSquare } from 'lucide-react';
+import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, Settings, Radio, Plug, FileText, Key } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -10,8 +10,6 @@ import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSignalNotifications } from '@/hooks/useSignalNotifications';
-import { useAdmin } from '@/hooks/useAdmin';
-import { FeedbackDialog } from '@/components/FeedbackDialog';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -38,7 +36,6 @@ const planColors: Record<PlanType, string> = {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, loading, signOut } = useAuth();
-  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,7 +46,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return false;
   });
   const [userPlan, setUserPlan] = useState<PlanType>('FREE');
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Enable real-time signal notifications
   useSignalNotifications();
@@ -217,75 +213,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {navigation.map((item) => (
               <NavItem key={item.name} item={item} />
             ))}
-            {isAdmin && (
-              <>
-                {!collapsed && (
-                  <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-4">Administration</p>
-                )}
-                {collapsed ? (
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        to="/admin/users"
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                          location.pathname.startsWith('/admin')
-                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                        }`}
-                      >
-                        <Shield className={`h-5 w-5 flex-shrink-0 ${location.pathname.startsWith('/admin') ? 'text-purple-600 dark:text-purple-400' : ''}`} />
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="font-medium">
-                      Admin Panel
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <Link
-                    to="/admin/users"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                      location.pathname.startsWith('/admin')
-                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    }`}
-                  >
-                    <Shield className={`h-5 w-5 flex-shrink-0 ${location.pathname.startsWith('/admin') ? 'text-purple-600 dark:text-purple-400' : ''}`} />
-                    <span>Admin Panel</span>
-                  </Link>
-                )}
-              </>
-            )}
           </nav>
-
-          {/* Feedback Button */}
-          <div className="px-3 py-2 border-t border-border">
-            {collapsed ? (
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setFeedbackOpen(true)}
-                    className="w-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Submit Feedback</TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button
-                variant="ghost"
-                onClick={() => setFeedbackOpen(true)}
-                className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span>Submit Feedback</span>
-              </Button>
-            )}
-          </div>
 
           {/* Appearance Controls - Desktop */}
           <div className={`px-3 py-2 border-t border-border hidden lg:flex items-center ${collapsed ? 'flex-col gap-2' : 'justify-between'}`}>
@@ -362,9 +290,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </div>
       </main>
-
-      {/* Feedback Dialog */}
-      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   );
 };
