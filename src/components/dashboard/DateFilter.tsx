@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n';
 
 export type DateFilterType = 'today' | 'week' | 'month' | 'year' | 'custom' | 'all';
 
@@ -21,6 +22,7 @@ interface DateFilterProps {
 }
 
 export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps) => {
+  const { t } = useLanguage();
   const [customRange, setCustomRange] = useState<DateRange>(dateRange || { from: undefined, to: undefined });
   const [isCustomOpen, setIsCustomOpen] = useState(false);
 
@@ -66,20 +68,20 @@ export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps
   const getDisplayText = () => {
     switch (value) {
       case 'today':
-        return 'Today';
+        return t.dateFilter.today;
       case 'week':
-        return 'This Week';
+        return t.dateFilter.thisWeek;
       case 'month':
-        return 'This Month';
+        return t.dateFilter.thisMonth;
       case 'year':
-        return 'This Year';
+        return t.dateFilter.thisYear;
       case 'custom':
         if (dateRange?.from && dateRange?.to) {
           return `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}`;
         }
-        return 'Custom Range';
+        return t.dateFilter.customRange;
       default:
-        return 'All Time';
+        return t.dateFilter.allTime;
     }
   };
 
@@ -90,12 +92,12 @@ export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps
           <SelectValue>{getDisplayText()}</SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Time</SelectItem>
-          <SelectItem value="today">Today</SelectItem>
-          <SelectItem value="week">This Week</SelectItem>
-          <SelectItem value="month">This Month</SelectItem>
-          <SelectItem value="year">This Year</SelectItem>
-          <SelectItem value="custom">Custom Range</SelectItem>
+          <SelectItem value="all">{t.dateFilter.allTime}</SelectItem>
+          <SelectItem value="today">{t.dateFilter.today}</SelectItem>
+          <SelectItem value="week">{t.dateFilter.thisWeek}</SelectItem>
+          <SelectItem value="month">{t.dateFilter.thisMonth}</SelectItem>
+          <SelectItem value="year">{t.dateFilter.thisYear}</SelectItem>
+          <SelectItem value="custom">{t.dateFilter.customRange}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -120,7 +122,7 @@ export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps
                   format(dateRange.from, "LLL dd, y")
                 )
               ) : (
-                <span>Pick a date range</span>
+                <span>{t.dateFilter.pickDateRange}</span>
               )}
             </Button>
           </PopoverTrigger>

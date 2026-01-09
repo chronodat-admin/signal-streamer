@@ -7,10 +7,12 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSignalNotifications } from '@/hooks/useSignalNotifications';
 import { FeedbackDialog } from '@/components/FeedbackDialog';
+import { useLanguage } from '@/i18n';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -18,15 +20,17 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Strategies', href: '/dashboard/strategies', icon: Layers },
-  { name: 'Signals', href: '/dashboard/signals', icon: Radio },
-  { name: 'Integrations', href: '/dashboard/integrations', icon: Plug },
-  { name: 'API Keys', href: '/dashboard/api-keys', icon: Key },
-  { name: 'Alert Logs', href: '/dashboard/logs', icon: FileText },
-  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-  { name: 'Preferences', href: '/dashboard/preferences', icon: Settings },
+type NavKey = 'dashboard' | 'strategies' | 'signals' | 'integrations' | 'apiKeys' | 'alertLogs' | 'billing' | 'preferences';
+
+const navigationConfig: { key: NavKey; href: string; icon: typeof LayoutDashboard }[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'strategies', href: '/dashboard/strategies', icon: Layers },
+  { key: 'signals', href: '/dashboard/signals', icon: Radio },
+  { key: 'integrations', href: '/dashboard/integrations', icon: Plug },
+  { key: 'apiKeys', href: '/dashboard/api-keys', icon: Key },
+  { key: 'alertLogs', href: '/dashboard/logs', icon: FileText },
+  { key: 'billing', href: '/dashboard/billing', icon: CreditCard },
+  { key: 'preferences', href: '/dashboard/preferences', icon: Settings },
 ];
 
 const planColors: Record<PlanType, string> = {
@@ -39,6 +43,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -52,6 +57,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   // Enable real-time signal notifications
   useSignalNotifications();
+
+  // Build navigation with translations
+  const navigation = navigationConfig.map((item) => ({
+    ...item,
+    name: t.nav[item.key],
+  }));
 
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', String(collapsed));
@@ -178,6 +189,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <span className="font-bold text-lg">SignalPulse</span>
         </Link>
         <div className="flex items-center gap-1">
+          <LanguageSwitcher />
           <ColorSchemePicker />
           <ThemeToggle />
           <Button
@@ -260,8 +272,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           {/* Appearance Controls - Desktop */}
           <div className={`px-3 py-2 border-t border-border hidden lg:flex items-center ${collapsed ? 'flex-col gap-2' : 'justify-between'}`}>
-            {!collapsed && <span className="text-sm text-muted-foreground">Appearance</span>}
+            {!collapsed && <span className="text-sm text-muted-foreground">{t.preferences.appearance}</span>}
             <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-1'}`}>
+              <LanguageSwitcher />
               <ColorSchemePicker />
               <ThemeToggle />
             </div>
@@ -297,7 +310,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                         </Button>
                       </Link>
                     </TooltipTrigger>
-                    <TooltipContent side="right">Admin Panel</TooltipContent>
+                    <TooltipContent side="right">{t.nav.adminPanel}</TooltipContent>
                   </Tooltip>
                 )}
                 <Tooltip delayDuration={0}>
@@ -311,7 +324,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       <MessageSquare className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">Send Feedback</TooltipContent>
+                  <TooltipContent side="right">{t.feedback.title}</TooltipContent>
                 </Tooltip>
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
@@ -324,7 +337,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       <LogOut className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">Sign Out</TooltipContent>
+                  <TooltipContent side="right">{t.nav.signOut}</TooltipContent>
                 </Tooltip>
               </>
             ) : (
@@ -349,7 +362,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       className="w-full justify-start gap-3 text-muted-foreground hover:text-primary hover:bg-primary/10 mb-1"
                     >
                       <Shield className="h-5 w-5" />
-                      Admin Panel
+                      {t.nav.adminPanel}
                     </Button>
                   </Link>
                 )}
@@ -359,7 +372,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   onClick={() => setFeedbackOpen(true)}
                 >
                   <MessageSquare className="h-5 w-5" />
-                  Send Feedback
+                  {t.feedback.title}
                 </Button>
                 <Button
                   variant="ghost"
@@ -367,7 +380,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   onClick={handleSignOut}
                 >
                   <LogOut className="h-5 w-5" />
-                  Sign Out
+                  {t.nav.signOut}
                 </Button>
               </>
             )}

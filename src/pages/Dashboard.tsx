@@ -16,6 +16,7 @@ import { formatPnL } from '@/lib/pnlUtils';
 import { DashboardPageSkeleton, StatsCardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { EmptyTrades } from '@/components/dashboard/EmptyState';
 import { DateFilter, DateFilterType, DateRange } from '@/components/dashboard/DateFilter';
+import { useLanguage } from '@/i18n';
 
 interface Signal {
   id: string;
@@ -62,6 +63,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { preferences } = usePreferences();
   const { isAdmin } = useAdmin();
+  const { t } = useLanguage();
   const [signals, setSignals] = useState<Signal[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [allTrades, setAllTrades] = useState<Trade[]>([]);
@@ -320,8 +322,8 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-display font-bold tracking-tight mb-2">Dashboard</h1>
-            <p className="text-muted-foreground text-lg">Track and manage your trading signals</p>
+            <h1 className="text-4xl font-display font-bold tracking-tight mb-2">{t.dashboard.title}</h1>
+            <p className="text-muted-foreground text-lg">{t.dashboard.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
             <DateFilter
@@ -336,14 +338,14 @@ const Dashboard = () => {
               <Link to="/admin/users">
                 <Button variant="outline" className="gap-2 border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 dark:hover:bg-purple-500/10">
                   <Shield className="h-4 w-4" />
-                  Admin Panel
+                  {t.nav.adminPanel}
                 </Button>
               </Link>
             )}
             <Link to="/dashboard/strategies">
               <Button className="gap-2 shadow-md hover:shadow-lg transition-all">
                 <Plus className="h-4 w-4" />
-                New Strategy
+                {t.dashboard.newStrategy}
               </Button>
             </Link>
           </div>
@@ -355,11 +357,11 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total P&L</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.totalPnL}</p>
                   <p className={`text-3xl font-semibold tracking-tight ${formatPnL(filteredStats.totalPnL).className}`}>
                     {formatPnL(filteredStats.totalPnL).value}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">{filteredStats.totalTrades} closed trades</p>
+                  <p className="text-xs text-muted-foreground mt-1">{filteredStats.totalTrades} {t.dashboard.closedTrades}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <DollarSign className={`h-5 w-5 ${filteredStats.totalPnL >= 0 ? 'text-buy' : 'text-sell'}`} />
@@ -371,10 +373,10 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Win Rate</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.winRate}</p>
                   <p className="text-3xl font-semibold tracking-tight">{filteredStats.winRate.toFixed(1)}%</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {filteredStats.totalTrades > 0 ? `${Math.round((filteredStats.winRate / 100) * filteredStats.totalTrades)} wins` : 'No trades'}
+                    {filteredStats.totalTrades > 0 ? `${Math.round((filteredStats.winRate / 100) * filteredStats.totalTrades)} ${t.dashboard.wins}` : t.dashboard.noTrades}
                   </p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -388,9 +390,9 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Signals Today</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.signalsToday}</p>
                   <p className="text-3xl font-semibold tracking-tight">{stats.signalsToday}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Last 24 hours</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.dashboard.last24Hours}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Activity className="h-5 w-5 text-primary" />
@@ -403,9 +405,9 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">This Week</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.thisWeek}</p>
                   <p className="text-3xl font-semibold tracking-tight">{stats.signalsWeek}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.dashboard.last7Days}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                   <TrendingUp className="h-5 w-5 text-emerald-500" />
@@ -418,9 +420,9 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Strategies</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.strategies}</p>
                   <p className="text-3xl font-semibold tracking-tight">{strategiesCount}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Active strategies</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.dashboard.activeStrategies}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
                   <Layers className="h-5 w-5 text-violet-500" />
@@ -433,9 +435,9 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Top Symbol</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.topSymbol}</p>
                   <p className="text-2xl font-semibold mt-1 font-mono tracking-tight">{stats.mostActiveSymbol || '—'}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Most signals</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.dashboard.mostSignals}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
                   <BarChart3 className="h-5 w-5 text-amber-500" />
@@ -448,9 +450,9 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Open Positions</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.openPositions}</p>
                   <p className="text-3xl font-semibold tracking-tight">{filteredStats.openPositions}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Active trades</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.dashboard.activeTrades}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Target className="h-5 w-5 text-blue-500" />
@@ -463,11 +465,11 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Best Trade</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.dashboard.bestTrade}</p>
                   <p className={`text-3xl font-semibold tracking-tight ${filteredStats.bestTrade !== null && filteredStats.bestTrade > 0 ? 'text-buy' : ''}`}>
                     {filteredStats.bestTrade !== null ? `+${filteredStats.bestTrade.toFixed(2)}%` : '—'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">Top performer</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.dashboard.topPerformer}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
                   <Trophy className="h-5 w-5 text-yellow-500" />
@@ -482,46 +484,46 @@ const Dashboard = () => {
           <CardHeader className="flex flex-row items-center justify-between border-b border-border">
             <CardTitle className="flex items-center gap-2 text-base font-semibold">
               <Activity className="h-4 w-4 text-muted-foreground" />
-              Open Trades
+              {t.dashboard.openTrades}
             </CardTitle>
-            {filteredTrades.filter(t => t.status === 'open').length > 0 && (
+            {filteredTrades.filter(tr => tr.status === 'open').length > 0 && (
               <Link to="/dashboard/signals">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  View All Signals <ArrowRight className="h-4 w-4" />
+                  {t.common.viewAll} <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             )}
           </CardHeader>
           <CardContent className="p-0">
-            {filteredTrades.filter(t => t.status === 'open').length === 0 ? (
+            {filteredTrades.filter(tr => tr.status === 'open').length === 0 ? (
               <EmptyTrades type="open" />
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Direction</TableHead>
-                      <TableHead>Symbol</TableHead>
-                      <TableHead>Entry Price</TableHead>
-                      <TableHead>Current</TableHead>
-                      <TableHead>Strategy</TableHead>
-                      <TableHead>Entry Time</TableHead>
+                      <TableHead>{t.dashboard.direction}</TableHead>
+                      <TableHead>{t.dashboard.symbol}</TableHead>
+                      <TableHead>{t.dashboard.entryPrice}</TableHead>
+                      <TableHead>{t.dashboard.current}</TableHead>
+                      <TableHead>{t.dashboard.strategy}</TableHead>
+                      <TableHead>{t.dashboard.entryTime}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTrades.filter(t => t.status === 'open').map((trade) => (
+                    {filteredTrades.filter(tr => tr.status === 'open').map((trade) => (
                       <TableRow key={trade.id}>
                         <TableCell>
                           <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
                             {trade.direction === 'long' ? (
                               <span className="flex items-center gap-1">
                                 <ArrowUpRight className="h-3 w-3" />
-                                LONG
+                                {t.dashboard.long}
                               </span>
                             ) : (
                               <span className="flex items-center gap-1">
                                 <ArrowDownRight className="h-3 w-3" />
-                                SHORT
+                                {t.dashboard.short}
                               </span>
                             )}
                           </Badge>
@@ -557,47 +559,47 @@ const Dashboard = () => {
           <CardHeader className="flex flex-row items-center justify-between border-b border-border">
             <CardTitle className="flex items-center gap-2 text-base font-semibold">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              Closed Trades
+              {t.dashboard.closedTrades}
             </CardTitle>
-            {filteredTrades.filter(t => t.status === 'closed').length > 0 && (
+            {filteredTrades.filter(tr => tr.status === 'closed').length > 0 && (
               <Link to="/dashboard/signals">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  View All Signals <ArrowRight className="h-4 w-4" />
+                  {t.common.viewAll} <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
             )}
           </CardHeader>
           <CardContent className="p-0">
-            {filteredTrades.filter(t => t.status === 'closed').length === 0 ? (
+            {filteredTrades.filter(tr => tr.status === 'closed').length === 0 ? (
               <EmptyTrades type="closed" />
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Direction</TableHead>
-                      <TableHead>Symbol</TableHead>
-                      <TableHead>Entry</TableHead>
-                      <TableHead>Exit</TableHead>
-                      <TableHead>P&L</TableHead>
-                      <TableHead>Strategy</TableHead>
-                      <TableHead>Time</TableHead>
+                      <TableHead>{t.dashboard.direction}</TableHead>
+                      <TableHead>{t.dashboard.symbol}</TableHead>
+                      <TableHead>{t.dashboard.entryPrice}</TableHead>
+                      <TableHead>{t.dashboard.exitPrice}</TableHead>
+                      <TableHead>{t.dashboard.pnl}</TableHead>
+                      <TableHead>{t.dashboard.strategy}</TableHead>
+                      <TableHead>{t.dashboard.time}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTrades.filter(t => t.status === 'closed').map((trade) => (
+                    {filteredTrades.filter(tr => tr.status === 'closed').map((trade) => (
                       <TableRow key={trade.id}>
                         <TableCell>
                           <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
                             {trade.direction === 'long' ? (
                               <span className="flex items-center gap-1">
                                 <ArrowUpRight className="h-3 w-3" />
-                                LONG
+                                {t.dashboard.long}
                               </span>
                             ) : (
                               <span className="flex items-center gap-1">
                                 <ArrowDownRight className="h-3 w-3" />
-                                SHORT
+                                {t.dashboard.short}
                               </span>
                             )}
                           </Badge>

@@ -3,25 +3,28 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Palette, Moon, Sun, Save, DollarSign, Calendar, Bell } from 'lucide-react';
+import { Palette, Moon, Sun, Save, DollarSign, Calendar, Bell, Globe } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { usePreferences, type Currency, type DateFormat } from '@/hooks/usePreferences';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage, type Language } from '@/i18n';
 
 const Preferences = () => {
   const { theme, setTheme } = useTheme();
   const { preferences, setCurrency, setDateFormat, setSignalNotifications } = usePreferences();
+  const { t, language, setLanguage } = useLanguage();
 
   const handleSave = (e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
     toast({
-      title: 'Preferences saved',
-      description: 'Your preferences have been saved successfully.',
+      title: t.preferences.preferencesSaved,
+      description: t.preferences.preferencesSaved,
     });
   };
 
@@ -30,26 +33,56 @@ const Preferences = () => {
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-display font-bold tracking-tight mb-2">Preferences</h1>
-          <p className="text-muted-foreground text-lg">Customize your app experience</p>
+          <h1 className="text-4xl font-display font-bold tracking-tight mb-2">{t.preferences.title}</h1>
+          <p className="text-muted-foreground text-lg">{t.preferences.subtitle}</p>
         </div>
 
         <div className="grid gap-6 max-w-4xl">
+          {/* Language Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                {t.preferences.language}
+              </CardTitle>
+              <CardDescription>
+                {t.preferences.languageDescription}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="language">{t.preferences.language}</Label>
+                <Select
+                  value={language}
+                  onValueChange={(value) => setLanguage(value as Language)}
+                >
+                  <SelectTrigger id="language" className="w-full max-w-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">🇺🇸 {t.preferences.english}</SelectItem>
+                    <SelectItem value="es">🇪🇸 {t.preferences.spanish}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Appearance Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Palette className="h-5 w-5" />
-                Appearance
+                {t.preferences.appearance}
               </CardTitle>
               <CardDescription>
-                Customize the look and feel of the application
+                {t.preferences.appearanceDescription}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Theme */}
               <div className="space-y-3">
-                <Label htmlFor="theme">Theme</Label>
+                <Label htmlFor="theme">{t.preferences.theme}</Label>
                 <div className="flex items-center gap-4">
                   <Button
                     variant={theme === 'light' ? 'default' : 'outline'}
@@ -57,7 +90,7 @@ const Preferences = () => {
                     className="flex items-center gap-2"
                   >
                     <Sun className="h-4 w-4" />
-                    Light
+                    {t.preferences.light}
                   </Button>
                   <Button
                     variant={theme === 'dark' ? 'default' : 'outline'}
@@ -65,11 +98,11 @@ const Preferences = () => {
                     className="flex items-center gap-2"
                   >
                     <Moon className="h-4 w-4" />
-                    Dark
+                    {t.preferences.dark}
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Choose between light and dark mode
+                  {t.preferences.themeDescription}
                 </p>
               </div>
 
@@ -77,11 +110,11 @@ const Preferences = () => {
 
               {/* Color Scheme */}
               <div className="space-y-3">
-                <Label>Color Scheme</Label>
+                <Label>{t.preferences.colorScheme}</Label>
                 <div className="flex items-center gap-4">
                   <ColorSchemePicker />
                   <p className="text-sm text-muted-foreground">
-                    Select your preferred color scheme
+                    {t.preferences.colorSchemeDescription}
                   </p>
                 </div>
               </div>
@@ -93,19 +126,19 @@ const Preferences = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
-                Notifications
+                {t.preferences.notifications}
               </CardTitle>
               <CardDescription>
-                Configure how you receive notifications
+                {t.preferences.notificationsDescription}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Signal Notifications */}
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="signal-notifications">Real-time Signal Notifications</Label>
+                  <Label htmlFor="signal-notifications">{t.preferences.pushNotifications}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Show a toast notification when a new trading signal is received
+                    {t.preferences.pushNotificationsDescription}
                   </p>
                 </div>
                 <Switch
@@ -122,16 +155,16 @@ const Preferences = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Regional Settings
+                {t.preferences.display}
               </CardTitle>
               <CardDescription>
-                Customize currency and date formats
+                {t.preferences.displayDescription}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Currency */}
               <div className="space-y-3">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency">{t.preferences.currency}</Label>
                 <Select
                   value={preferences.currency}
                   onValueChange={(value) => setCurrency(value as Currency)}
@@ -151,7 +184,7 @@ const Preferences = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  Currency used for displaying prices and amounts
+                  {t.preferences.currencyDescription}
                 </p>
               </div>
 
@@ -159,7 +192,7 @@ const Preferences = () => {
 
               {/* Date Format */}
               <div className="space-y-3">
-                <Label htmlFor="dateFormat">Date Format</Label>
+                <Label htmlFor="dateFormat">{t.preferences.dateFormat}</Label>
                 <Select
                   value={preferences.dateFormat}
                   onValueChange={(value) => setDateFormat(value as DateFormat)}
@@ -176,7 +209,7 @@ const Preferences = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  Format used for displaying dates throughout the application
+                  {t.preferences.dateFormatDescription}
                 </p>
               </div>
             </CardContent>
@@ -186,7 +219,7 @@ const Preferences = () => {
           <div className="flex justify-end">
             <Button onClick={handleSave} className="gap-2">
               <Save className="h-4 w-4" />
-              Save Preferences
+              {t.common.save}
             </Button>
           </div>
         </div>

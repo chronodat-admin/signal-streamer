@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { SignalsPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { EmptySignals, NoSearchResults } from '@/components/dashboard/EmptyState';
 import { DateFilter, DateFilterType, DateRange } from '@/components/dashboard/DateFilter';
+import { useLanguage } from '@/i18n';
 
 interface Signal {
   id: string;
@@ -73,6 +74,7 @@ const Signals = () => {
   const { user } = useAuth();
   const { preferences } = usePreferences();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [signals, setSignals] = useState<Signal[]>([]);
   const [filteredSignals, setFilteredSignals] = useState<Signal[]>([]);
   const [strategies, setStrategies] = useState<{ id: string; name: string }[]>([]);
@@ -300,8 +302,8 @@ const Signals = () => {
     window.URL.revokeObjectURL(url);
 
     toast({
-      title: 'Exported',
-      description: 'Signals exported to CSV',
+      title: t.signals.exported,
+      description: t.signals.signalsExported,
     });
   };
 
@@ -318,32 +320,32 @@ const Signals = () => {
     // Validation
     if (!formData.strategy_id) {
       toast({
-        title: 'Validation Error',
-        description: 'Please select a strategy',
+        title: t.signals.validationError,
+        description: t.signals.pleaseSelectStrategy,
         variant: 'destructive',
       });
       return;
     }
     if (!formData.signal_type) {
       toast({
-        title: 'Validation Error',
-        description: 'Please select a signal type',
+        title: t.signals.validationError,
+        description: t.signals.pleaseSelectSignalType,
         variant: 'destructive',
       });
       return;
     }
     if (!formData.symbol.trim()) {
       toast({
-        title: 'Validation Error',
-        description: 'Please enter a symbol',
+        title: t.signals.validationError,
+        description: t.signals.pleaseEnterSymbol,
         variant: 'destructive',
       });
       return;
     }
     if (!formData.price || isNaN(parseFloat(formData.price))) {
       toast({
-        title: 'Validation Error',
-        description: 'Please enter a valid price',
+        title: t.signals.validationError,
+        description: t.signals.pleaseEnterValidPrice,
         variant: 'destructive',
       });
       return;
@@ -376,8 +378,8 @@ const Signals = () => {
       if (error) throw error;
 
       toast({
-        title: 'Signal Added',
-        description: `Manual ${formData.signal_type.toUpperCase()} signal for ${formData.symbol.toUpperCase()} added successfully`,
+        title: t.signals.signalAdded,
+        description: `${formData.signal_type.toUpperCase()} ${formData.symbol.toUpperCase()}`,
       });
 
       // Refresh signals list
@@ -389,8 +391,8 @@ const Signals = () => {
     } catch (error: any) {
       console.error('Error adding manual signal:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to add signal',
+        title: t.common.error,
+        description: error.message || t.signals.failedToAddSignal,
         variant: 'destructive',
       });
     } finally {
@@ -433,8 +435,8 @@ const Signals = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold">All Signals</h1>
-            <p className="text-muted-foreground">View and filter all your trading signals</p>
+            <h1 className="text-3xl font-display font-bold">{t.signals.title}</h1>
+            <p className="text-muted-foreground">{t.signals.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Date Filter */}
@@ -454,27 +456,27 @@ const Signals = () => {
               <DialogTrigger asChild>
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add Signal
+                  {t.signals.addSignal}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Add Manual Signal</DialogTitle>
+                  <DialogTitle>{t.signals.addManualSignal}</DialogTitle>
                   <DialogDescription>
-                    Enter a signal manually to track your trades. This works the same as signals from TradingView.
+                    {t.signals.manualSignalDescription}
                   </DialogDescription>
                 </DialogHeader>
                 
                 <div className="grid gap-4 py-4">
                   {/* Strategy Selection */}
                   <div className="grid gap-2">
-                    <Label htmlFor="strategy">Strategy *</Label>
+                    <Label htmlFor="strategy">{t.dashboard.strategy} *</Label>
                     <Select
                       value={formData.strategy_id}
                       onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}
                     >
                       <SelectTrigger id="strategy">
-                        <SelectValue placeholder="Select a strategy" />
+                        <SelectValue placeholder={t.signals.selectStrategy} />
                       </SelectTrigger>
                       <SelectContent>
                         {strategies.map((s) => (
@@ -486,50 +488,50 @@ const Signals = () => {
                     </Select>
                     {strategies.length === 0 && (
                       <p className="text-xs text-muted-foreground">
-                        No strategies found. Create a strategy first.
+                        {t.signals.noStrategiesFound}
                       </p>
                     )}
                   </div>
 
                   {/* Signal Type */}
                   <div className="grid gap-2">
-                    <Label htmlFor="signal_type">Signal Type *</Label>
+                    <Label htmlFor="signal_type">{t.signals.signalType} *</Label>
                     <Select
                       value={formData.signal_type}
                       onValueChange={(value) => setFormData({ ...formData, signal_type: value })}
                     >
                       <SelectTrigger id="signal_type">
-                        <SelectValue placeholder="Select signal type" />
+                        <SelectValue placeholder={t.signals.selectSignalType} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="BUY">
                           <span className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-500" />
-                            BUY (Long Entry)
+                            {t.signals.buyLongEntry}
                           </span>
                         </SelectItem>
                         <SelectItem value="SELL">
                           <span className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-red-500" />
-                            SELL (Short Entry / Exit Long)
+                            {t.signals.sellShortEntry}
                           </span>
                         </SelectItem>
                         <SelectItem value="LONG">
                           <span className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-500" />
-                            LONG (Open Long Position)
+                            {t.signals.longOpenPosition}
                           </span>
                         </SelectItem>
                         <SelectItem value="SHORT">
                           <span className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-red-500" />
-                            SHORT (Open Short Position)
+                            {t.signals.shortOpenPosition}
                           </span>
                         </SelectItem>
                         <SelectItem value="CLOSE">
                           <span className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-gray-500" />
-                            CLOSE (Close Position)
+                            {t.signals.closePosition}
                           </span>
                         </SelectItem>
                       </SelectContent>
@@ -539,22 +541,22 @@ const Signals = () => {
                   {/* Symbol and Price Row */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="symbol">Symbol *</Label>
+                      <Label htmlFor="symbol">{t.dashboard.symbol} *</Label>
                       <Input
                         id="symbol"
-                        placeholder="e.g., AAPL, BTCUSD"
+                        placeholder={t.signals.symbolPlaceholder}
                         value={formData.symbol}
                         onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
                         className="uppercase"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="price">Price *</Label>
+                      <Label htmlFor="price">{t.signals.price} *</Label>
                       <Input
                         id="price"
                         type="number"
                         step="0.00001"
-                        placeholder="e.g., 150.25"
+                        placeholder={t.signals.pricePlaceholder}
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       />
@@ -563,7 +565,7 @@ const Signals = () => {
 
                   {/* Signal Time */}
                   <div className="grid gap-2">
-                    <Label htmlFor="signal_time">Signal Time *</Label>
+                    <Label htmlFor="signal_time">{t.signals.signalTime} *</Label>
                     <Input
                       id="signal_time"
                       type="datetime-local"
@@ -571,16 +573,16 @@ const Signals = () => {
                       onChange={(e) => setFormData({ ...formData, signal_time: e.target.value })}
                     />
                     <p className="text-xs text-muted-foreground">
-                      When did this signal occur? Defaults to now.
+                      {t.signals.signalTimeDescription}
                     </p>
                   </div>
 
                   {/* Notes (Optional) */}
                   <div className="grid gap-2">
-                    <Label htmlFor="notes">Notes (Optional)</Label>
+                    <Label htmlFor="notes">{t.signals.notes} ({t.common.optional})</Label>
                     <Input
                       id="notes"
-                      placeholder="e.g., RSI oversold, support level"
+                      placeholder={t.signals.notesPlaceholder}
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
@@ -596,7 +598,7 @@ const Signals = () => {
                     }}
                     disabled={submitting}
                   >
-                    Cancel
+                    {t.common.cancel}
                   </Button>
                   <Button 
                     onClick={handleSubmitManualSignal}
@@ -605,12 +607,12 @@ const Signals = () => {
                     {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Adding...
+                        {t.signals.adding}
                       </>
                     ) : (
                       <>
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Signal
+                        {t.signals.addSignal}
                       </>
                     )}
                   </Button>
@@ -620,7 +622,7 @@ const Signals = () => {
 
             <Button onClick={exportCSV} variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
-            Export CSV
+            {t.signals.exportCSV}
           </Button>
           </div>
         </div>
@@ -632,7 +634,7 @@ const Signals = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                    Total Signals
+                    {t.signals.totalSignals}
                   </p>
                   <p className="text-2xl font-semibold">{stats.total}</p>
                 </div>
@@ -646,7 +648,7 @@ const Signals = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                    BUY Signals
+                    {t.signals.buySignals}
                   </p>
                   <p className="text-2xl font-semibold text-buy">{stats.buys}</p>
                 </div>
@@ -660,7 +662,7 @@ const Signals = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                    SELL Signals
+                    {t.signals.sellSignals}
                   </p>
                   <p className="text-2xl font-semibold text-sell">{stats.sells}</p>
                 </div>
@@ -674,7 +676,7 @@ const Signals = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                    Potential Duplicates
+                    {t.signals.potentialDuplicates}
                   </p>
                   <p className="text-2xl font-semibold">{stats.duplicates}</p>
                 </div>
@@ -689,16 +691,16 @@ const Signals = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Filter className="h-4 w-4" />
-              Filters
+              {t.signals.filters}
             </CardTitle>
-            <CardDescription>Filter signals by strategy, symbol, or type</CardDescription>
+            <CardDescription>{t.signals.filterDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search signals..."
+                  placeholder={t.signals.searchSignals}
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                   className="pl-9"
@@ -710,10 +712,10 @@ const Signals = () => {
                 onValueChange={(value) => setFilters({ ...filters, strategy: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Strategies" />
+                  <SelectValue placeholder={t.signals.allStrategies} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Strategies</SelectItem>
+                  <SelectItem value="all">{t.signals.allStrategies}</SelectItem>
                   {strategies.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -723,7 +725,7 @@ const Signals = () => {
               </Select>
 
               <Input
-                placeholder="Filter by symbol..."
+                placeholder={t.signals.filterBySymbol}
                 value={filters.symbol}
                 onChange={(e) => setFilters({ ...filters, symbol: e.target.value })}
               />
@@ -733,12 +735,12 @@ const Signals = () => {
                 onValueChange={(value) => setFilters({ ...filters, signalType: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Types" />
+                  <SelectValue placeholder={t.signals.allTypes} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="buy">BUY/LONG</SelectItem>
-                  <SelectItem value="sell">SELL/SHORT</SelectItem>
+                  <SelectItem value="all">{t.signals.allTypes}</SelectItem>
+                  <SelectItem value="buy">{t.signals.buyLong}</SelectItem>
+                  <SelectItem value="sell">{t.signals.sellShort}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -748,7 +750,7 @@ const Signals = () => {
         {/* Signals Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Signals ({filteredSignals.length})</CardTitle>
+            <CardTitle className="text-base">{t.nav.signals} ({filteredSignals.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {filteredSignals.length === 0 ? (
@@ -762,12 +764,12 @@ const Signals = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date & Time</TableHead>
-                      <TableHead>Strategy</TableHead>
-                      <TableHead>Signal</TableHead>
-                      <TableHead>Symbol</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Source</TableHead>
+                      <TableHead>{t.signals.dateTime}</TableHead>
+                      <TableHead>{t.dashboard.strategy}</TableHead>
+                      <TableHead>{t.signals.signal}</TableHead>
+                      <TableHead>{t.dashboard.symbol}</TableHead>
+                      <TableHead>{t.signals.price}</TableHead>
+                      <TableHead>{t.signals.source}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -784,7 +786,7 @@ const Signals = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium">{signal.strategies?.name || 'Unknown'}</span>
+                          <span className="font-medium">{signal.strategies?.name || t.common.unknown}</span>
                         </TableCell>
                         <TableCell>{getSignalBadge(signal.signal_type)}</TableCell>
                         <TableCell>
