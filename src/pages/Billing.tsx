@@ -256,7 +256,30 @@ const Billing = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+    
+    // Check if user has a subscription that should update their plan
+    // This handles cases where redirect doesn't include query params
+    if (user) {
+      const checkSubscription = async () => {
+        // Only check if currently on FREE plan
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('plan, stripe_customer_id, stripe_subscription_id')
+          .eq('user_id', user.id)
+          .single();
+        
+        // If user has a Stripe customer ID but is on FREE plan, try to sync
+        if (currentProfile?.stripe_customer_id && currentProfile?.plan === 'FREE') {
+          console.log('User has Stripe customer but is on FREE plan, checking subscription...');
+          // Don't auto-sync immediately, let user use manual sync button
+          // This prevents unnecessary API calls
+        }
+      };
+      
+      // Check after a delay to avoid race conditions
+      setTimeout(checkSubscription, 3000);
+    }
+  }, [fetchProfile, user]);
 
   // Track previous plan to detect upgrades
   const previousPlanRef = useRef<PlanType | null>(null);
@@ -307,6 +330,62 @@ const Billing = () => {
       previousPlanRef.current = profile.plan;
     }
   }, [profile?.plan]);
+
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSyncSubscription = async () => {
+    if (!user) return;
+
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co'}/functions/v1/sync-subscription`;
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+      console.log('Sync response:', data);
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to sync subscription');
+      }
+
+      if (data.updated) {
+        toast({
+          title: '✅ Subscription Synced!',
+          description: `Your plan has been updated to ${data.plan}.`,
+          duration: 6000,
+        });
+        fetchProfile();
+      } else {
+        toast({
+          title: 'Subscription Status',
+          description: data.message || 'Your subscription is up to date.',
+          duration: 5000,
+        });
+        fetchProfile();
+      }
+    } catch (error: any) {
+      console.error('Sync error:', error);
+      toast({
+        title: 'Sync Failed',
+        description: error.message || 'Failed to sync subscription. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleManageSubscription = async () => {
     if (!profile?.stripe_customer_id) {
@@ -744,6 +823,19 @@ const Billing = () => {
                         <Button 
                           variant="ghost" 
                           className="w-full justify-start gap-2 text-muted-foreground"
+                          onClick={handleSyncSubscription}
+                          disabled={syncing}
+                        >
+                          {syncing ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ArrowUpRight className="h-4 w-4" />
+                          )}
+                          Sync Subscription Status
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start gap-2 text-muted-foreground"
                           onClick={handleManageSubscription}
                           disabled={portalLoading}
                         >
@@ -773,12 +865,30 @@ const Billing = () => {
                         <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                           <CreditCard className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium text-sm">No Active Subscription</p>
                           <p className="text-xs text-muted-foreground">
-                            Upgrade to unlock premium features
+                            {profile?.stripe_customer_id 
+                              ? 'If you just upgraded, click Sync to update your plan'
+                              : 'Upgrade to unlock premium features'}
                           </p>
                         </div>
+                        {profile?.stripe_customer_id && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleSyncSubscription}
+                            disabled={syncing}
+                            className="gap-1"
+                          >
+                            {syncing ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <ArrowUpRight className="h-3 w-3" />
+                            )}
+                            Sync
+                          </Button>
+                        )}
                       </div>
 
                       <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">

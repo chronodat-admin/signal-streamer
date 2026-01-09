@@ -107,6 +107,11 @@ serve(async (req) => {
 
     // Get origin for redirect URLs
     const origin = req.headers.get("origin") || "https://signal-streamer.vercel.app";
+    
+    // Use session_id in success URL so we can verify it later
+    // This ensures we can sync even if query params are lost
+    const successUrl = `${origin}/dashboard/billing?success=true&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${origin}/dashboard/billing?canceled=true`;
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -119,8 +124,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/dashboard/billing?success=true`,
-      cancel_url: `${origin}/dashboard/billing?canceled=true`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         user_id: user.id,
         plan,
