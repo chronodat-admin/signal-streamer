@@ -490,65 +490,35 @@ const Billing = () => {
     setCheckoutLoading(plan);
 
     try {
-      console.log('Starting checkout for plan:', plan);
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      // Get fresh session and refresh if needed
-      let { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !currentSession?.access_token) {
-        // Try to refresh
-        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError || !refreshedSession?.access_token) {
-          throw new Error('Your session has expired. Please sign in again.');
-        }
-        currentSession = refreshedSession;
+      if (sessionError || !session?.access_token) {
+        throw new Error('Please sign in to continue.');
       }
-      
-      // Check if token is expired or about to expire
-      if (currentSession.expires_at) {
-        const expiresIn = currentSession.expires_at - Math.floor(Date.now() / 1000);
-        if (expiresIn < 60) {
-          // Token expiring soon, refresh it
-          console.log('Token expiring soon, refreshing...');
-          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-          if (!refreshError && refreshedSession?.access_token) {
-            currentSession = refreshedSession;
-          }
-        }
-      }
-      
-      if (!currentSession?.access_token) {
-        throw new Error('Please sign in again to continue.');
-      }
-      
+
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
       if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Supabase configuration error. Please check your environment variables.');
+        throw new Error('Configuration error: Missing Supabase credentials.');
       }
-      
-      console.log('Making checkout request with token (length:', currentSession.access_token.length, ')');
-      
-      // Simple direct fetch with explicit headers
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/create-checkout`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentSession.access_token}`,
-            'apikey': supabaseAnonKey,
-          },
-          body: JSON.stringify({ plan }),
-        }
-      );
+
+      // Call Edge Function
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({ plan }),
+      });
 
       const data = await response.json();
-      console.log('Checkout response:', response.status, data);
 
       if (!response.ok) {
-        throw new Error(data?.error || data?.message || `Error ${response.status}`);
+        throw new Error(data?.error || data?.message || 'Checkout failed');
       }
 
       const { url, error: dataError } = data;

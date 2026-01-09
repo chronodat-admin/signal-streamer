@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
+  // Handle CORS
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,79 +17,77 @@ serve(async (req) => {
     // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("ANON_KEY"); // Secret name: ANON_KEY (no SUPABASE_ prefix allowed)
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     const proPriceId = Deno.env.get("STRIPE_PRO_PRICE_ID");
     const elitePriceId = Deno.env.get("STRIPE_ELITE_PRICE_ID");
 
-    // Check Stripe configuration
-    if (!stripeSecretKey) {
-      console.error("Missing STRIPE_SECRET_KEY");
+    // Validate Stripe config
+    if (!stripeSecretKey || !proPriceId || !elitePriceId) {
       return new Response(
-        JSON.stringify({ error: "Stripe is not configured. Please set STRIPE_SECRET_KEY in Edge Function secrets." }),
+        JSON.stringify({ error: "Stripe not configured. Please set STRIPE_SECRET_KEY, STRIPE_PRO_PRICE_ID, and STRIPE_ELITE_PRICE_ID in Edge Function secrets." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!proPriceId || !elitePriceId) {
-      console.error("Missing price IDs");
-      return new Response(
-        JSON.stringify({ error: "Stripe price IDs not configured. Please set STRIPE_PRO_PRICE_ID and STRIPE_ELITE_PRICE_ID." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get auth header
+    // Get auth token
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "No authorization header provided" }),
+        JSON.stringify({ error: "Missing or invalid authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const token = authHeader.replace("Bearer ", "");
-    console.log("[create-checkout] Token received, length:", token.length);
-    
-    // Create Supabase client with service role key
-    // We can use service role key to validate user tokens by calling getUser
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    console.log("[create-checkout] Validating user token...");
-    
-    // Validate user token using service role client
-    // This works because we're using getUser() which validates the JWT signature
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
-    if (userError) {
-      console.error("[create-checkout] Auth validation failed:", {
-        message: userError.message,
-        status: userError.status,
-        name: userError.name,
-        code: (userError as any).code,
-      });
-      
+    // Get anon key from header or env
+    const apikeyFromHeader = req.headers.get("apikey");
+    const anonKey = apikeyFromHeader || supabaseAnonKey;
+
+    if (!anonKey) {
+      // Fallback: try to validate with service role (less ideal but might work)
+      console.log("No anon key available, using service role for validation");
+    }
+
+    // Create client with anon key for token validation (preferred)
+    // If no anon key, use service role as fallback
+    const authClient = createClient(
+      supabaseUrl,
+      anonKey || supabaseServiceKey,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      }
+    );
+
+    // Validate user token
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error("Auth error:", authError?.message);
       return new Response(
         JSON.stringify({ 
-          error: "Invalid or expired token", 
-          details: userError.message,
-          code: (userError as any).code,
+          error: "Authentication failed",
+          message: authError?.message || "Invalid token"
         }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
-    if (!user) {
-      console.error("[create-checkout] No user returned from getUser");
-      return new Response(
-        JSON.stringify({ error: "User not found" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    console.log("[create-checkout] User authenticated:", user.id);
 
     // Parse request body
-    const { plan } = await req.json();
+    let plan: string;
+    try {
+      const body = await req.json();
+      plan = body.plan;
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!plan || !["PRO", "ELITE"].includes(plan)) {
       return new Response(
@@ -98,10 +96,11 @@ serve(async (req) => {
       );
     }
 
-    // Create Stripe client
+    // Create service role client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
-    // Get or create Stripe customer
+    // Get user profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("stripe_customer_id, plan")
@@ -115,28 +114,24 @@ serve(async (req) => {
       );
     }
 
+    // Get or create Stripe customer
     let customerId = profile?.stripe_customer_id;
-
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: user.email,
+        email: user.email || undefined,
         metadata: { user_id: user.id },
       });
       customerId = customer.id;
-
       await supabase
         .from("profiles")
         .update({ stripe_customer_id: customerId })
         .eq("user_id", user.id);
     }
 
-    // Get price ID
+    // Create checkout session
     const priceId = plan === "PRO" ? proPriceId : elitePriceId;
-
-    // Get origin for redirect URLs
     const origin = req.headers.get("origin") || "https://signal-streamer.vercel.app";
 
-    // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
@@ -149,17 +144,15 @@ serve(async (req) => {
       allow_promotion_codes: true,
     });
 
-    console.log(`Created checkout session ${session.id} for user ${user.id}`);
-
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Checkout error:", error);
+    console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to create checkout session" }),
+      JSON.stringify({ error: error.message || "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
