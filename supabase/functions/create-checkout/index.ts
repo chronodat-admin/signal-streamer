@@ -48,17 +48,27 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log("Token received, length:", token.length);
+    console.log("Token preview:", token.substring(0, 20) + "...");
     
     // Get anon key from request header (client sends it)
     // This is the correct way to validate user tokens
     const apikeyHeader = req.headers.get("apikey");
-    const anonKey = apikeyHeader || Deno.env.get("SUPABASE_ANON_KEY") || supabaseServiceKey;
+    console.log("apikey header present:", !!apikeyHeader);
     
-    console.log("Validating token with:", apikeyHeader ? "apikey header" : "env/service_role");
+    if (!apikeyHeader) {
+      console.error("Missing apikey header - client must send Supabase anon key");
+      return new Response(
+        JSON.stringify({ error: "Missing apikey header. Please ensure VITE_SUPABASE_PUBLISHABLE_KEY is set." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     // Create Supabase client with anon key for user token validation
     // Service role key can't properly validate user JWTs
-    const authClient = createClient(supabaseUrl, anonKey);
+    const authClient = createClient(supabaseUrl, apikeyHeader);
+    
+    console.log("Attempting to validate token with anon key...");
     
     // Validate user token
     const { data: { user }, error: userError } = await authClient.auth.getUser(token);

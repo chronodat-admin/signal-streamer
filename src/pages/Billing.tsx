@@ -492,22 +492,53 @@ const Billing = () => {
     try {
       console.log('Starting checkout for plan:', plan);
       
-      // Get fresh session
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      // Get fresh session and refresh if needed
+      let { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !currentSession?.access_token) {
+        // Try to refresh
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError || !refreshedSession?.access_token) {
+          throw new Error('Your session has expired. Please sign in again.');
+        }
+        currentSession = refreshedSession;
+      }
+      
+      // Check if token is expired or about to expire
+      if (currentSession.expires_at) {
+        const expiresIn = currentSession.expires_at - Math.floor(Date.now() / 1000);
+        if (expiresIn < 60) {
+          // Token expiring soon, refresh it
+          console.log('Token expiring soon, refreshing...');
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          if (!refreshError && refreshedSession?.access_token) {
+            currentSession = refreshedSession;
+          }
+        }
+      }
       
       if (!currentSession?.access_token) {
         throw new Error('Please sign in again to continue.');
       }
       
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration error. Please check your environment variables.');
+      }
+      
+      console.log('Making checkout request with token (length:', currentSession.access_token.length, ')');
+      
       // Simple direct fetch with explicit headers
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
+        `${supabaseUrl}/functions/v1/create-checkout`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${currentSession.access_token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'apikey': supabaseAnonKey,
           },
           body: JSON.stringify({ plan }),
         }
