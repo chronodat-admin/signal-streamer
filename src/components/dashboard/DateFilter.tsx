@@ -26,6 +26,8 @@ export const DateFilter = ({ value, dateRange, onFilterChange }: DateFilterProps
 
   const handlePresetChange = (preset: DateFilterType) => {
     if (preset === 'custom') {
+      // Set filter to 'custom' immediately so the calendar button renders
+      onFilterChange('custom', customRange.from && customRange.to ? customRange : undefined);
       setIsCustomOpen(true);
     } else {
       onFilterChange(preset);

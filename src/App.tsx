@@ -22,6 +22,8 @@ import ApiKeys from "./pages/ApiKeys";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { UserManagement } from "./pages/admin/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,8 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/dashboard/billing" element={<Billing />} />
               <Route path="/dashboard/preferences" element={<Preferences />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<UserManagement />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
