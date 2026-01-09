@@ -532,63 +532,67 @@ const Billing = () => {
       
       console.log('Using session token, expires at:', currentSession.expires_at);
       
-      // Use fetch directly to get better error details from 401 responses
-      // supabase.functions.invoke doesn't expose the response body for non-2xx status codes
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co';
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      // Ensure the supabase client has the current session
+      // This is necessary because supabase.functions.invoke uses the client's internal session
+      await supabase.auth.setSession({
+        access_token: currentSession.access_token,
+        refresh_token: currentSession.refresh_token,
+      });
       
-      if (!supabaseAnonKey) {
-        throw new Error('Supabase configuration error: Missing anon key');
+      // Verify the session is set
+      const { data: verifySession } = await supabase.auth.getSession();
+      console.log('Verified supabase client session:', {
+        hasSession: !!verifySession.session,
+        hasAccessToken: !!verifySession.session?.access_token,
+      });
+      
+      if (!verifySession.session?.access_token) {
+        throw new Error('Failed to set session on Supabase client. Please sign in again.');
       }
-
-      const functionUrl = `${supabaseUrl}/functions/v1/create-checkout`;
       
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentSession.access_token}`,
-          'apikey': supabaseAnonKey,
-        },
-        body: JSON.stringify({ plan }),
+      // Use supabase.functions.invoke - it handles auth headers automatically
+      // and is the recommended way to call Edge Functions from the Supabase client
+      console.log('Calling create-checkout via supabase.functions.invoke...');
+      
+      const { data, error: invokeError } = await supabase.functions.invoke('create-checkout', {
+        body: { plan },
       });
 
-      const data = await response.json();
-      console.log('Checkout response:', response.status, data);
+      console.log('Checkout invoke result:', { data, error: invokeError });
 
-      if (!response.ok) {
-        // Extract actual error message from Edge Function response
-        let errorMessage = 'Failed to create checkout session';
+      // If there was an invoke error, try to get more details
+      if (invokeError) {
+        console.error('Function invoke error:', invokeError);
         
-        console.log('Error data from Edge Function:', data);
+        // The error object from supabase.functions.invoke
+        const errorMessage = invokeError.message || 'Function call failed';
+        const errorContext = (invokeError as any).context;
         
-        if (data?.error) {
-          // Show the actual error with details for debugging
-          if (data.details) {
-            errorMessage = `${data.error}: ${data.details}`;
-            console.error('Auth error details:', data.details, 'Code:', data.code);
-          } else {
-            errorMessage = data.error;
+        console.log('Error context:', errorContext);
+        
+        // Try to parse the error body if available
+        if (errorContext?.body) {
+          try {
+            const errorBody = JSON.parse(errorContext.body);
+            console.log('Error body:', errorBody);
+            throw new Error(errorBody.error || errorBody.message || errorMessage);
+          } catch (parseError) {
+            console.log('Could not parse error body');
           }
-          
-          // Only show user-friendly message for specific known errors
-          if (data.details?.includes('expired') || data.details?.includes('invalid signature')) {
-            errorMessage = 'Your session has expired. Please sign in again.';
-          } else if (data.error === 'No authorization header') {
-            errorMessage = 'Authentication failed. Please sign in again.';
-          }
-          // For other errors, show the actual error message to help debug
-        } else if (response.status === 401) {
-          errorMessage = `Authentication failed (${response.status}). Please sign in again.`;
-        } else if (response.status === 500) {
-          errorMessage = 'Payment processing is not yet configured. Please contact support.';
         }
         
         throw new Error(errorMessage);
       }
+      
+      console.log('Checkout response data:', data);
 
       if (!data) {
         throw new Error('No response data from checkout function');
+      }
+      
+      // Check for error in response data
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       const { url, error: dataError } = data;
