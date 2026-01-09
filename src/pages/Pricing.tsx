@@ -101,9 +101,32 @@ const Pricing = () => {
         body: { plan },
       });
 
+      console.log('Checkout response:', response);
+
+      // Handle function error (includes non-2xx responses)
       if (response.error) {
         console.error('Function error:', response.error);
-        throw new Error(response.error.message || 'Failed to create checkout session');
+        console.log('Response data:', response.data);
+        
+        // Try to extract the actual error message from the response
+        let errorMessage = 'Failed to create checkout session';
+        
+        // Check if there's data with an error (edge function returned JSON error)
+        if (response.data?.error) {
+          errorMessage = response.data.error;
+        } else if (response.error.message) {
+          // Check for common configuration errors
+          if (response.error.message.includes('non-2xx') || response.error.message.includes('500')) {
+            // Edge function returned an error - likely Stripe not configured
+            errorMessage = 'Payment processing is not yet configured. Please contact support or try again later.';
+          } else if (response.error.message.includes('FunctionsHttpError')) {
+            errorMessage = 'Payment service temporarily unavailable. Please try again later.';
+          } else {
+            errorMessage = response.error.message;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       if (!response.data) {
@@ -129,7 +152,7 @@ const Pricing = () => {
       if (error.message) {
         errorMessage = error.message;
       } else if (error.toString().includes('fetch')) {
-        errorMessage = 'Failed to send a request to the Edge Function. Please check if the function is deployed.';
+        errorMessage = 'Unable to connect to payment service. Please try again later.';
       }
       
       toast({
