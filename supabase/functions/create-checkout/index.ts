@@ -48,61 +48,45 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    console.log("Token received, length:", token.length);
-    console.log("Token preview:", token.substring(0, 20) + "...");
+    console.log("[create-checkout] Token received, length:", token.length);
     
-    // Get anon key from request header (client sends it)
-    // This is the correct way to validate user tokens
-    const apikeyHeader = req.headers.get("apikey");
-    console.log("apikey header present:", !!apikeyHeader);
+    // Create Supabase client with service role key
+    // We can use service role key to validate user tokens by calling getUser
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    if (!apikeyHeader) {
-      console.error("Missing apikey header - client must send Supabase anon key");
-      return new Response(
-        JSON.stringify({ error: "Missing apikey header. Please ensure VITE_SUPABASE_PUBLISHABLE_KEY is set." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    console.log("[create-checkout] Validating user token...");
     
-    // Create Supabase client with anon key for user token validation
-    // Service role key can't properly validate user JWTs
-    const authClient = createClient(supabaseUrl, apikeyHeader);
-    
-    console.log("Attempting to validate token with anon key...");
-    
-    // Validate user token
-    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
+    // Validate user token using service role client
+    // This works because we're using getUser() which validates the JWT signature
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError) {
-      console.error("Auth validation failed:", {
+      console.error("[create-checkout] Auth validation failed:", {
         message: userError.message,
         status: userError.status,
         name: userError.name,
+        code: (userError as any).code,
       });
       
-      // Provide helpful error message
-      let errorMsg = "Invalid or expired token";
-      if (userError.message?.includes("JWT")) {
-        errorMsg = "Your session has expired. Please sign in again.";
-      } else if (userError.message) {
-        errorMsg = userError.message;
-      }
-      
       return new Response(
-        JSON.stringify({ error: errorMsg, details: userError.message }),
+        JSON.stringify({ 
+          error: "Invalid or expired token", 
+          details: userError.message,
+          code: (userError as any).code,
+        }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
     if (!user) {
+      console.error("[create-checkout] No user returned from getUser");
       return new Response(
         JSON.stringify({ error: "User not found" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    // Create service role client for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log("[create-checkout] User authenticated:", user.id);
 
     // Parse request body
     const { plan } = await req.json();
