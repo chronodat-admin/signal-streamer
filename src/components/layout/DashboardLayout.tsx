@@ -58,17 +58,27 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [collapsed]);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndRole = async () => {
       if (!user) return;
-      const { data } = await supabase
+      
+      // Fetch plan from profiles
+      const { data: profileData } = await supabase
         .from('profiles')
-        .select('plan, role')
+        .select('plan')
         .eq('user_id', user.id)
         .single();
-      if (data?.plan) setUserPlan(data.plan);
-      if (data?.role === 'admin') setIsAdmin(true);
+      
+      if (profileData?.plan) setUserPlan(profileData.plan);
+      
+      // Check admin role using RPC function
+      const { data: hasAdminRole } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin',
+      });
+      
+      if (hasAdminRole) setIsAdmin(true);
     };
-    fetchProfile();
+    fetchProfileAndRole();
   }, [user]);
 
   useEffect(() => {

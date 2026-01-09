@@ -19,10 +19,6 @@ interface UserFeedback {
   category: string | null;
   status?: 'new' | 'reviewed' | 'resolved';
   created_at: string;
-  profiles?: {
-    email: string | null;
-    full_name: string | null;
-  } | null;
 }
 
 export const UserFeedback = () => {
@@ -40,28 +36,22 @@ export const UserFeedback = () => {
     try {
       setLoading(true);
       
-      // Try to fetch from user_feedback table
-      // If table doesn't exist, this will return an error which we'll handle gracefully
+      // Fetch feedback without join (user_id references auth.users, not profiles directly)
       const { data, error } = await supabase
         .from('user_feedback')
-        .select(`
-          *,
-          profiles:user_id (
-            email,
-            full_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
         // Table might not exist yet, that's okay
-        if (error.code === '42P01') {
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
           console.log('user_feedback table does not exist yet');
           setFeedback([]);
         } else {
           throw error;
         }
       } else {
+        // Feedback already contains email and name fields from submission
         setFeedback(data || []);
       }
     } catch (error) {
@@ -80,8 +70,7 @@ export const UserFeedback = () => {
         item.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.feedback?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        item.name?.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSearch;
     });
   }, [feedback, searchQuery]);
@@ -205,10 +194,10 @@ export const UserFeedback = () => {
                     filteredFeedback.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
-                          {item.name || item.profiles?.full_name || 'Anonymous'}
+                          {item.name || 'Anonymous'}
                         </TableCell>
                         <TableCell>
-                          {item.profiles?.email || item.email || 'N/A'}
+                          {item.email || 'N/A'}
                         </TableCell>
                         <TableCell className="font-medium">
                           {item.subject || 'N/A'}

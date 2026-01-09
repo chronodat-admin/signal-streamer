@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { 
   CreditCard, 
   Calendar, 
@@ -28,7 +28,6 @@ import {
   Infinity,
   CheckCircle2,
   XCircle,
-  RefreshCw,
   ExternalLink,
   Receipt,
   History
@@ -38,7 +37,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { getPlanLimits, type PlanLimits } from '@/lib/planUtils';
+import { getPlanLimits } from '@/lib/planUtils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type PlanType = Database['public']['Enums']['plan_type'];
@@ -134,6 +133,7 @@ const Billing = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<'PRO' | 'ELITE' | null>(null);
   const [usageStats, setUsageStats] = useState<UsageStats>({
     strategiesCount: 0,
     integrationsCount: 0,
@@ -147,15 +147,50 @@ const Billing = () => {
 
     if (success === 'true') {
       toast({
-        title: '🎉 Subscription Activated!',
-        description: 'Welcome to your new plan! Your upgraded features are now available.',
+        title: '🎉 Payment Successful!',
+        description: 'Processing your subscription... This may take a moment.',
         duration: 6000,
       });
       // Clean up URL
       setSearchParams({});
-      // Refresh profile to get new plan
+      
+      // Poll for profile update (webhook might take a moment)
       if (user) {
-        fetchProfile();
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const pollForUpdate = async () => {
+          attempts++;
+          const { data } = await supabase
+            .from('profiles')
+            .select('plan')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (data?.plan && data.plan !== 'FREE') {
+            // Plan updated!
+            toast({
+              title: '🎉 Subscription Activated!',
+              description: `You're now on the ${data.plan} plan! Enjoy your upgraded features.`,
+              duration: 6000,
+            });
+            fetchProfile();
+          } else if (attempts < maxAttempts) {
+            // Keep polling
+            setTimeout(pollForUpdate, 2000);
+          } else {
+            // Webhook might not be configured - show manual refresh option
+            toast({
+              title: 'Almost there!',
+              description: 'Your payment was successful. If your plan hasn\'t updated, please refresh the page in a minute.',
+              duration: 8000,
+            });
+            fetchProfile();
+          }
+        };
+        
+        // Start polling after a short delay
+        setTimeout(pollForUpdate, 2000);
       }
     } else if (canceled === 'true') {
       toast({
@@ -265,6 +300,71 @@ const Billing = () => {
     }
   };
 
+  const handleCheckout = async (plan: 'PRO' | 'ELITE') => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to upgrade your plan.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCheckoutLoading(plan);
+
+    try {
+      console.log('Starting checkout for plan:', plan);
+      
+      // Use fetch directly to get more control over the response
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co'}/functions/v1/create-checkout`;
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ plan }),
+      });
+
+      const data = await response.json();
+      console.log('Checkout response:', response.status, data);
+
+      if (!response.ok) {
+        // Show the actual error from the edge function
+        const errorMessage = data?.error || `Server error: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      const { url, error: dataError } = data;
+      
+      if (dataError) {
+        throw new Error(dataError);
+      }
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned. Please ensure Stripe is properly configured.');
+      }
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast({
+        title: 'Checkout Error',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
   const currentPlan = profile?.plan || 'FREE';
   const details = planDetails[currentPlan];
   const limits = getPlanLimits(currentPlan);
@@ -326,12 +426,20 @@ const Billing = () => {
                 <AlertTitle className="text-amber-600 dark:text-amber-400">Strategy Limit Reached</AlertTitle>
                 <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <span>You've reached your strategy limit. Upgrade to {planDetails[nextPlan].name} to create more strategies.</span>
-                  <Link to="/pricing">
-                    <Button size="sm" variant="outline" className="gap-1 border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="gap-1 border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                    onClick={() => handleCheckout(nextPlan as 'PRO' | 'ELITE')}
+                    disabled={checkoutLoading !== null}
+                  >
+                    {checkoutLoading === nextPlan ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
                       <ArrowUpRight className="h-3 w-3" />
-                      Upgrade Now
-                    </Button>
-                  </Link>
+                    )}
+                    Upgrade Now
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}
@@ -468,20 +576,48 @@ const Billing = () => {
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     {currentPlan === 'FREE' ? (
-                      <Link to="/pricing" className="flex-1">
-                        <Button className="w-full gap-2 shadow-md hover:shadow-lg transition-all">
-                          <ArrowUpRight className="h-4 w-4" />
-                          Upgrade Plan
+                      <div className="flex flex-1 gap-2">
+                        <Button 
+                          className="flex-1 gap-2 shadow-md hover:shadow-lg transition-all"
+                          onClick={() => handleCheckout('PRO')}
+                          disabled={checkoutLoading !== null}
+                        >
+                          {checkoutLoading === 'PRO' ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Crown className="h-4 w-4" />
+                          )}
+                          Upgrade to Pro
                         </Button>
-                      </Link>
+                        <Button 
+                          variant="outline"
+                          className="flex-1 gap-2"
+                          onClick={() => handleCheckout('ELITE')}
+                          disabled={checkoutLoading !== null}
+                        >
+                          {checkoutLoading === 'ELITE' ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
+                          Upgrade to Elite
+                        </Button>
+                      </div>
                     ) : nextPlan ? (
                       <>
-                        <Link to="/pricing" className="flex-1">
-                          <Button variant="outline" className="w-full gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1 gap-2"
+                          onClick={() => handleCheckout(nextPlan as 'PRO' | 'ELITE')}
+                          disabled={checkoutLoading !== null}
+                        >
+                          {checkoutLoading === nextPlan ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
                             <TrendingUp className="h-4 w-4" />
-                            Upgrade to {planDetails[nextPlan].name}
-                          </Button>
-                        </Link>
+                          )}
+                          Upgrade to {planDetails[nextPlan].name}
+                        </Button>
                         <Button 
                           variant="ghost" 
                           className="gap-2"
@@ -612,12 +748,19 @@ const Billing = () => {
                             CSV export & public pages
                           </li>
                         </ul>
-                        <Link to="/pricing">
-                          <Button size="sm" className="w-full gap-1">
+                        <Button 
+                          size="sm" 
+                          className="w-full gap-1"
+                          onClick={() => handleCheckout('PRO')}
+                          disabled={checkoutLoading !== null}
+                        >
+                          {checkoutLoading === 'PRO' ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
                             <ArrowUpRight className="h-3 w-3" />
-                            View Plans
-                          </Button>
-                        </Link>
+                          )}
+                          Upgrade to Pro - $19/mo
+                        </Button>
                       </div>
                     </>
                   )}
@@ -691,23 +834,21 @@ const Billing = () => {
                           ))}
                         </ul>
 
-                        {!isCurrentPlan && (
-                          <Link to="/pricing">
-                            <Button 
-                              variant={planOrder.indexOf(plan) > currentPlanIndex ? 'default' : 'outline'}
-                              size="sm"
-                              className="w-full gap-1"
-                            >
-                              {planOrder.indexOf(plan) > currentPlanIndex ? (
-                                <>
-                                  <ArrowUpRight className="h-3 w-3" />
-                                  Upgrade
-                                </>
-                              ) : (
-                                'View Details'
-                              )}
-                            </Button>
-                          </Link>
+                        {!isCurrentPlan && planOrder.indexOf(plan) > currentPlanIndex && (
+                          <Button 
+                            variant="default"
+                            size="sm"
+                            className="w-full gap-1"
+                            onClick={() => handleCheckout(plan as 'PRO' | 'ELITE')}
+                            disabled={checkoutLoading !== null}
+                          >
+                            {checkoutLoading === plan ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <ArrowUpRight className="h-3 w-3" />
+                            )}
+                            Upgrade to {planInfo.name}
+                          </Button>
                         )}
                       </div>
                     );
