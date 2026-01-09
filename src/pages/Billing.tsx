@@ -36,7 +36,7 @@ const PLAN_HIERARCHY: Record<PlanType, number> = {
   ELITE: 2,
 };
 
-const planDetails: Record<PlanType, { 
+const getPlanDetails = (t: any): Record<PlanType, { 
   name: string; 
   price: string; 
   priceAmount: number;
@@ -44,12 +44,12 @@ const planDetails: Record<PlanType, {
   icon: typeof Zap;
   color: string;
   bgColor: string;
-}> = {
+}> => ({
   FREE: {
     name: 'Free',
     price: '$0/forever',
     priceAmount: 0,
-    features: ['1 Strategy', '7-day signal history', 'Email support'],
+    features: [t.planFeatures.oneStrategy, t.planFeatures.sevenDayHistory, t.planFeatures.emailSupport],
     icon: Zap,
     color: 'text-slate-500',
     bgColor: 'bg-slate-500/10',
@@ -58,7 +58,7 @@ const planDetails: Record<PlanType, {
     name: 'Pro',
     price: '$19/month',
     priceAmount: 19,
-    features: ['10 Strategies', '90-day signal history', 'CSV export', 'Public pages'],
+    features: [t.planFeatures.tenStrategies, t.planFeatures.ninetyDayHistory, t.planFeatures.csvExport, t.planFeatures.publicPages],
     icon: Crown,
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10',
@@ -67,12 +67,12 @@ const planDetails: Record<PlanType, {
     name: 'Elite',
     price: '$49/month',
     priceAmount: 49,
-    features: ['Unlimited strategies', 'Unlimited history', 'API access', 'Dedicated support'],
+    features: [t.planFeatures.unlimitedStrategies, t.planFeatures.unlimitedHistory, t.planFeatures.apiAccess, t.planFeatures.dedicatedSupport],
     icon: Sparkles,
     color: 'text-amber-500',
     bgColor: 'bg-amber-500/10',
   },
-};
+});
 
 // All available plans in order
 const ALL_PLANS: PlanType[] = ['FREE', 'PRO', 'ELITE'];
@@ -136,6 +136,7 @@ const Billing = () => {
     }
   }, [searchParams, setSearchParams, checkSubscription, refetch]);
 
+  const planDetails = getPlanDetails(t);
   const details = planDetails[plan];
 
   const handleUpgrade = async (planKey: keyof typeof STRIPE_PLANS) => {

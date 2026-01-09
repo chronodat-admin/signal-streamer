@@ -22,24 +22,17 @@ import {
 } from '@/components/ui/select';
 import { MessageSquare, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/i18n';
 
 interface FeedbackDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const feedbackCategories = [
-  'Bug Report',
-  'Feature Request',
-  'UI/UX Improvement',
-  'Performance Issue',
-  'Documentation',
-  'Other',
-];
-
 export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     category: '',
@@ -48,13 +41,22 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
     name: '',
   });
 
+  const feedbackCategories = [
+    { value: 'Bug Report', label: t.feedback.bug },
+    { value: 'Feature Request', label: t.feedback.feature },
+    { value: 'UI/UX Improvement', label: t.feedback.improvement },
+    { value: 'Performance Issue', label: t.feedback.performance },
+    { value: 'Documentation', label: t.feedback.documentation },
+    { value: 'Other', label: t.feedback.other },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.category || !formData.subject || !formData.message) {
       toast({
-        title: 'Missing required fields',
-        description: 'Please fill in all required fields.',
+        title: t.feedback.missingFields,
+        description: t.feedback.missingFieldsDescription,
         variant: 'destructive',
       });
       return;
@@ -78,8 +80,8 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
         // If table doesn't exist, show a helpful message
         if (error.code === '42P01') {
           toast({
-            title: 'Feedback system not available',
-            description: 'The feedback system is being set up. Please try again later.',
+            title: t.feedback.systemNotAvailable,
+            description: t.feedback.systemNotAvailableDescription,
             variant: 'destructive',
           });
         } else {
@@ -87,8 +89,8 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
         }
       } else {
         toast({
-          title: 'Feedback submitted!',
-          description: 'Thank you for your feedback. We appreciate your input.',
+          title: t.feedback.feedbackSubmitted,
+          description: t.feedback.feedbackReceived,
         });
         // Reset form
         setFormData({
@@ -102,8 +104,8 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to submit feedback. Please try again.',
+        title: t.feedback.error,
+        description: t.feedback.failedToSubmit,
         variant: 'destructive',
       });
     } finally {
@@ -120,9 +122,9 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
               <MessageSquare className="h-5 w-5 text-white" />
             </div>
             <div>
-              <DialogTitle>Submit Feedback</DialogTitle>
+              <DialogTitle>{t.feedback.submitFeedback}</DialogTitle>
               <DialogDescription>
-                We'd love to hear from you! Share your thoughts, report bugs, or suggest new features.
+                {t.feedback.description}
               </DialogDescription>
             </div>
           </div>
@@ -131,7 +133,7 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="category">
-              Category <span className="text-destructive">*</span>
+              {t.feedback.category} <span className="text-destructive">*</span>
             </Label>
             <Select
               value={formData.category}
@@ -139,12 +141,12 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
               required
             >
               <SelectTrigger id="category">
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder={t.feedback.selectCategory} />
               </SelectTrigger>
               <SelectContent>
                 {feedbackCategories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -153,11 +155,11 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="subject">
-              Subject <span className="text-destructive">*</span>
+              {t.feedback.subject} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="subject"
-              placeholder="Brief description of your feedback"
+              placeholder={t.feedback.subjectPlaceholder}
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               required
@@ -166,11 +168,11 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="message">
-              Message <span className="text-destructive">*</span>
+              {t.feedback.message} <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="message"
-              placeholder="Please provide as much detail as possible..."
+              placeholder={t.feedback.messagePlaceholder}
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={6}
@@ -179,10 +181,10 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Name (Optional)</Label>
+            <Label htmlFor="name">{t.feedback.nameOptional}</Label>
             <Input
               id="name"
-              placeholder="Your name"
+              placeholder={t.feedback.namePlaceholder}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
@@ -195,18 +197,18 @@ export const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t.feedback.cancel}
             </Button>
             <Button type="submit" disabled={loading} className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {t.feedback.submitting}
                 </>
               ) : (
                 <>
                   <Send className="mr-2 h-4 w-4" />
-                  Submit Feedback
+                  {t.feedback.submitFeedback}
                 </>
               )}
             </Button>

@@ -474,6 +474,21 @@ export const es: TranslationKeys = {
     confirmDelete: '¿Estás seguro de que quieres eliminar esta integración?',
   },
 
+  // Plan Features
+  planFeatures: {
+    unlimitedStrategies: 'Estrategias ilimitadas',
+    unlimitedHistory: 'Historial ilimitado',
+    apiAccess: 'Acceso API',
+    dedicatedSupport: 'Soporte dedicado',
+    oneStrategy: '1 Estrategia',
+    sevenDayHistory: 'Historial de señales de 7 días',
+    emailSupport: 'Soporte por correo',
+    tenStrategies: '10 Estrategias',
+    ninetyDayHistory: 'Historial de señales de 90 días',
+    csvExport: 'Exportar CSV',
+    publicPages: 'Páginas públicas',
+  },
+
   // Billing Page
   billing: {
     title: 'Facturación',
@@ -633,17 +648,35 @@ export const es: TranslationKeys = {
   // Feedback
   feedback: {
     title: 'Enviar Comentarios',
-    description: 'Ayúdanos a mejorar SignalPulse',
+    submitFeedback: 'Enviar Comentarios',
+    description: '¡Nos encantaría saber de ti! Comparte tus pensamientos, reporta errores o sugiere nuevas funciones.',
+    category: 'Categoría',
+    selectCategory: 'Selecciona una categoría',
+    subject: 'Asunto',
+    subjectPlaceholder: 'Breve descripción de tus comentarios',
+    message: 'Mensaje',
+    messagePlaceholder: 'Por favor proporciona tantos detalles como sea posible...',
+    name: 'Nombre',
+    nameOptional: 'Nombre (Opcional)',
+    namePlaceholder: 'Tu nombre',
+    cancel: 'Cancelar',
+    submitting: 'Enviando...',
     typePlaceholder: 'Selecciona tipo de comentario',
     bug: 'Reporte de Error',
     feature: 'Solicitud de Función',
-    improvement: 'Mejora',
+    improvement: 'Mejora de UI/UX',
+    performance: 'Problema de Rendimiento',
+    documentation: 'Documentación',
     other: 'Otro',
-    messagePlaceholder: 'Describe tu comentario...',
-    submit: 'Enviar Comentarios',
-    submitting: 'Enviando...',
     thankYou: '¡Gracias!',
-    feedbackReceived: 'Tu comentario ha sido recibido',
+    feedbackReceived: 'Gracias por tus comentarios. Apreciamos tu aporte.',
+    feedbackSubmitted: '¡Comentarios enviados!',
+    missingFields: 'Campos requeridos faltantes',
+    missingFieldsDescription: 'Por favor completa todos los campos requeridos.',
+    error: 'Error',
+    failedToSubmit: 'Error al enviar comentarios. Por favor intenta de nuevo.',
+    systemNotAvailable: 'Sistema de comentarios no disponible',
+    systemNotAvailableDescription: 'El sistema de comentarios se está configurando. Por favor intenta más tarde.',
   },
 };
 

@@ -472,6 +472,21 @@ export const en = {
     confirmDelete: 'Are you sure you want to delete this integration?',
   },
 
+  // Plan Features
+  planFeatures: {
+    unlimitedStrategies: 'Unlimited strategies',
+    unlimitedHistory: 'Unlimited history',
+    apiAccess: 'API access',
+    dedicatedSupport: 'Dedicated support',
+    oneStrategy: '1 Strategy',
+    sevenDayHistory: '7-day signal history',
+    emailSupport: 'Email support',
+    tenStrategies: '10 Strategies',
+    ninetyDayHistory: '90-day signal history',
+    csvExport: 'CSV export',
+    publicPages: 'Public pages',
+  },
+
   // Billing Page
   billing: {
     title: 'Billing',
@@ -631,17 +646,35 @@ export const en = {
   // Feedback
   feedback: {
     title: 'Send Feedback',
-    description: 'Help us improve SignalPulse',
+    submitFeedback: 'Submit Feedback',
+    description: 'We\'d love to hear from you! Share your thoughts, report bugs, or suggest new features.',
+    category: 'Category',
+    selectCategory: 'Select a category',
+    subject: 'Subject',
+    subjectPlaceholder: 'Brief description of your feedback',
+    message: 'Message',
+    messagePlaceholder: 'Please provide as much detail as possible...',
+    name: 'Name',
+    nameOptional: 'Name (Optional)',
+    namePlaceholder: 'Your name',
+    cancel: 'Cancel',
+    submitting: 'Submitting...',
     typePlaceholder: 'Select feedback type',
     bug: 'Bug Report',
     feature: 'Feature Request',
-    improvement: 'Improvement',
+    improvement: 'UI/UX Improvement',
+    performance: 'Performance Issue',
+    documentation: 'Documentation',
     other: 'Other',
-    messagePlaceholder: 'Describe your feedback...',
-    submit: 'Submit Feedback',
-    submitting: 'Submitting...',
     thankYou: 'Thank you!',
-    feedbackReceived: 'Your feedback has been received',
+    feedbackReceived: 'Thank you for your feedback. We appreciate your input.',
+    feedbackSubmitted: 'Feedback submitted!',
+    missingFields: 'Missing required fields',
+    missingFieldsDescription: 'Please fill in all required fields.',
+    error: 'Error',
+    failedToSubmit: 'Failed to submit feedback. Please try again.',
+    systemNotAvailable: 'Feedback system not available',
+    systemNotAvailableDescription: 'The feedback system is being set up. Please try again later.',
   },
 };
 
