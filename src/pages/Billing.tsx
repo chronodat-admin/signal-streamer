@@ -127,7 +127,7 @@ const planDetails: Record<PlanType, {
 const planOrder: PlanType[] = ['FREE', 'PRO', 'ELITE'];
 
 const Billing = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -478,7 +478,7 @@ const Billing = () => {
   };
 
   const handleCheckout = async (plan: 'PRO' | 'ELITE') => {
-    if (!user) {
+    if (!user || !session?.access_token) {
       toast({
         title: 'Authentication Required',
         description: 'Please sign in to upgrade your plan.',
@@ -492,44 +492,44 @@ const Billing = () => {
     try {
       console.log('Starting checkout for plan:', plan);
       
-      // Use supabase.functions.invoke which automatically handles auth headers
-      const response = await supabase.functions.invoke('create-checkout', {
-        body: { plan },
+      // Ensure session is fresh
+      const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !freshSession) {
+        throw new Error('Session expired. Please sign in again.');
+      }
+
+      // Get Supabase URL and anon key for headers
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co';
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      if (!supabaseAnonKey) {
+        throw new Error('Supabase configuration error: Missing anon key');
+      }
+
+      const functionUrl = `${supabaseUrl}/functions/v1/create-checkout`;
+      
+      // Use fetch with explicit headers - both Authorization and apikey are required
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${freshSession.access_token}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({ plan }),
       });
 
-      console.log('Checkout response:', response);
+      const data = await response.json();
+      console.log('Checkout response:', response.status, data);
 
-      // Handle function error (includes non-2xx responses)
-      if (response.error) {
-        console.error('Function error:', response.error);
-        console.log('Response data:', response.data);
-        
-        // Try to extract the actual error message from the response
-        let errorMessage = 'Failed to create checkout session';
-        
-        // Check if there's data with an error (edge function returned JSON error)
-        if (response.data?.error) {
-          errorMessage = response.data.error;
-        } else if (response.error.message) {
-          // Check for common configuration errors
-          if (response.error.message.includes('non-2xx') || response.error.message.includes('500')) {
-            // Edge function returned an error - likely Stripe not configured
-            errorMessage = 'Payment processing is not yet configured. Please contact support or try again later.';
-          } else if (response.error.message.includes('FunctionsHttpError')) {
-            errorMessage = 'Payment service temporarily unavailable. Please try again later.';
-          } else {
-            errorMessage = response.error.message;
-          }
-        }
-        
+      if (!response.ok) {
+        // Show the actual error from the edge function
+        const errorMessage = data?.error || data?.details || `Server error: ${response.status}`;
         throw new Error(errorMessage);
       }
 
-      if (!response.data) {
-        throw new Error('No response data from checkout function');
-      }
-
-      const { url, error: dataError } = response.data;
+      const { url, error: dataError } = data;
       
       if (dataError) {
         throw new Error(dataError);
