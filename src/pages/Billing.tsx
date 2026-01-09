@@ -492,77 +492,102 @@ const Billing = () => {
     try {
       console.log('Starting checkout for plan:', plan);
       
-      // Validate session before making the call
-      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      // Validate and refresh session before making the call
+      let currentSession = session;
       
-      if (sessionError || !currentSession || !currentSession.access_token) {
-        throw new Error('Your session has expired. Please sign in again.');
-      }
+      // Always try to get the latest session
+      const { data: { session: latestSession }, error: sessionError } = await supabase.auth.getSession();
       
-      // Check if token is about to expire (within 60 seconds)
-      const expiresAt = currentSession.expires_at;
-      if (expiresAt) {
-        const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
-        if (expiresIn < 60) {
-          // Token is about to expire, refresh it
-          console.log('Token expiring soon, refreshing...');
-          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError || !refreshedSession) {
-            throw new Error('Failed to refresh session. Please sign in again.');
+      if (sessionError || !latestSession || !latestSession.access_token) {
+        // Try to refresh the session
+        console.log('Session invalid, attempting refresh...');
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshedSession || !refreshedSession.access_token) {
+          throw new Error('Your session has expired. Please sign in again.');
+        }
+        
+        currentSession = refreshedSession;
+      } else {
+        currentSession = latestSession;
+        
+        // Check if token is about to expire (within 5 minutes)
+        const expiresAt = currentSession.expires_at;
+        if (expiresAt) {
+          const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
+          if (expiresIn < 300) { // 5 minutes
+            // Token is about to expire, refresh it proactively
+            console.log('Token expiring soon, refreshing proactively...');
+            const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+            if (!refreshError && refreshedSession && refreshedSession.access_token) {
+              currentSession = refreshedSession;
+            }
           }
         }
       }
       
-      // Use supabase.functions.invoke which automatically handles:
-      // - Token refresh (if needed)
-      // - Authorization header with access token
-      // - apikey header with anon key
-      // This is the recommended way to call Edge Functions
-      const response = await supabase.functions.invoke('create-checkout', {
-        body: { plan },
+      if (!currentSession?.access_token) {
+        throw new Error('Unable to get valid session. Please sign in again.');
+      }
+      
+      console.log('Using session token, expires at:', currentSession.expires_at);
+      
+      // Use fetch directly to get better error details from 401 responses
+      // supabase.functions.invoke doesn't expose the response body for non-2xx status codes
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ogcnilkuneeqkhmoamxi.supabase.co';
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      if (!supabaseAnonKey) {
+        throw new Error('Supabase configuration error: Missing anon key');
+      }
+
+      const functionUrl = `${supabaseUrl}/functions/v1/create-checkout`;
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession.access_token}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({ plan }),
       });
 
-      console.log('Checkout response:', response);
+      const data = await response.json();
+      console.log('Checkout response:', response.status, data);
 
-      // Handle function error (includes non-2xx responses)
-      if (response.error) {
-        console.error('Function error:', response.error);
-        console.log('Response data:', response.data);
-        
-        // Try to extract the actual error message from the response
+      if (!response.ok) {
+        // Extract actual error message from Edge Function response
         let errorMessage = 'Failed to create checkout session';
         
-        // Check if there's data with an error (edge function returned JSON error)
-        if (response.data?.error) {
-          errorMessage = response.data.error;
-          // Handle specific JWT errors
-          if (response.data.error === 'Invalid JWT' || response.data.error.includes('JWT')) {
-            errorMessage = 'Your session has expired. Please sign in again and try again.';
-          } else if (response.data.details) {
-            errorMessage = `${response.data.error}: ${response.data.details}`;
+        if (data?.error) {
+          errorMessage = data.error;
+          if (data.details) {
+            errorMessage = `${data.error}: ${data.details}`;
           }
-        } else if (response.error.message) {
-          // Check for common configuration errors
-          if (response.error.message.includes('non-2xx') || response.error.message.includes('500')) {
-            // Edge function returned an error - likely Stripe not configured
-            errorMessage = 'Payment processing is not yet configured. Please contact support or try again later.';
-          } else if (response.error.message.includes('FunctionsHttpError')) {
-            errorMessage = 'Payment service temporarily unavailable. Please try again later.';
-          } else if (response.error.message.includes('JWT') || response.error.message.includes('Invalid')) {
-            errorMessage = 'Your session has expired. Please sign in again and try again.';
-          } else {
-            errorMessage = response.error.message;
+          
+          // Handle specific error types
+          if (data.error === 'Unauthorized' || data.error === 'Invalid JWT' || data.error.includes('JWT')) {
+            errorMessage = 'Your session has expired. Please sign in again.';
+          } else if (data.error === 'No authorization header') {
+            errorMessage = 'Authentication failed. Please sign in again.';
+          } else if (data.error.includes('Stripe') || data.error.includes('configured')) {
+            errorMessage = data.error;
           }
+        } else if (response.status === 401) {
+          errorMessage = 'Your session has expired. Please sign in again.';
+        } else if (response.status === 500) {
+          errorMessage = 'Payment processing is not yet configured. Please contact support.';
         }
         
         throw new Error(errorMessage);
       }
 
-      if (!response.data) {
+      if (!data) {
         throw new Error('No response data from checkout function');
       }
 
-      const { url, error: dataError } = response.data;
+      const { url, error: dataError } = data;
       
       if (dataError) {
         throw new Error(dataError);
