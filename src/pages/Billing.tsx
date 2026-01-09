@@ -490,9 +490,20 @@ const Billing = () => {
     setCheckoutLoading(plan);
 
     try {
-      // Use supabase.functions.invoke - it handles token refresh automatically
+      // Get current session for explicit auth header
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (!currentSession?.access_token) {
+        throw new Error('Please sign in to continue.');
+      }
+
+      // Use supabase.functions.invoke with explicit Authorization header
+      // This matches the working pattern from signal-streamer-main
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { plan },
+        headers: {
+          Authorization: `Bearer ${currentSession.access_token}`,
+        },
       });
 
       if (error) {

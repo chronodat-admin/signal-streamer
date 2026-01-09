@@ -1,140 +1,120 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const logStep = (step: string, details?: unknown) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
-  // Handle CORS
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get environment variables
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const proPriceId = Deno.env.get("STRIPE_PRO_PRICE_ID");
-    const elitePriceId = Deno.env.get("STRIPE_ELITE_PRICE_ID");
+    logStep("Function started");
 
-    // Validate Stripe config
-    if (!stripeSecretKey || !proPriceId || !elitePriceId) {
-      return new Response(
-        JSON.stringify({ error: "Stripe not configured. Please set STRIPE_SECRET_KEY, STRIPE_PRO_PRICE_ID, and STRIPE_ELITE_PRICE_ID in Edge Function secrets." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    logStep("Stripe key verified");
+
+    // Get anon key - try from env first (auto-provided), then from header, then fallback
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || 
+                            req.headers.get("apikey") || 
+                            Deno.env.get("ANON_KEY");
+    
+    if (!supabaseAnonKey) {
+      throw new Error("Supabase anon key not available. Please set ANON_KEY secret in Edge Functions.");
     }
 
-    // Get auth token
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      supabaseAnonKey
+    );
+
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Missing or invalid authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    if (!authHeader) throw new Error("No authorization header provided");
+    
     const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    const user = userData.user;
+    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Create Supabase client with service role key
-    // This is the same pattern used in sync-subscription and create-portal functions
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const body = await req.json();
+    let priceId: string;
+    
+    // Support both priceId (new) and plan (legacy)
+    if (body.priceId) {
+      priceId = body.priceId;
+    } else if (body.plan) {
+      // Map plan to price ID using environment variables
+      const proPriceId = Deno.env.get("STRIPE_PRO_PRICE_ID");
+      const elitePriceId = Deno.env.get("STRIPE_ELITE_PRICE_ID");
+      
+      if (body.plan === "PRO" && proPriceId) {
+        priceId = proPriceId;
+      } else if (body.plan === "ELITE" && elitePriceId) {
+        priceId = elitePriceId;
+      } else {
+        throw new Error(`Price ID not configured for plan: ${body.plan}`);
+      }
+    } else {
+      throw new Error("Either priceId or plan is required");
+    }
+    
+    logStep("Price ID determined", { priceId, plan: body.plan });
 
-    // Validate user token using service role client
-    // This works because getUser() validates the JWT signature
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      console.error("Auth error:", userError?.message);
-      return new Response(
-        JSON.stringify({ 
-          error: "Authentication failed",
-          message: userError?.message || "Invalid token"
-        }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    
+    // Check if customer already exists
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId: string | undefined;
+    
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+      logStep("Found existing Stripe customer", { customerId });
     }
 
-    // Parse request body
-    let plan: string;
-    try {
-      const body = await req.json();
-      plan = body.plan;
-    } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid request body" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!plan || !["PRO", "ELITE"].includes(plan)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid plan. Must be PRO or ELITE." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create Stripe client
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
-
-    // Get user profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("stripe_customer_id, plan")
-      .eq("user_id", user.id)
-      .single();
-
-    if (profile?.plan === plan) {
-      return new Response(
-        JSON.stringify({ error: `You are already on the ${plan} plan.` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get or create Stripe customer
-    let customerId = profile?.stripe_customer_id;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email || undefined,
-        metadata: { user_id: user.id },
-      });
-      customerId = customer.id;
-      await supabase
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("user_id", user.id);
-    }
-
-    // Create checkout session
-    const priceId = plan === "PRO" ? proPriceId : elitePriceId;
     const origin = req.headers.get("origin") || "https://signal-streamer.vercel.app";
-
+    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
+      customer_email: customerId ? undefined : user.email,
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
       mode: "subscription",
-      success_url: `${origin}/dashboard/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/dashboard/billing?success=true`,
       cancel_url: `${origin}/dashboard/billing?canceled=true`,
-      metadata: { user_id: user.id, plan },
-      subscription_data: { metadata: { user_id: user.id, plan } },
-      allow_promotion_codes: true,
+      metadata: {
+        user_id: user.id,
+      },
     });
 
-    return new Response(
-      JSON.stringify({ url: session.url, sessionId: session.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
   } catch (error) {
-    console.error("Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in create-checkout", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });
