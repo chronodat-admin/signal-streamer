@@ -47,19 +47,52 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client and validate user
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "");
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    // Get anon key from request header (client sends it)
+    // This is the correct way to validate user tokens
+    const apikeyHeader = req.headers.get("apikey");
+    const anonKey = apikeyHeader || Deno.env.get("SUPABASE_ANON_KEY") || supabaseServiceKey;
+    
+    console.log("Validating token with:", apikeyHeader ? "apikey header" : "env/service_role");
+    
+    // Create Supabase client with anon key for user token validation
+    // Service role key can't properly validate user JWTs
+    const authClient = createClient(supabaseUrl, anonKey);
+    
+    // Validate user token
+    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
 
-    if (userError || !user) {
-      console.error("Auth error:", userError?.message);
+    if (userError) {
+      console.error("Auth validation failed:", {
+        message: userError.message,
+        status: userError.status,
+        name: userError.name,
+      });
+      
+      // Provide helpful error message
+      let errorMsg = "Invalid or expired token";
+      if (userError.message?.includes("JWT")) {
+        errorMsg = "Your session has expired. Please sign in again.";
+      } else if (userError.message) {
+        errorMsg = userError.message;
+      }
+      
       return new Response(
-        JSON.stringify({ error: "Invalid or expired token", details: userError?.message }),
+        JSON.stringify({ error: errorMsg, details: userError.message }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "User not found" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Create service role client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body
     const { plan } = await req.json();
