@@ -243,7 +243,7 @@ export const en = {
   // Alert Logs Page
   alertLogs: {
     title: 'Alert Logs',
-    subtitle: 'View incoming webhook requests and their processing status',
+    subtitle: 'View and debug alert delivery attempts to your integrations',
     
     // Stats
     totalAlerts: 'Total Alerts',
@@ -253,17 +253,44 @@ export const en = {
 
     // Table
     timestamp: 'Timestamp',
+    time: 'Time',
+    integration: 'Integration',
     strategy: 'Strategy',
+    signal: 'Signal',
     status: 'Status',
+    message: 'Message',
     payload: 'Payload',
     response: 'Response',
     success: 'Success',
     error: 'Error',
+    pending: 'Pending',
+    totalLogsFound: '{count} total logs found',
+    refresh: 'Refresh',
 
     // Filters
+    searchLogs: 'Search logs...',
+    filterByStatus: 'Filter by status',
+    filterByType: 'Filter by type',
     allStatuses: 'All Statuses',
+    allTypes: 'All Types',
     successOnly: 'Success Only',
     errorsOnly: 'Errors Only',
+    discord: 'Discord',
+    slack: 'Slack',
+    telegram: 'Telegram',
+    whatsapp: 'WhatsApp',
+    
+    // Empty state
+    noLogsFound: 'No logs found.',
+    noLogsReason1: 'No signals have been sent yet',
+    noLogsReason2: 'The send-alerts function hasn\'t been triggered',
+    noLogsReason3: 'No integrations are configured or enabled',
+    checkSupabaseLogs: 'Check Supabase Edge Function logs to see if the function is being called.',
+    
+    // Pagination
+    page: 'Page {current} of {total}',
+    previous: 'Previous',
+    next: 'Next',
   },
 
   // API Keys Page
@@ -287,39 +314,102 @@ export const en = {
     lastUsed: 'Last Used',
     actions: 'Actions',
     active: 'Active',
+    disabled: 'Disabled',
     revoked: 'Revoked',
     never: 'Never',
+    neverUsed: 'Never used',
     revokeKey: 'Revoke Key',
     deleteKey: 'Delete Key',
+    configure: 'Configure',
+    requests: '{count} requests',
+    lastUsedDate: 'Last used {date}',
+    rateLimit: '{limit}/min limit',
 
     // Create Dialog
     createNewApiKey: 'Create API Key',
-    createApiKeyDescription: 'Generate a new API key for sending signals',
-    keyName: 'Key Name',
-    keyNamePlaceholder: 'e.g., Trading Bot',
+    editApiKey: 'Edit API Key',
+    createApiKeyDescription: 'Configure how your third-party application sends signals',
+    keyName: 'Name *',
+    keyNamePlaceholder: 'e.g., My Trading Bot',
+    description: 'Description',
+    descriptionPlaceholder: 'What is this API key used for?',
+    linkToStrategy: 'Link to Strategy (Optional)',
+    autoStrategy: 'Auto (first active strategy)',
+    autoStrategyPlaceholder: 'Auto (uses first active strategy)',
+    autoStrategyDescription: 'Leave empty to automatically route signals to your first active strategy',
+    payloadMapping: 'Payload Mapping',
+    loadTemplate: 'Load template...',
+    mappingDescription: 'Map your payload fields to our signal format. Use dot notation for nested fields (e.g., data.ticker)',
+    signalField: 'Signal Field',
+    symbolField: 'Symbol Field',
+    priceField: 'Price Field',
+    timeField: 'Time Field (Optional)',
+    timeFieldDescription: 'Leave empty to use current time',
+    rateLimitLabel: 'Rate Limit (requests per minute)',
+    rateLimitDescription: 'Your {plan} plan allows up to {limit} requests per minute',
+    activeToggle: 'Active',
+    activeToggleDescription: 'Enable or disable this API key',
     selectStrategy: 'Select Strategy',
     allStrategies: 'All Strategies',
     creating: 'Creating...',
+    update: 'Update',
+    cancel: 'Cancel',
+
+    // API Endpoint
+    apiEndpoint: 'API Endpoint',
+    recommended: 'Recommended',
+    alternativeEndpoint: 'Alternative (direct Supabase):',
+    sendPostRequest: 'Send a POST request with your API key in the {header} header',
+    xApiKeyHeader: 'x-api-key',
+
+    // Empty State
+    noApiKeys: 'No API Keys',
+    noApiKeysDescription: 'Create an API key to allow third-party applications to send signals',
+
+    // Quick Start Guide
+    quickStartGuide: 'Quick Start Guide',
+    exampleRequest: 'Example Request',
+    expectedResponse: 'Expected Response',
+    importantNotes: 'Important Notes',
+    note1: 'Replace {code} with your actual API key',
+    note2: 'Configure {strong} if your data format differs',
+    note3: 'Use dot notation for nested fields (e.g., {code2})',
+    note4: 'The {code3} field is optional (defaults to current time)',
+    copied: 'Copied!',
+    copy: 'Copy',
+    yourApiKey: 'YOUR_API_KEY',
+    payloadMappingLabel: 'payload mapping',
+    dataTicker: 'data.ticker',
+    timeField: 'time',
 
     // New Key Dialog
     apiKeyCreated: 'API Key Created',
     copyKeyWarning: 'Copy your API key now. You won\'t be able to see it again!',
-    yourApiKey: 'Your API Key',
+    yourApiKeyLabel: 'Your API Key',
 
     // Toast messages
     keyCreated: 'API key created successfully',
+    keyUpdated: 'API key updated successfully',
     keyCopied: 'API key copied to clipboard',
+    codeCopied: 'Code copied to clipboard',
     keyRevoked: 'API key revoked',
     keyDeleted: 'API key deleted',
+    nameRequired: 'Name is required',
+    failedToLoad: 'Failed to load API keys',
     failedToCreate: 'Failed to create API key',
+    failedToUpdate: 'Failed to update API key',
     failedToRevoke: 'Failed to revoke API key',
     failedToDelete: 'Failed to delete API key',
+    upgradeRequired: 'Upgrade Required',
+    apiKeysNotAvailable: 'API Keys are available on Pro and Elite plans. Upgrade to create custom API integrations.',
+    planLimitReached: 'Your {plan} plan allows {count} API keys. Upgrade to Elite for unlimited API keys.',
+    confirmDelete: 'Are you sure you want to delete this API key? This action cannot be undone.',
   },
 
   // Integrations Page
   integrations: {
     title: 'Integrations',
-    subtitle: 'Connect your favorite trading platforms',
+    subtitle: 'Connect your trading signals to Discord, Slack, Telegram, WhatsApp, and more',
     
     tradingView: 'TradingView',
     tradingViewDescription: 'Receive alerts from TradingView strategies',
@@ -333,6 +423,53 @@ export const en = {
     configure: 'Configure',
     disconnect: 'Disconnect',
     learnMore: 'Learn More',
+    
+    // Sections
+    availableIntegrations: 'Available Integrations',
+    yourIntegrations: 'Your Integrations',
+    configured: 'Configured',
+    allStrategies: 'All Strategies',
+    
+    // Dialog
+    editIntegration: 'Edit Integration',
+    configureIntegration: 'Configure {name}',
+    integrationDescription: 'Configure your integration settings',
+    name: 'Name',
+    namePlaceholder: 'My Integration',
+    strategyOptional: 'Strategy (Optional - leave empty for all strategies)',
+    selectStrategy: 'Select a strategy',
+    webhookUrl: 'Webhook URL',
+    webhookUrlPlaceholder: 'https://...',
+    howToGetWebhook: 'How to get webhook URL',
+    howToGetBotToken: 'How to get bot token and chat ID',
+    howToSetupWhatsApp: 'How to set up WhatsApp integration',
+    enabled: 'Enabled',
+    cancel: 'Cancel',
+    update: 'Update',
+    create: 'Create',
+    updateIntegration: 'Update Integration',
+    createIntegration: 'Create Integration',
+    
+    // Status
+    active: 'Active',
+    inactive: 'Inactive',
+    lastUsed: 'Last used: {date}',
+    error: 'Error: {message}',
+    
+    // Toast messages
+    integrationCreated: 'Integration Created',
+    integrationCreatedDescription: 'Your integration has been created successfully.',
+    integrationUpdated: 'Integration Updated',
+    integrationUpdatedDescription: 'Your integration has been updated successfully.',
+    integrationDeleted: 'Integration Deleted',
+    integrationDeletedDescription: 'Your integration has been deleted successfully.',
+    failedToLoad: 'Failed to load integrations',
+    failedToSave: 'Failed to save integration',
+    failedToDelete: 'Failed to delete integration',
+    upgradeRequired: 'Upgrade Required',
+    integrationsNotAvailable: 'Integrations are available on Pro and Elite plans. Upgrade to connect Discord, Slack, and more.',
+    planLimitReached: 'Your {plan} plan allows {count} integrations. Upgrade to Elite for unlimited integrations.',
+    confirmDelete: 'Are you sure you want to delete this integration?',
   },
 
   // Billing Page
@@ -340,13 +477,16 @@ export const en = {
     title: 'Billing',
     subtitle: 'Manage your subscription and payment methods',
     refreshStatus: 'Refresh Status',
+    pleaseSignIn: 'Please sign in to view billing.',
     
     // Plan Status
     currentPlan: 'Current Plan',
+    yourActiveSubscription: 'Your active subscription',
     freePlan: 'Free Plan',
     proPlan: 'Pro Plan',
     elitePlan: 'Elite Plan',
     perMonth: '/month',
+    perForever: '/forever',
     
     // Features
     features: 'Features',
@@ -355,12 +495,43 @@ export const en = {
     unlimited: 'Unlimited',
     historyDays: '{days} days history',
     prioritySupport: 'Priority support',
+    viewAllPlans: 'View All Plans',
+    comparePlans: 'Compare Plans',
     
-    // Actions
+    // Subscription Management
+    subscriptionManagement: 'Subscription Management',
+    manageSubscriptionDescription: 'Manage your subscription, update payment method, or cancel',
+    upgradeDescription: 'Upgrade to a paid plan to unlock more features',
+    activeSubscription: 'Active Subscription',
+    activeSubscriptionDescription: '{plan} plan via Stripe',
+    noActiveSubscription: 'No active subscription',
+    noActiveSubscriptionDescription: 'You\'re on the free plan',
+    manageSubscription: 'Manage Subscription',
+    updatePaymentMethod: 'Update payment method, change plan, or cancel subscription',
+    upgradeToPro: 'Upgrade to Pro - $19/mo',
+    upgradeToElite: 'Upgrade to Elite - $49/mo',
+    
+    // Change Plan
+    changeYourPlan: 'Change Your Plan',
+    bestPlanDescription: 'You\'re on our best plan! Downgrade options are available below.',
+    upgradeDowngradeDescription: 'Upgrade to Elite or downgrade to Free',
+    choosePlanDescription: 'Choose the plan that fits your needs',
+    current: 'Current',
     upgrade: 'Upgrade',
     downgrade: 'Downgrade',
-    manageBilling: 'Manage Billing',
-    manageSubscription: 'Manage Subscription',
+    currentPlanButton: 'Current Plan',
+    upgradeTo: 'Upgrade to {plan}',
+    cancelSubscription: 'Cancel Subscription',
+    downgradeTo: 'Downgrade to {plan}',
+    downgradeNotice: 'Downgrades and cancellations are handled through Stripe. Your access continues until the end of your billing period.',
+    
+    // Billing History
+    billingHistory: 'Billing History',
+    viewInvoicesDescription: 'View your past invoices and payments',
+    viewInvoicesDescription2: 'View and download your invoices from the Stripe Customer Portal',
+    viewInvoices: 'View Invoices',
+    noBillingHistory: 'No billing history yet',
+    noBillingHistoryDescription: 'Your invoices will appear here once you upgrade',
     
     // Status
     active: 'Active',
@@ -370,9 +541,17 @@ export const en = {
     
     // Processing
     processingPayment: 'Processing your payment...',
-    subscriptionActivating: 'Your subscription is being activated. This may take a few moments.',
+    processingSubscription: 'Processing your subscription...',
+    subscriptionActivating: 'Please wait while we activate your subscription. This may take a few moments.',
+    
+    // Error
+    error: 'Error',
+    tryAgain: 'Try again',
     
     // Toast messages
+    paymentSuccessful: 'Payment successful! Activating your subscription...',
+    subscriptionActivated: 'Subscription activated! Enjoy your new plan.',
+    checkoutCanceled: 'Checkout was canceled. No charges were made.',
     subscriptionUpdated: 'Subscription updated successfully',
     failedToUpdate: 'Failed to update subscription',
     redirectingToCheckout: 'Redirecting to checkout...',

@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { formatDateTime } from '@/lib/formatUtils';
 import { usePreferences } from '@/hooks/usePreferences';
 import { getUserPlan, getPlanLimits } from '@/lib/planUtils';
+import { useLanguage } from '@/i18n';
 
 interface ApiKey {
   id: string;
@@ -76,6 +77,7 @@ export default function ApiKeys() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { preferences } = usePreferences();
+  const { t } = useLanguage();
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,8 +136,8 @@ export default function ApiKeys() {
     } catch (error: any) {
       console.error('Error fetching API keys:', error?.message || error);
       toast({
-        title: 'Error',
-        description: error?.message || 'Failed to load API keys',
+        title: t.common.error,
+        description: error?.message || t.apiKeys.failedToLoad,
         variant: 'destructive',
       });
     } finally {
@@ -155,7 +157,7 @@ export default function ApiKeys() {
 
   const handleCreate = async () => {
     if (!formData.name.trim()) {
-      toast({ title: 'Error', description: 'Name is required', variant: 'destructive' });
+      toast({ title: t.common.error, description: t.apiKeys.nameRequired, variant: 'destructive' });
       return;
     }
 
@@ -163,10 +165,10 @@ export default function ApiKeys() {
     const limits = getPlanLimits(userPlan);
     if (limits.integrations !== -1 && apiKeys.length >= limits.integrations) {
       toast({
-        title: 'Upgrade Required',
+        title: t.apiKeys.upgradeRequired,
         description: limits.integrations === 0 
-          ? 'API Keys are available on Pro and Elite plans. Upgrade to create custom API integrations.'
-          : `Your ${userPlan} plan allows ${limits.integrations} API keys. Upgrade to Elite for unlimited API keys.`,
+          ? t.apiKeys.apiKeysNotAvailable
+          : t.apiKeys.planLimitReached.replace('{plan}', userPlan).replace('{count}', limits.integrations.toString()),
         variant: 'destructive',
       });
       return;
@@ -192,15 +194,15 @@ export default function ApiKeys() {
 
       if (error) throw error;
 
-      toast({ title: 'Success', description: 'API key created successfully' });
+      toast({ title: t.common.success, description: t.apiKeys.keyCreated });
       setDialogOpen(false);
       resetForm();
       fetchApiKeys();
     } catch (error: any) {
       console.error('Error creating API key:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create API key',
+        title: t.common.error,
+        description: error.message || t.apiKeys.failedToCreate,
         variant: 'destructive',
       });
     } finally {
@@ -228,15 +230,15 @@ export default function ApiKeys() {
 
       if (error) throw error;
 
-      toast({ title: 'Success', description: 'API key updated successfully' });
+      toast({ title: t.common.success, description: t.apiKeys.keyUpdated });
       setDialogOpen(false);
       setEditingKey(null);
       resetForm();
       fetchApiKeys();
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to update API key',
+        title: t.common.error,
+        description: error.message || t.apiKeys.failedToUpdate,
         variant: 'destructive',
       });
     } finally {
@@ -245,18 +247,18 @@ export default function ApiKeys() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) return;
+    if (!confirm(t.apiKeys.confirmDelete)) return;
 
     try {
       const { error } = await supabase.from('api_keys').delete().eq('id', id);
       if (error) throw error;
 
-      toast({ title: 'Success', description: 'API key deleted' });
+      toast({ title: t.common.success, description: t.apiKeys.keyDeleted });
       fetchApiKeys();
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete API key',
+        title: t.common.error,
+        description: error.message || t.apiKeys.failedToDelete,
         variant: 'destructive',
       });
     }
@@ -276,14 +278,14 @@ export default function ApiKeys() {
     await navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
-    toast({ title: 'Copied!', description: 'API key copied to clipboard' });
+    toast({ title: t.apiKeys.copied, description: t.apiKeys.keyCopied });
   };
 
   const copyCodeToClipboard = async (code: string, codeId: string) => {
     await navigator.clipboard.writeText(code);
     setCopiedCode(codeId);
     setTimeout(() => setCopiedCode(null), 2000);
-    toast({ title: 'Copied!', description: 'Code copied to clipboard' });
+    toast({ title: t.apiKeys.copied, description: t.apiKeys.codeCopied });
   };
 
   const resetForm = () => {
@@ -374,9 +376,9 @@ export default function ApiKeys() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold tracking-tight">API Keys</h1>
+            <h1 className="text-3xl font-display font-bold tracking-tight">{t.apiKeys.title}</h1>
             <p className="text-muted-foreground mt-1">
-              Create API keys for third-party applications to send signals
+              {t.apiKeys.subtitle}
             </p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -389,14 +391,14 @@ export default function ApiKeys() {
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                Create API Key
+                {t.apiKeys.createApiKey}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
               <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shrink-0">
-                <DialogTitle>{editingKey ? 'Edit API Key' : 'Create API Key'}</DialogTitle>
+                <DialogTitle>{editingKey ? t.apiKeys.editApiKey : t.apiKeys.createNewApiKey}</DialogTitle>
                 <DialogDescription>
-                  Configure how your third-party application sends signals
+                  {t.apiKeys.createApiKeyDescription}
                 </DialogDescription>
               </DialogHeader>
 
@@ -404,19 +406,19 @@ export default function ApiKeys() {
                 {/* Basic Info */}
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name *</Label>
+                    <Label htmlFor="name">{t.apiKeys.keyName}</Label>
                     <Input
                       id="name"
-                      placeholder="e.g., My Trading Bot"
+                      placeholder={t.apiKeys.keyNamePlaceholder}
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">{t.apiKeys.description}</Label>
                     <Textarea
                       id="description"
-                      placeholder="What is this API key used for?"
+                      placeholder={t.apiKeys.descriptionPlaceholder}
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       rows={2}
@@ -426,33 +428,33 @@ export default function ApiKeys() {
 
                 {/* Strategy Selection */}
                 <div className="space-y-2">
-                  <Label>Link to Strategy (Optional)</Label>
+                  <Label>{t.apiKeys.linkToStrategy}</Label>
                   <Select
                     value={formData.strategy_id || '_auto'}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, strategy_id: value === '_auto' ? '' : value }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Auto (uses first active strategy)" />
+                      <SelectValue placeholder={t.apiKeys.autoStrategyPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="_auto">Auto (first active strategy)</SelectItem>
+                      <SelectItem value="_auto">{t.apiKeys.autoStrategy}</SelectItem>
                       {strategies.map((s) => (
                         <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Leave empty to automatically route signals to your first active strategy
+                    {t.apiKeys.autoStrategyDescription}
                   </p>
                 </div>
 
                 {/* Payload Mapping */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">Payload Mapping</Label>
+                    <Label className="text-base font-semibold">{t.apiKeys.payloadMapping}</Label>
                     <Select onValueChange={(idx) => applyTemplate(EXAMPLE_PAYLOADS[parseInt(idx)])}>
                       <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Load template..." />
+                        <SelectValue placeholder={t.apiKeys.loadTemplate} />
                       </SelectTrigger>
                       <SelectContent>
                         {EXAMPLE_PAYLOADS.map((t, i) => (
@@ -462,12 +464,12 @@ export default function ApiKeys() {
                     </Select>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Map your payload fields to our signal format. Use dot notation for nested fields (e.g., data.ticker)
+                    {t.apiKeys.mappingDescription}
                   </p>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="map-signal" className="text-sm">Signal Field</Label>
+                      <Label htmlFor="map-signal" className="text-sm">{t.apiKeys.signalField}</Label>
                       <Input
                         id="map-signal"
                         placeholder="signal"
@@ -480,7 +482,7 @@ export default function ApiKeys() {
                       <p className="text-xs text-muted-foreground">e.g., action, type, data.signal</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="map-symbol" className="text-sm">Symbol Field</Label>
+                      <Label htmlFor="map-symbol" className="text-sm">{t.apiKeys.symbolField}</Label>
                       <Input
                         id="map-symbol"
                         placeholder="symbol"
@@ -493,7 +495,7 @@ export default function ApiKeys() {
                       <p className="text-xs text-muted-foreground">e.g., ticker, asset, data.symbol</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="map-price" className="text-sm">Price Field</Label>
+                      <Label htmlFor="map-price" className="text-sm">{t.apiKeys.priceField}</Label>
                       <Input
                         id="map-price"
                         placeholder="price"
@@ -506,7 +508,7 @@ export default function ApiKeys() {
                       <p className="text-xs text-muted-foreground">e.g., close, value, entry_price</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="map-time" className="text-sm">Time Field (Optional)</Label>
+                      <Label htmlFor="map-time" className="text-sm">{t.apiKeys.timeField}</Label>
                       <Input
                         id="map-time"
                         placeholder="time"
@@ -516,14 +518,14 @@ export default function ApiKeys() {
                           payload_mapping: { ...prev.payload_mapping, time: e.target.value }
                         }))}
                       />
-                      <p className="text-xs text-muted-foreground">Leave empty to use current time</p>
+                      <p className="text-xs text-muted-foreground">{t.apiKeys.timeFieldDescription}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Rate Limiting */}
                 <div className="space-y-2">
-                  <Label htmlFor="rate-limit">Rate Limit (requests per minute)</Label>
+                  <Label htmlFor="rate-limit">{t.apiKeys.rateLimitLabel}</Label>
                   <Input
                     id="rate-limit"
                     type="number"
@@ -540,15 +542,15 @@ export default function ApiKeys() {
                     }}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Your {userPlan} plan allows up to {maxRateLimit} requests per minute
+                    {t.apiKeys.rateLimitDescription.replace('{plan}', userPlan).replace('{limit}', maxRateLimit.toString())}
                   </p>
                 </div>
 
                 {/* Active Toggle */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Active</Label>
-                    <p className="text-sm text-muted-foreground">Enable or disable this API key</p>
+                    <Label>{t.apiKeys.activeToggle}</Label>
+                    <p className="text-sm text-muted-foreground">{t.apiKeys.activeToggleDescription}</p>
                   </div>
                   <Switch
                     checked={formData.is_active}
@@ -560,11 +562,11 @@ export default function ApiKeys() {
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 px-6 pb-6 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shrink-0">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
+                  {t.apiKeys.cancel}
                 </Button>
                 <Button onClick={editingKey ? handleUpdate : handleCreate} disabled={creating}>
                   {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {editingKey ? 'Update' : 'Create'}
+                  {editingKey ? t.apiKeys.update : t.common.create}
                 </Button>
               </div>
             </DialogContent>
@@ -581,17 +583,17 @@ export default function ApiKeys() {
               <div className="flex-1 min-w-0 space-y-3">
                 <div>
                   <div className="font-medium flex items-center gap-2">
-                    API Endpoint
-                    <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                    {t.apiKeys.apiEndpoint}
+                    <Badge variant="secondary" className="text-xs">{t.apiKeys.recommended}</Badge>
                   </div>
                   <code className="text-sm text-primary break-all">{getApiEndpoint()}</code>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <p className="mb-1">Alternative (direct Supabase):</p>
+                  <p className="mb-1">{t.apiKeys.alternativeEndpoint}</p>
                   <code className="text-xs break-all opacity-70">{getDirectSupabaseEndpoint()}</code>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Send a POST request with your API key in the <code className="text-primary">x-api-key</code> header
+                  {t.apiKeys.sendPostRequest.replace('{header}', `<code className="text-primary">${t.apiKeys.xApiKeyHeader}</code>`)}
                 </p>
               </div>
             </div>
@@ -601,10 +603,10 @@ export default function ApiKeys() {
         {/* API Keys List */}
         {apiKeys.length === 0 ? (
           <EmptyState
-            title="No API Keys"
-            description="Create an API key to allow third-party applications to send signals"
+            title={t.apiKeys.noApiKeys}
+            description={t.apiKeys.noApiKeysDescription}
             action={{
-              label: 'Create API Key',
+              label: t.apiKeys.createApiKey,
               onClick: () => setDialogOpen(true)
             }}
             variant="illustration"
@@ -624,7 +626,7 @@ export default function ApiKeys() {
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{key.name}</h3>
                             <Badge variant={key.is_active ? 'default' : 'secondary'}>
-                              {key.is_active ? 'Active' : 'Disabled'}
+                              {key.is_active ? t.apiKeys.active : t.apiKeys.disabled}
                             </Badge>
                           </div>
                           {key.description && (
@@ -668,20 +670,20 @@ export default function ApiKeys() {
                       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <Zap className="h-4 w-4" />
-                          <span>{key.request_count.toLocaleString()} requests</span>
+                          <span>{t.apiKeys.requests.replace('{count}', key.request_count.toLocaleString())}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-4 w-4" />
                           <span>
                             {key.last_used_at 
-                              ? `Last used ${formatDateTime(key.last_used_at, preferences)}`
-                              : 'Never used'
+                              ? t.apiKeys.lastUsedDate.replace('{date}', formatDateTime(key.last_used_at, preferences.dateFormat))
+                              : t.apiKeys.neverUsed
                             }
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <AlertCircle className="h-4 w-4" />
-                          <span>{key.rate_limit_per_minute}/min limit</span>
+                          <span>{t.apiKeys.rateLimit.replace('{limit}', key.rate_limit_per_minute.toString())}</span>
                         </div>
                       </div>
                     </div>
@@ -695,7 +697,7 @@ export default function ApiKeys() {
                         onClick={() => openEditDialog(key)}
                       >
                         <Settings className="h-4 w-4" />
-                        Configure
+                        {t.apiKeys.configure}
                       </Button>
                       <Button
                         variant="ghost"
@@ -718,7 +720,7 @@ export default function ApiKeys() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ExternalLink className="h-5 w-5" />
-              Quick Start Guide
+              {t.apiKeys.quickStartGuide}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -738,7 +740,7 @@ export default function ApiKeys() {
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium flex items-center gap-2">
                       <Badge variant="outline" className="font-mono text-xs">cURL</Badge>
-                      Example Request
+                      {t.apiKeys.exampleRequest}
                     </h4>
                     <Button
                       variant="ghost"
@@ -749,12 +751,12 @@ export default function ApiKeys() {
                       {copiedCode === 'curl' ? (
                         <>
                           <Check className="h-3.5 w-3.5 text-green-500" />
-                          Copied!
+                          {t.apiKeys.copied}
                         </>
                       ) : (
                         <>
                           <Copy className="h-3.5 w-3.5" />
-                          Copy
+                          {t.apiKeys.copy}
                         </>
                       )}
                     </Button>
@@ -792,7 +794,7 @@ print(response.json())`;
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium flex items-center gap-2">
                       <Badge variant="outline" className="font-mono text-xs">Python</Badge>
-                      Example Request
+                      {t.apiKeys.exampleRequest}
                     </h4>
                     <Button
                       variant="ghost"
@@ -803,12 +805,12 @@ print(response.json())`;
                       {copiedCode === 'python' ? (
                         <>
                           <Check className="h-3.5 w-3.5 text-green-500" />
-                          Copied!
+                          {t.apiKeys.copied}
                         </>
                       ) : (
                         <>
                           <Copy className="h-3.5 w-3.5" />
-                          Copy
+                          {t.apiKeys.copy}
                         </>
                       )}
                     </Button>
@@ -844,7 +846,7 @@ console.log(data);`;
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium flex items-center gap-2">
                       <Badge variant="outline" className="font-mono text-xs">JavaScript</Badge>
-                      Example Request
+                      {t.apiKeys.exampleRequest}
                     </h4>
                     <Button
                       variant="ghost"
@@ -855,12 +857,12 @@ console.log(data);`;
                       {copiedCode === 'js' ? (
                         <>
                           <Check className="h-3.5 w-3.5 text-green-500" />
-                          Copied!
+                          {t.apiKeys.copied}
                         </>
                       ) : (
                         <>
                           <Copy className="h-3.5 w-3.5" />
-                          Copy
+                          {t.apiKeys.copy}
                         </>
                       )}
                     </Button>
@@ -876,7 +878,7 @@ console.log(data);`;
 
             {/* Response Example */}
             <div className="space-y-2">
-              <h4 className="font-medium">Expected Response</h4>
+              <h4 className="font-medium">{t.apiKeys.expectedResponse}</h4>
               <pre className="bg-green-500/10 border-green-500/20 p-4 rounded-lg text-sm overflow-x-auto border">
                 <code className="text-green-600 dark:text-green-400">{`{
   "success": true,
@@ -890,13 +892,13 @@ console.log(data);`;
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 text-sm space-y-2">
               <p className="font-medium text-amber-600 dark:text-amber-400 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4" />
-                Important Notes
+                {t.apiKeys.importantNotes}
               </p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Replace <code className="bg-muted px-1 py-0.5 rounded text-xs">YOUR_API_KEY</code> with your actual API key</li>
-                <li>Configure <strong>payload mapping</strong> if your data format differs</li>
-                <li>Use dot notation for nested fields (e.g., <code className="bg-muted px-1 py-0.5 rounded text-xs">data.ticker</code>)</li>
-                <li>The <code className="bg-muted px-1 py-0.5 rounded text-xs">time</code> field is optional (defaults to current time)</li>
+                <li>{t.apiKeys.note1.replace('{code}', '<code className="bg-muted px-1 py-0.5 rounded text-xs">YOUR_API_KEY</code>')}</li>
+                <li>{t.apiKeys.note2.replace('{strong}', '<strong>payload mapping</strong>')}</li>
+                <li>{t.apiKeys.note3.replace('{code2}', '<code className="bg-muted px-1 py-0.5 rounded text-xs">data.ticker</code>')}</li>
+                <li>{t.apiKeys.note4.replace('{code3}', '<code className="bg-muted px-1 py-0.5 rounded text-xs">time</code>')}</li>
               </ul>
             </div>
           </CardContent>

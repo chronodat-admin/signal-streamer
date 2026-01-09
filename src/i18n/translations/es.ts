@@ -245,7 +245,7 @@ export const es: TranslationKeys = {
   // Alert Logs Page
   alertLogs: {
     title: 'Registro de Alertas',
-    subtitle: 'Ver solicitudes de webhook entrantes y su estado de procesamiento',
+    subtitle: 'Ver y depurar intentos de entrega de alertas a tus integraciones',
     
     // Stats
     totalAlerts: 'Total de Alertas',
@@ -255,17 +255,44 @@ export const es: TranslationKeys = {
 
     // Table
     timestamp: 'Marca de Tiempo',
+    time: 'Hora',
+    integration: 'Integración',
     strategy: 'Estrategia',
+    signal: 'Señal',
     status: 'Estado',
+    message: 'Mensaje',
     payload: 'Carga',
     response: 'Respuesta',
     success: 'Éxito',
     error: 'Error',
+    pending: 'Pendiente',
+    totalLogsFound: '{count} registros encontrados',
+    refresh: 'Actualizar',
 
     // Filters
+    searchLogs: 'Buscar registros...',
+    filterByStatus: 'Filtrar por estado',
+    filterByType: 'Filtrar por tipo',
     allStatuses: 'Todos los Estados',
+    allTypes: 'Todos los Tipos',
     successOnly: 'Solo Exitosas',
     errorsOnly: 'Solo Errores',
+    discord: 'Discord',
+    slack: 'Slack',
+    telegram: 'Telegram',
+    whatsapp: 'WhatsApp',
+    
+    // Empty state
+    noLogsFound: 'No se encontraron registros.',
+    noLogsReason1: 'Aún no se han enviado señales',
+    noLogsReason2: 'La función de envío de alertas no se ha activado',
+    noLogsReason3: 'No hay integraciones configuradas o habilitadas',
+    checkSupabaseLogs: 'Revisa los registros de la función Edge de Supabase para ver si la función está siendo llamada.',
+    
+    // Pagination
+    page: 'Página {current} de {total}',
+    previous: 'Anterior',
+    next: 'Siguiente',
   },
 
   // API Keys Page
@@ -289,39 +316,102 @@ export const es: TranslationKeys = {
     lastUsed: 'Último Uso',
     actions: 'Acciones',
     active: 'Activa',
+    disabled: 'Deshabilitada',
     revoked: 'Revocada',
     never: 'Nunca',
+    neverUsed: 'Nunca usada',
     revokeKey: 'Revocar Clave',
     deleteKey: 'Eliminar Clave',
+    configure: 'Configurar',
+    requests: '{count} solicitudes',
+    lastUsedDate: 'Último uso {date}',
+    rateLimit: 'límite de {limit}/min',
 
     // Create Dialog
     createNewApiKey: 'Crear Clave API',
-    createApiKeyDescription: 'Genera una nueva clave API para enviar señales',
-    keyName: 'Nombre de la Clave',
-    keyNamePlaceholder: 'ej., Bot de Trading',
+    editApiKey: 'Editar Clave API',
+    createApiKeyDescription: 'Configura cómo tu aplicación de terceros envía señales',
+    keyName: 'Nombre *',
+    keyNamePlaceholder: 'ej., Mi Bot de Trading',
+    description: 'Descripción',
+    descriptionPlaceholder: '¿Para qué se usa esta clave API?',
+    linkToStrategy: 'Vincular a Estrategia (Opcional)',
+    autoStrategy: 'Auto (primera estrategia activa)',
+    autoStrategyPlaceholder: 'Auto (usa la primera estrategia activa)',
+    autoStrategyDescription: 'Deja vacío para enrutar automáticamente las señales a tu primera estrategia activa',
+    payloadMapping: 'Mapeo de Carga',
+    loadTemplate: 'Cargar plantilla...',
+    mappingDescription: 'Mapea los campos de tu carga útil a nuestro formato de señal. Usa notación de punto para campos anidados (ej., data.ticker)',
+    signalField: 'Campo de Señal',
+    symbolField: 'Campo de Símbolo',
+    priceField: 'Campo de Precio',
+    timeField: 'Campo de Tiempo (Opcional)',
+    timeFieldDescription: 'Deja vacío para usar la hora actual',
+    rateLimitLabel: 'Límite de Velocidad (solicitudes por minuto)',
+    rateLimitDescription: 'Tu plan {plan} permite hasta {limit} solicitudes por minuto',
+    activeToggle: 'Activa',
+    activeToggleDescription: 'Habilitar o deshabilitar esta clave API',
     selectStrategy: 'Seleccionar Estrategia',
     allStrategies: 'Todas las Estrategias',
     creating: 'Creando...',
+    update: 'Actualizar',
+    cancel: 'Cancelar',
+
+    // API Endpoint
+    apiEndpoint: 'Endpoint de API',
+    recommended: 'Recomendado',
+    alternativeEndpoint: 'Alternativa (Supabase directo):',
+    sendPostRequest: 'Envía una solicitud POST con tu clave API en el encabezado {header}',
+    xApiKeyHeader: 'x-api-key',
+
+    // Empty State
+    noApiKeys: 'Sin Claves API',
+    noApiKeysDescription: 'Crea una clave API para permitir que aplicaciones de terceros envíen señales',
+
+    // Quick Start Guide
+    quickStartGuide: 'Guía de Inicio Rápido',
+    exampleRequest: 'Ejemplo de Solicitud',
+    expectedResponse: 'Respuesta Esperada',
+    importantNotes: 'Notas Importantes',
+    note1: 'Reemplaza {code} con tu clave API real',
+    note2: 'Configura {strong} si tu formato de datos difiere',
+    note3: 'Usa notación de punto para campos anidados (ej., {code2})',
+    note4: 'El campo {code3} es opcional (por defecto usa la hora actual)',
+    copied: '¡Copiado!',
+    copy: 'Copiar',
+    yourApiKey: 'TU_CLAVE_API',
+    payloadMappingLabel: 'mapeo de carga útil',
+    dataTicker: 'data.ticker',
+    timeField: 'tiempo',
 
     // New Key Dialog
     apiKeyCreated: 'Clave API Creada',
     copyKeyWarning: '¡Copia tu clave API ahora. No podrás verla de nuevo!',
-    yourApiKey: 'Tu Clave API',
+    yourApiKeyLabel: 'Tu Clave API',
 
     // Toast messages
     keyCreated: 'Clave API creada exitosamente',
+    keyUpdated: 'Clave API actualizada exitosamente',
     keyCopied: 'Clave API copiada al portapapeles',
+    codeCopied: 'Código copiado al portapapeles',
     keyRevoked: 'Clave API revocada',
     keyDeleted: 'Clave API eliminada',
+    nameRequired: 'El nombre es requerido',
+    failedToLoad: 'Error al cargar claves API',
     failedToCreate: 'Error al crear clave API',
+    failedToUpdate: 'Error al actualizar clave API',
     failedToRevoke: 'Error al revocar clave API',
     failedToDelete: 'Error al eliminar clave API',
+    upgradeRequired: 'Mejora Requerida',
+    apiKeysNotAvailable: 'Las claves API están disponibles en los planes Pro y Elite. Mejora para crear integraciones API personalizadas.',
+    planLimitReached: 'Tu plan {plan} permite {count} claves API. Mejora a Elite para claves API ilimitadas.',
+    confirmDelete: '¿Estás seguro de que quieres eliminar esta clave API? Esta acción no se puede deshacer.',
   },
 
   // Integrations Page
   integrations: {
     title: 'Integraciones',
-    subtitle: 'Conecta tus plataformas de trading favoritas',
+    subtitle: 'Conecta tus señales de trading a Discord, Slack, Telegram, WhatsApp y más',
     
     tradingView: 'TradingView',
     tradingViewDescription: 'Recibe alertas de estrategias de TradingView',
@@ -335,6 +425,53 @@ export const es: TranslationKeys = {
     configure: 'Configurar',
     disconnect: 'Desconectar',
     learnMore: 'Más Información',
+    
+    // Sections
+    availableIntegrations: 'Integraciones Disponibles',
+    yourIntegrations: 'Tus Integraciones',
+    configured: 'Configurada',
+    allStrategies: 'Todas las Estrategias',
+    
+    // Dialog
+    editIntegration: 'Editar Integración',
+    configureIntegration: 'Configurar {name}',
+    integrationDescription: 'Configura los ajustes de tu integración',
+    name: 'Nombre',
+    namePlaceholder: 'Mi Integración',
+    strategyOptional: 'Estrategia (Opcional - deja vacío para todas las estrategias)',
+    selectStrategy: 'Selecciona una estrategia',
+    webhookUrl: 'URL del Webhook',
+    webhookUrlPlaceholder: 'https://...',
+    howToGetWebhook: 'Cómo obtener la URL del webhook',
+    howToGetBotToken: 'Cómo obtener el token del bot y el ID del chat',
+    howToSetupWhatsApp: 'Cómo configurar la integración de WhatsApp',
+    enabled: 'Habilitado',
+    cancel: 'Cancelar',
+    update: 'Actualizar',
+    create: 'Crear',
+    updateIntegration: 'Actualizar Integración',
+    createIntegration: 'Crear Integración',
+    
+    // Status
+    active: 'Activa',
+    inactive: 'Inactiva',
+    lastUsed: 'Último uso: {date}',
+    error: 'Error: {message}',
+    
+    // Toast messages
+    integrationCreated: 'Integración Creada',
+    integrationCreatedDescription: 'Tu integración ha sido creada exitosamente.',
+    integrationUpdated: 'Integración Actualizada',
+    integrationUpdatedDescription: 'Tu integración ha sido actualizada exitosamente.',
+    integrationDeleted: 'Integración Eliminada',
+    integrationDeletedDescription: 'Tu integración ha sido eliminada exitosamente.',
+    failedToLoad: 'Error al cargar integraciones',
+    failedToSave: 'Error al guardar integración',
+    failedToDelete: 'Error al eliminar integración',
+    upgradeRequired: 'Mejora Requerida',
+    integrationsNotAvailable: 'Las integraciones están disponibles en los planes Pro y Elite. Mejora para conectar Discord, Slack y más.',
+    planLimitReached: 'Tu plan {plan} permite {count} integraciones. Mejora a Elite para integraciones ilimitadas.',
+    confirmDelete: '¿Estás seguro de que quieres eliminar esta integración?',
   },
 
   // Billing Page
@@ -342,13 +479,16 @@ export const es: TranslationKeys = {
     title: 'Facturación',
     subtitle: 'Gestiona tu suscripción y métodos de pago',
     refreshStatus: 'Actualizar Estado',
+    pleaseSignIn: 'Por favor inicia sesión para ver la facturación.',
     
     // Plan Status
     currentPlan: 'Plan Actual',
+    yourActiveSubscription: 'Tu suscripción activa',
     freePlan: 'Plan Gratuito',
     proPlan: 'Plan Pro',
     elitePlan: 'Plan Elite',
     perMonth: '/mes',
+    perForever: '/siempre',
     
     // Features
     features: 'Características',
@@ -357,12 +497,43 @@ export const es: TranslationKeys = {
     unlimited: 'Ilimitado',
     historyDays: '{days} días de historial',
     prioritySupport: 'Soporte prioritario',
+    viewAllPlans: 'Ver Todos los Planes',
+    comparePlans: 'Comparar Planes',
     
-    // Actions
+    // Subscription Management
+    subscriptionManagement: 'Gestión de Suscripción',
+    manageSubscriptionDescription: 'Gestiona tu suscripción, actualiza el método de pago o cancela',
+    upgradeDescription: 'Mejora a un plan de pago para desbloquear más funciones',
+    activeSubscription: 'Suscripción Activa',
+    activeSubscriptionDescription: 'Plan {plan} vía Stripe',
+    noActiveSubscription: 'Sin suscripción activa',
+    noActiveSubscriptionDescription: 'Estás en el plan gratuito',
+    manageSubscription: 'Gestionar Suscripción',
+    updatePaymentMethod: 'Actualizar método de pago, cambiar plan o cancelar suscripción',
+    upgradeToPro: 'Mejorar a Pro - $19/mes',
+    upgradeToElite: 'Mejorar a Elite - $49/mes',
+    
+    // Change Plan
+    changeYourPlan: 'Cambiar Tu Plan',
+    bestPlanDescription: '¡Estás en nuestro mejor plan! Las opciones de reducción están disponibles a continuación.',
+    upgradeDowngradeDescription: 'Mejora a Elite o reduce a Gratuito',
+    choosePlanDescription: 'Elige el plan que se ajuste a tus necesidades',
+    current: 'Actual',
     upgrade: 'Mejorar',
     downgrade: 'Reducir',
-    manageBilling: 'Gestionar Facturación',
-    manageSubscription: 'Gestionar Suscripción',
+    currentPlanButton: 'Plan Actual',
+    upgradeTo: 'Mejorar a {plan}',
+    cancelSubscription: 'Cancelar Suscripción',
+    downgradeTo: 'Reducir a {plan}',
+    downgradeNotice: 'Las reducciones y cancelaciones se manejan a través de Stripe. Tu acceso continúa hasta el final de tu período de facturación.',
+    
+    // Billing History
+    billingHistory: 'Historial de Facturación',
+    viewInvoicesDescription: 'Ver tus facturas y pagos anteriores',
+    viewInvoicesDescription2: 'Ver y descargar tus facturas desde el Portal de Clientes de Stripe',
+    viewInvoices: 'Ver Facturas',
+    noBillingHistory: 'Sin historial de facturación aún',
+    noBillingHistoryDescription: 'Tus facturas aparecerán aquí una vez que mejores',
     
     // Status
     active: 'Activo',
@@ -372,9 +543,17 @@ export const es: TranslationKeys = {
     
     // Processing
     processingPayment: 'Procesando tu pago...',
-    subscriptionActivating: 'Tu suscripción se está activando. Esto puede tomar unos momentos.',
+    processingSubscription: 'Procesando tu suscripción...',
+    subscriptionActivating: 'Por favor espera mientras activamos tu suscripción. Esto puede tomar unos momentos.',
+    
+    // Error
+    error: 'Error',
+    tryAgain: 'Intentar de nuevo',
     
     // Toast messages
+    paymentSuccessful: '¡Pago exitoso! Activando tu suscripción...',
+    subscriptionActivated: '¡Suscripción activada! Disfruta de tu nuevo plan.',
+    checkoutCanceled: 'El checkout fue cancelado. No se realizaron cargos.',
     subscriptionUpdated: 'Suscripción actualizada exitosamente',
     failedToUpdate: 'Error al actualizar suscripción',
     redirectingToCheckout: 'Redirigiendo al checkout...',

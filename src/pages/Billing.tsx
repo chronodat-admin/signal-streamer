@@ -25,6 +25,7 @@ import { STRIPE_PLANS } from '@/lib/stripe';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useLanguage } from '@/i18n';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -80,6 +81,7 @@ const Billing = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [processingSuccess, setProcessingSuccess] = useState(false);
+  const { t } = useLanguage();
   
   const { 
     plan, 
@@ -102,7 +104,7 @@ const Billing = () => {
 
     if (success === 'true') {
       setProcessingSuccess(true);
-      toast.success('Payment successful! Activating your subscription...');
+      toast.success(t.billing.paymentSuccessful);
       
       // Clean URL
       setSearchParams({});
@@ -120,7 +122,7 @@ const Billing = () => {
           refetch();
           if (attempts >= maxAttempts) {
             setProcessingSuccess(false);
-            toast.success('Subscription activated! Enjoy your new plan.');
+            toast.success(t.billing.subscriptionActivated);
           } else {
             setTimeout(pollForUpdate, 2000);
           }
@@ -129,7 +131,7 @@ const Billing = () => {
       
         setTimeout(pollForUpdate, 2000);
     } else if (canceled === 'true') {
-      toast.info('Checkout was canceled. No charges were made.');
+      toast.info(t.billing.checkoutCanceled);
       setSearchParams({});
     }
   }, [searchParams, setSearchParams, checkSubscription, refetch]);
@@ -150,7 +152,7 @@ const Billing = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Please sign in to view billing.</p>
+          <p className="text-muted-foreground">{t.billing.pleaseSignIn}</p>
         </div>
       </DashboardLayout>
     );
@@ -162,9 +164,9 @@ const Billing = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Billing</h1>
+            <h1 className="text-3xl font-bold">{t.billing.title}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your subscription and payment methods
+              {t.billing.subtitle}
             </p>
           </div>
             <Button 
@@ -174,7 +176,7 @@ const Billing = () => {
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh Status
+            {t.billing.refreshStatus}
             </Button>
         </div>
 
@@ -182,9 +184,9 @@ const Billing = () => {
         {processingSuccess && (
           <Alert>
             <Loader2 className="h-4 w-4 animate-spin" />
-            <AlertTitle>Processing your subscription...</AlertTitle>
+            <AlertTitle>{t.billing.processingSubscription}</AlertTitle>
             <AlertDescription>
-              Please wait while we activate your subscription. This may take a few moments.
+              {t.billing.subscriptionActivating}
                 </AlertDescription>
               </Alert>
             )}
@@ -193,9 +195,9 @@ const Billing = () => {
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>{t.billing.error}</AlertTitle>
                 <AlertDescription>
-              {error}. <Button variant="link" className="p-0 h-auto" onClick={handleRefresh}>Try again</Button>
+              {error}. <Button variant="link" className="p-0 h-auto" onClick={handleRefresh}>{t.billing.tryAgain}</Button>
                 </AlertDescription>
               </Alert>
             )}
@@ -218,8 +220,8 @@ const Billing = () => {
                       })()}
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Current Plan</CardTitle>
-                      <CardDescription>Your active subscription</CardDescription>
+                      <CardTitle className="text-lg">{t.billing.currentPlan}</CardTitle>
+                      <CardDescription>{t.billing.yourActiveSubscription}</CardDescription>
                     </div>
                   </div>
                   <Badge variant={plan === 'FREE' ? 'secondary' : 'default'} className="text-sm px-3 py-1">
@@ -241,13 +243,13 @@ const Billing = () => {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      Renews on {new Date(subscriptionEnd).toLocaleDateString()}
+                      {t.billing.renewsOn.replace('{date}', new Date(subscriptionEnd).toLocaleDateString())}
                     </span>
                   </div>
                 )}
                 <Link to="/pricing">
                   <Button className="w-full mt-4" variant="outline">
-                    {plan === 'FREE' ? 'View All Plans' : 'Compare Plans'}
+                    {plan === 'FREE' ? t.billing.viewAllPlans : t.billing.comparePlans}
                     <ArrowUpRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
@@ -257,11 +259,11 @@ const Billing = () => {
             {/* Subscription Management */}
               <Card className="stat-card">
                 <CardHeader>
-                <CardTitle className="text-lg">Subscription Management</CardTitle>
+                <CardTitle className="text-lg">{t.billing.subscriptionManagement}</CardTitle>
                 <CardDescription>
                   {subscribed 
-                    ? 'Manage your subscription, update payment method, or cancel'
-                    : 'Upgrade to a paid plan to unlock more features'
+                    ? t.billing.manageSubscriptionDescription
+                    : t.billing.upgradeDescription
                   }
                 </CardDescription>
                 </CardHeader>
@@ -273,9 +275,9 @@ const Billing = () => {
                         <CreditCard className="h-6 w-6 text-green-500" />
                         </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">Active Subscription</p>
+                        <p className="text-sm font-medium">{t.billing.activeSubscription}</p>
                           <p className="text-xs text-muted-foreground">
-                          {details.name} plan via Stripe
+                          {t.billing.activeSubscriptionDescription.replace('{plan}', details.name)}
                           </p>
                         </div>
                       </div>
@@ -290,10 +292,10 @@ const Billing = () => {
                           ) : (
                         <ExternalLink className="h-4 w-4 mr-2" />
                           )}
-                          Manage Subscription
+                          {t.billing.manageSubscription}
                         </Button>
                       <p className="text-xs text-center text-muted-foreground">
-                      Update payment method, change plan, or cancel subscription
+                      {t.billing.updatePaymentMethod}
                       </p>
                     </>
                   ) : (
@@ -303,9 +305,9 @@ const Billing = () => {
                         <CreditCard className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <div className="flex-1">
-                        <p className="text-sm font-medium">No active subscription</p>
+                        <p className="text-sm font-medium">{t.billing.noActiveSubscription}</p>
                           <p className="text-xs text-muted-foreground">
-                          You're on the free plan
+                          {t.billing.noActiveSubscriptionDescription}
                           </p>
                         </div>
                       </div>
@@ -318,7 +320,7 @@ const Billing = () => {
                         {checkoutLoading ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : null}
-                          Upgrade to Pro - $19/mo
+                          {t.billing.upgradeToPro}
                         </Button>
                       <Button 
                         variant="outline"
@@ -329,7 +331,7 @@ const Billing = () => {
                         {checkoutLoading ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : null}
-                        Upgrade to Elite - $49/mo
+                        {t.billing.upgradeToElite}
                       </Button>
                       </div>
                     </>
@@ -340,13 +342,13 @@ const Billing = () => {
             {/* All Plans - Upgrade/Downgrade Options */}
             <Card className="stat-card lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-lg">Change Your Plan</CardTitle>
+                <CardTitle className="text-lg">{t.billing.changeYourPlan}</CardTitle>
                 <CardDescription>
                   {plan === 'ELITE' 
-                    ? 'You\'re on our best plan! Downgrade options are available below.'
+                    ? t.billing.bestPlanDescription
                     : plan === 'PRO'
-                    ? 'Upgrade to Elite or downgrade to Free'
-                    : 'Choose the plan that fits your needs'
+                    ? t.billing.upgradeDowngradeDescription
+                    : t.billing.choosePlanDescription
                   }
                 </CardDescription>
               </CardHeader>
@@ -377,18 +379,18 @@ const Billing = () => {
                             <h3 className="font-semibold">{planInfo.name}</h3>
                           </div>
                           {isCurrent && (
-                            <Badge variant="default" className="text-xs">Current</Badge>
+                            <Badge variant="default" className="text-xs">{t.billing.current}</Badge>
                           )}
                           {!isCurrent && isUpgrade && (
                             <Badge variant="outline" className="text-xs text-green-600 border-green-600">
                               <ArrowUpRight className="h-3 w-3 mr-1" />
-                              Upgrade
+                              {t.billing.upgrade}
                             </Badge>
                           )}
                           {!isCurrent && isDowngrade && (
                             <Badge variant="outline" className="text-xs text-orange-600 border-orange-600">
                               <ArrowDownRight className="h-3 w-3 mr-1" />
-                              Downgrade
+                              {t.billing.downgrade}
                             </Badge>
                           )}
                         </div>
@@ -397,7 +399,7 @@ const Billing = () => {
                         <p className="text-2xl font-bold mb-3">
                           ${planInfo.priceAmount}
                           <span className="text-sm font-normal text-muted-foreground">
-                            {planKey === 'FREE' ? '/forever' : '/month'}
+                            {planKey === 'FREE' ? t.billing.perForever : t.billing.perMonth}
                           </span>
                         </p>
 
@@ -415,7 +417,7 @@ const Billing = () => {
                         {isCurrent ? (
                           <Button variant="secondary" className="w-full" disabled>
                             <Check className="h-4 w-4 mr-2" />
-                            Current Plan
+                            {t.billing.currentPlanButton}
                           </Button>
                         ) : isUpgrade ? (
                           <Button 
@@ -428,7 +430,7 @@ const Billing = () => {
                             ) : (
                               <ArrowUpRight className="h-4 w-4 mr-2" />
                             )}
-                            Upgrade to {planInfo.name}
+                            {t.billing.upgradeTo.replace('{plan}', planInfo.name)}
                           </Button>
                         ) : isDowngrade ? (
                           planKey === 'FREE' ? (
@@ -443,7 +445,7 @@ const Billing = () => {
                               ) : (
                                 <ArrowDownRight className="h-4 w-4 mr-2" />
                               )}
-                              Cancel Subscription
+                              {t.billing.cancelSubscription}
                             </Button>
                           ) : (
                             <Button 
@@ -457,7 +459,7 @@ const Billing = () => {
                               ) : (
                                 <ArrowDownRight className="h-4 w-4 mr-2" />
                               )}
-                              Downgrade to {planInfo.name}
+                              {t.billing.downgradeTo.replace('{plan}', planInfo.name)}
                             </Button>
                           )
                         ) : null}
@@ -469,7 +471,7 @@ const Billing = () => {
                 {/* Downgrade Notice */}
                 {plan !== 'FREE' && (
                   <p className="text-xs text-muted-foreground text-center mt-4">
-                    Downgrades and cancellations are handled through Stripe. Your access continues until the end of your billing period.
+                    {t.billing.downgradeNotice}
                   </p>
                 )}
               </CardContent>
@@ -478,14 +480,14 @@ const Billing = () => {
             {/* Billing History */}
             <Card className="stat-card lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-lg">Billing History</CardTitle>
-                <CardDescription>View your past invoices and payments</CardDescription>
+                <CardTitle className="text-lg">{t.billing.billingHistory}</CardTitle>
+                <CardDescription>{t.billing.viewInvoicesDescription}</CardDescription>
               </CardHeader>
               <CardContent>
                 {subscribed ? (
                   <div className="text-center py-6">
                     <p className="text-muted-foreground mb-4">
-                      View and download your invoices from the Stripe Customer Portal
+                      {t.billing.viewInvoicesDescription2}
                     </p>
                     <Button 
                       variant="outline" 
@@ -497,14 +499,14 @@ const Billing = () => {
                       ) : (
                         <ExternalLink className="h-4 w-4 mr-2" />
                       )}
-                      View Invoices
+                      {t.billing.viewInvoices}
                     </Button>
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>No billing history yet</p>
+                    <p>{t.billing.noBillingHistory}</p>
                     <p className="text-sm mt-1">
-                      Your invoices will appear here once you upgrade
+                      {t.billing.noBillingHistoryDescription}
                     </p>
                 </div>
                 )}

@@ -13,6 +13,7 @@ import { formatDate, formatDateTime } from '@/lib/formatUtils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyAlertLogs } from '@/components/dashboard/EmptyState';
+import { useLanguage } from '@/i18n';
 
 interface AlertLog {
   id: string;
@@ -44,6 +45,7 @@ export default function AlertLogs() {
   const [totalCount, setTotalCount] = useState(0);
   const logsPerPage = 50;
   const { preferences } = usePreferences();
+  const { t } = useLanguage();
 
   const fetchLogs = async () => {
     if (!user) return;
@@ -105,11 +107,11 @@ export default function AlertLogs() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle2 className="h-3 w-3 mr-1" />Success</Badge>;
+        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle2 className="h-3 w-3 mr-1" />{t.alertLogs.success}</Badge>;
       case 'error':
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="h-3 w-3 mr-1" />Error</Badge>;
+        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="h-3 w-3 mr-1" />{t.alertLogs.error}</Badge>;
       case 'pending':
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="h-3 w-3 mr-1" />{t.alertLogs.pending}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -131,22 +133,22 @@ export default function AlertLogs() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-display font-bold tracking-tight">Alert Logs</h1>
+          <h1 className="text-3xl font-display font-bold tracking-tight">{t.alertLogs.title}</h1>
           <p className="text-muted-foreground mt-2">
-            View and debug alert delivery attempts to your integrations
+            {t.alertLogs.subtitle}
           </p>
           {logs.length === 0 && !loading && (
             <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
               <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                <strong>No logs found.</strong> This could mean:
+                <strong>{t.alertLogs.noLogsFound}</strong> {t.alertLogs.noLogsReason1}:
               </p>
               <ul className="list-disc list-inside mt-2 text-sm text-yellow-600 dark:text-yellow-400 space-y-1">
-                <li>No signals have been sent yet</li>
-                <li>The send-alerts function hasn't been triggered</li>
-                <li>No integrations are configured or enabled</li>
+                <li>{t.alertLogs.noLogsReason1}</li>
+                <li>{t.alertLogs.noLogsReason2}</li>
+                <li>{t.alertLogs.noLogsReason3}</li>
               </ul>
               <p className="text-xs mt-2 text-muted-foreground">
-                Check Supabase Edge Function logs to see if the function is being called.
+                {t.alertLogs.checkSupabaseLogs}
               </p>
             </div>
           )}
@@ -159,7 +161,7 @@ export default function AlertLogs() {
               <div className="md:col-span-2">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Search logs..."
+                    placeholder={t.alertLogs.searchLogs}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -171,25 +173,25 @@ export default function AlertLogs() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by status" />
+                  <SelectValue placeholder={t.alertLogs.filterByStatus} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="success">Success</SelectItem>
-                  <SelectItem value="error">Error</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="all">{t.alertLogs.allStatuses}</SelectItem>
+                  <SelectItem value="success">{t.alertLogs.success}</SelectItem>
+                  <SelectItem value="error">{t.alertLogs.error}</SelectItem>
+                  <SelectItem value="pending">{t.alertLogs.pending}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={integrationTypeFilter} onValueChange={setIntegrationTypeFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by type" />
+                  <SelectValue placeholder={t.alertLogs.filterByType} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="discord">Discord</SelectItem>
-                  <SelectItem value="slack">Slack</SelectItem>
-                  <SelectItem value="telegram">Telegram</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="all">{t.alertLogs.allTypes}</SelectItem>
+                  <SelectItem value="discord">{t.alertLogs.discord}</SelectItem>
+                  <SelectItem value="slack">{t.alertLogs.slack}</SelectItem>
+                  <SelectItem value="telegram">{t.alertLogs.telegram}</SelectItem>
+                  <SelectItem value="whatsapp">{t.alertLogs.whatsapp}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -201,14 +203,14 @@ export default function AlertLogs() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Alert Logs</CardTitle>
+                <CardTitle>{t.alertLogs.title}</CardTitle>
                 <CardDescription>
-                  {totalCount} total logs found
+                  {t.alertLogs.totalLogsFound.replace('{count}', totalCount.toString())}
                 </CardDescription>
               </div>
               <Button onClick={fetchLogs} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+                {t.alertLogs.refresh}
               </Button>
             </div>
           </CardHeader>
@@ -234,13 +236,13 @@ export default function AlertLogs() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Time</TableHead>
-                        <TableHead>Integration</TableHead>
-                        <TableHead>Strategy</TableHead>
-                        <TableHead>Signal</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Message</TableHead>
-                        <TableHead>Response</TableHead>
+                        <TableHead>{t.alertLogs.time}</TableHead>
+                        <TableHead>{t.alertLogs.integration}</TableHead>
+                        <TableHead>{t.alertLogs.strategy}</TableHead>
+                        <TableHead>{t.alertLogs.signal}</TableHead>
+                        <TableHead>{t.alertLogs.status}</TableHead>
+                        <TableHead>{t.alertLogs.message}</TableHead>
+                        <TableHead>{t.alertLogs.response}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -322,7 +324,7 @@ export default function AlertLogs() {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
-                      Page {page} of {totalPages}
+                      {t.alertLogs.page.replace('{current}', page.toString()).replace('{total}', totalPages.toString())}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -331,7 +333,7 @@ export default function AlertLogs() {
                         onClick={() => setPage(p => Math.max(1, p - 1))}
                         disabled={page === 1}
                       >
-                        Previous
+                        {t.alertLogs.previous}
                       </Button>
                       <Button
                         variant="outline"
@@ -339,7 +341,7 @@ export default function AlertLogs() {
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
                       >
-                        Next
+                        {t.alertLogs.next}
                       </Button>
                     </div>
                   </div>

@@ -16,6 +16,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate, formatDateTime } from '@/lib/formatUtils';
 import { IntegrationsPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { getUserPlan, getPlanLimits } from '@/lib/planUtils';
+import { useLanguage } from '@/i18n';
 
 type IntegrationType = 'discord' | 'slack' | 'telegram' | 'whatsapp' | 'email' | 'webhook' | 'pushover' | 'ntfy' | 'zapier' | 'ifttt' | 'microsoft-teams' | 'google-chat';
 type IntegrationStatus = 'active' | 'inactive' | 'error';
@@ -190,6 +191,7 @@ const availableIntegrations: IntegrationOption[] = [
 const Integrations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [strategies, setStrategies] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -257,8 +259,8 @@ const Integrations = () => {
     } catch (error) {
       console.error('Error fetching integrations:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load integrations',
+        title: t.common.error,
+        description: t.integrations.failedToLoad,
         variant: 'destructive',
       });
     } finally {
@@ -289,10 +291,10 @@ const Integrations = () => {
     const limits = getPlanLimits(userPlan);
     if (limits.integrations !== -1 && integrations.length >= limits.integrations) {
       toast({
-        title: 'Upgrade Required',
+        title: t.integrations.upgradeRequired,
         description: limits.integrations === 0 
-          ? 'Integrations are available on Pro and Elite plans. Upgrade to connect Discord, Slack, and more.'
-          : `Your ${userPlan} plan allows ${limits.integrations} integrations. Upgrade to Elite for unlimited integrations.`,
+          ? t.integrations.integrationsNotAvailable
+          : t.integrations.planLimitReached.replace('{plan}', userPlan).replace('{count}', limits.integrations.toString()),
         variant: 'destructive',
       });
       return;
@@ -384,8 +386,8 @@ const Integrations = () => {
 
         if (error) throw error;
         toast({
-          title: 'Integration Updated',
-          description: 'Your integration has been updated successfully.',
+          title: t.integrations.integrationUpdated,
+          description: t.integrations.integrationUpdatedDescription,
         });
       } else {
         const { error } = await supabase
@@ -394,8 +396,8 @@ const Integrations = () => {
 
         if (error) throw error;
         toast({
-          title: 'Integration Created',
-          description: 'Your integration has been created successfully.',
+          title: t.integrations.integrationCreated,
+          description: t.integrations.integrationCreatedDescription,
         });
       }
 
@@ -405,15 +407,15 @@ const Integrations = () => {
     } catch (error: any) {
       console.error('Error saving integration:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to save integration',
+        title: t.common.error,
+        description: error.message || t.integrations.failedToSave,
         variant: 'destructive',
       });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this integration?')) return;
+    if (!confirm(t.integrations.confirmDelete)) return;
 
     try {
       const { error } = await supabase
@@ -423,15 +425,15 @@ const Integrations = () => {
 
       if (error) throw error;
       toast({
-        title: 'Integration Deleted',
-        description: 'Your integration has been deleted successfully.',
+        title: t.integrations.integrationDeleted,
+        description: t.integrations.integrationDeletedDescription,
       });
       fetchIntegrations();
     } catch (error) {
       console.error('Error deleting integration:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to delete integration',
+        title: t.common.error,
+        description: t.integrations.failedToDelete,
         variant: 'destructive',
       });
     }
@@ -539,9 +541,9 @@ const Integrations = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-display font-bold tracking-tight">Integrations</h1>
+          <h1 className="text-3xl font-display font-bold tracking-tight">{t.integrations.title}</h1>
           <p className="text-muted-foreground mt-2">
-            Connect your trading signals to Discord, Slack, Telegram, WhatsApp, and more
+            {t.integrations.subtitle}
           </p>
         </div>
 
@@ -549,7 +551,7 @@ const Integrations = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Start typing to filter..."
+            placeholder={t.common.search}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -558,7 +560,7 @@ const Integrations = () => {
 
         {/* Available Integrations Grid */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Available Integrations</h2>
+          <h2 className="text-xl font-semibold mb-4">{t.integrations.availableIntegrations}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredIntegrations.map((integration) => {
               const isConfigured = integrations.some(
@@ -601,7 +603,7 @@ const Integrations = () => {
                         <div className="flex items-center justify-between mb-1">
                           <h3 className="font-semibold text-base">{integration.name}</h3>
                           {isConfigured && (
-                            <Badge variant="outline" className="text-xs">Configured</Badge>
+                            <Badge variant="outline" className="text-xs">{t.integrations.configured}</Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -626,7 +628,7 @@ const Integrations = () => {
         {/* Configured Integrations */}
         {integrations.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Your Integrations</h2>
+            <h2 className="text-xl font-semibold mb-4">{t.integrations.yourIntegrations}</h2>
             <div className="grid gap-4">
               {integrations.map((integration) => {
                 const integrationType = integration.integration_type || integration.type || 'discord';
@@ -674,12 +676,12 @@ const Integrations = () => {
                                 </Badge>
                               ) : (
                                 <Badge variant="secondary" className="text-xs">
-                                  All Strategies
+                                  {t.integrations.allStrategies}
                                 </Badge>
                               )}
                               <div className="flex items-center gap-1">
                                 {getStatusIcon(integration.status)}
-                                <span className="text-xs text-muted-foreground">{integration.status}</span>
+                                <span className="text-xs text-muted-foreground">{integration.status === 'active' ? t.integrations.active : integration.status === 'inactive' ? t.integrations.inactive : integration.status}</span>
                               </div>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
@@ -691,10 +693,10 @@ const Integrations = () => {
                             </p>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
                               {integration.last_used_at && (
-                                <span>Last used: {formatDateTime(integration.last_used_at, preferences.dateFormat)}</span>
+                                <span>{t.integrations.lastUsed.replace('{date}', formatDateTime(integration.last_used_at, preferences.dateFormat))}</span>
                               )}
                               {integration.error_message && (
-                                <span className="text-red-500">Error: {integration.error_message}</span>
+                                <span className="text-red-500">{t.integrations.error.replace('{message}', integration.error_message)}</span>
                               )}
                             </div>
                           </div>
@@ -734,36 +736,36 @@ const Integrations = () => {
           <DialogContent className="max-w-2xl max-h-[85vh] p-0 flex flex-col overflow-hidden">
             <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shrink-0">
               <DialogTitle className="font-display">
-                {editingIntegration ? 'Edit Integration' : `Configure ${selectedIntegration?.name || 'Integration'}`}
+                {editingIntegration ? t.integrations.editIntegration : t.integrations.configureIntegration.replace('{name}', selectedIntegration?.name || 'Integration')}
               </DialogTitle>
               <DialogDescription>
-                {selectedIntegration?.description || 'Configure your integration settings'}
+                {selectedIntegration?.description || t.integrations.integrationDescription}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scrollbar-minimal">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t.integrations.name}</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="My Integration"
+                  placeholder={t.integrations.namePlaceholder}
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="strategy_id">Strategy (Optional - leave empty for all strategies)</Label>
+                <Label htmlFor="strategy_id">{t.integrations.strategyOptional}</Label>
                 <Select
                   value={formData.strategy_id}
                   onValueChange={(value) => setFormData({ ...formData, strategy_id: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a strategy" />
+                    <SelectValue placeholder={t.integrations.selectStrategy} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Strategies</SelectItem>
+                    <SelectItem value="all">{t.integrations.allStrategies}</SelectItem>
                     {strategies.map((strategy) => (
                       <SelectItem key={strategy.id} value={strategy.id}>
                         {strategy.name}
@@ -779,19 +781,19 @@ const Integrations = () => {
                 formData.integration_type === 'google-chat' || formData.integration_type === 'pushover' ||
                 formData.integration_type === 'ntfy') && (
                 <div>
-                  <Label htmlFor="webhook_url">Webhook URL</Label>
+                  <Label htmlFor="webhook_url">{t.integrations.webhookUrl}</Label>
                   <Input
                     id="webhook_url"
                     type="url"
                     value={formData.webhook_url}
                     onChange={(e) => setFormData({ ...formData, webhook_url: e.target.value })}
-                    placeholder="https://..."
+                    placeholder={t.integrations.webhookUrlPlaceholder}
                     required
                   />
                   {selectedIntegration?.docsUrl && (
                     <p className="text-xs text-muted-foreground mt-1">
                       <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        How to get webhook URL
+                        {t.integrations.howToGetWebhook}
                       </a>
                     </p>
                   )}
@@ -818,7 +820,7 @@ const Integrations = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="auth_header">Authorization Header (Optional)</Label>
+                    <Label htmlFor="auth_header">Authorization Header ({t.common.optional})</Label>
                     <Input
                       id="auth_header"
                       value={formData.auth_header || ''}
@@ -830,7 +832,7 @@ const Integrations = () => {
                     </p>
                   </div>
                   <div>
-                    <Label htmlFor="payload_template">Payload Template (Optional)</Label>
+                    <Label htmlFor="payload_template">Payload Template ({t.common.optional})</Label>
                     <textarea
                       id="payload_template"
                       className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
@@ -875,7 +877,7 @@ const Integrations = () => {
                   {selectedIntegration?.docsUrl && (
                     <p className="text-xs text-muted-foreground">
                       <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        How to get bot token and chat ID
+                        {t.integrations.howToGetBotToken}
                       </a>
                     </p>
                   )}
@@ -916,7 +918,7 @@ const Integrations = () => {
                   {selectedIntegration?.docsUrl && (
                     <p className="text-xs text-muted-foreground">
                       <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        How to set up WhatsApp integration
+                        {t.integrations.howToSetupWhatsApp}
                       </a>
                     </p>
                   )}
@@ -1065,14 +1067,14 @@ const Integrations = () => {
                       checked={formData.enabled}
                       onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
                     />
-                    <Label>Enabled</Label>
+                    <Label>{t.integrations.enabled}</Label>
                   </div>
                   <div className="flex gap-2">
                     <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                      Cancel
+                      {t.integrations.cancel}
                     </Button>
                     <Button type="submit">
-                      {editingIntegration ? 'Update' : 'Create'} Integration
+                      {editingIntegration ? t.integrations.updateIntegration : t.integrations.createIntegration}
                     </Button>
                   </div>
                 </div>
