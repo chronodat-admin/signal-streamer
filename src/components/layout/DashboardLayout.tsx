@@ -262,9 +262,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           {/* Navigation */}
           <nav className="flex-1 p-3 space-y-1.5">
-            {!collapsed && (
-              <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Menu</p>
-            )}
             {navigation.map((item) => (
               <NavItem key={item.name} item={item} />
             ))}
