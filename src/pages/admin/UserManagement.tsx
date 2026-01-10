@@ -15,7 +15,9 @@ import {
   TrendingUp, 
   Search,
   ChevronDown,
-  Loader2
+  Loader2,
+  MapPin,
+  Globe
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,6 +27,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatDate } from '@/lib/formatUtils';
 
+// Convert country code to flag emoji
+const getCountryFlag = (countryCode: string): string => {
+  if (!countryCode || countryCode.length !== 2) return '🌍';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
+
 interface UserProfile {
   id: string;
   user_id: string;
@@ -32,6 +44,10 @@ interface UserProfile {
   full_name: string | null;
   plan: 'FREE' | 'PRO' | 'ELITE';
   created_at: string;
+  country: string | null;
+  country_code: string | null;
+  city: string | null;
+  last_login_at: string | null;
   roles?: { role: 'admin' | 'moderator' | 'user' }[];
 }
 
@@ -43,6 +59,8 @@ interface UserStats {
   joinedToday: number;
   joinedThisWeek: number;
   joinedThisMonth: number;
+  topCountries: { country: string; countryCode: string; count: number }[];
+  usersWithLocation: number;
 }
 
 export const UserManagement = () => {
@@ -58,7 +76,10 @@ export const UserManagement = () => {
     joinedToday: 0,
     joinedThisWeek: 0,
     joinedThisMonth: 0,
+    topCountries: [],
+    usersWithLocation: 0,
   });
+  const [countryFilter, setCountryFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchUsers();
@@ -137,6 +158,31 @@ export const UserManagement = () => {
         return createdAt >= thisMonth;
       }).length;
 
+      // Calculate country statistics
+      const countryMap = new Map<string, { country: string; countryCode: string; count: number }>();
+      let usersWithLocation = 0;
+      
+      usersWithRoles.forEach((u) => {
+        if (u.country) {
+          usersWithLocation++;
+          const key = u.country_code || u.country;
+          const existing = countryMap.get(key);
+          if (existing) {
+            existing.count++;
+          } else {
+            countryMap.set(key, { 
+              country: u.country, 
+              countryCode: u.country_code || '', 
+              count: 1 
+            });
+          }
+        }
+      });
+      
+      const topCountries = Array.from(countryMap.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
       setStats({
         totalUsers: usersWithRoles.length,
         adminUsers: adminCount,
@@ -145,6 +191,8 @@ export const UserManagement = () => {
         joinedToday,
         joinedThisWeek,
         joinedThisMonth,
+        topCountries,
+        usersWithLocation,
       });
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -159,7 +207,9 @@ export const UserManagement = () => {
       const matchesSearch = 
         !searchQuery ||
         user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
+        user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.country?.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Role filter
       const matchesRole = 
@@ -168,9 +218,26 @@ export const UserManagement = () => {
         (roleFilter === 'moderator' && user.roles.some((r) => r.role === 'moderator')) ||
         (roleFilter === 'user' && !user.roles.some((r) => r.role === 'admin' || r.role === 'moderator'));
 
-      return matchesSearch && matchesRole;
+      // Country filter
+      const matchesCountry = 
+        countryFilter === 'all' ||
+        user.country_code === countryFilter ||
+        user.country === countryFilter;
+
+      return matchesSearch && matchesRole && matchesCountry;
     });
-  }, [users, searchQuery, roleFilter]);
+  }, [users, searchQuery, roleFilter, countryFilter]);
+
+  // Get unique countries for filter dropdown
+  const uniqueCountries = useMemo(() => {
+    const countries = new Map<string, string>();
+    users.forEach((user) => {
+      if (user.country && user.country_code) {
+        countries.set(user.country_code, user.country);
+      }
+    });
+    return Array.from(countries.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [users]);
 
   const getUserRole = (user: UserProfile) => {
     if (user.roles.some((r) => r.role === 'admin')) return 'admin';
@@ -246,7 +313,7 @@ export const UserManagement = () => {
       </div>
 
       {/* User Join Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Joined Today</CardTitle>
@@ -280,6 +347,50 @@ export const UserManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Location Statistics Card */}
+      <Card className="mb-8">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            Top Countries
+          </CardTitle>
+          <span className="text-xs text-muted-foreground">
+            {stats.usersWithLocation} of {stats.totalUsers} users have location data
+          </span>
+        </CardHeader>
+        <CardContent>
+          {stats.topCountries.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {stats.topCountries.map((country) => (
+                <button
+                  key={country.countryCode || country.country}
+                  onClick={() => setCountryFilter(country.countryCode || country.country)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                    countryFilter === country.countryCode || countryFilter === country.country
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted/50 hover:bg-muted border-transparent'
+                  }`}
+                >
+                  <span className="text-lg">{getCountryFlag(country.countryCode)}</span>
+                  <span className="font-medium">{country.country}</span>
+                  <Badge variant="secondary" className="ml-1">{country.count}</Badge>
+                </button>
+              ))}
+              {countryFilter !== 'all' && (
+                <button
+                  onClick={() => setCountryFilter('all')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                >
+                  Clear filter
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No location data available yet. Users will be geolocated on their next login.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* All Users Section */}
       <Card>
@@ -316,6 +427,26 @@ export const UserManagement = () => {
                 <DropdownMenuItem onClick={() => setRoleFilter('user')}>User</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Globe className="h-4 w-4" />
+                  {countryFilter === 'all' 
+                    ? 'All Countries' 
+                    : `${getCountryFlag(countryFilter)} ${uniqueCountries.find(([code]) => code === countryFilter)?.[1] || countryFilter}`
+                  }
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="max-h-64 overflow-y-auto">
+                <DropdownMenuItem onClick={() => setCountryFilter('all')}>All Countries</DropdownMenuItem>
+                {uniqueCountries.map(([code, name]) => (
+                  <DropdownMenuItem key={code} onClick={() => setCountryFilter(code)}>
+                    {getCountryFlag(code)} {name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {loading ? (
@@ -329,25 +460,40 @@ export const UserManagement = () => {
                   <TableRow>
                     <TableHead>Email</TableHead>
                     <TableHead>Name</TableHead>
+                    <TableHead>Location</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Plan</TableHead>
+                    <TableHead>Last Login</TableHead>
                     <TableHead>Joined</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No users found
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredUsers.map((user) => {
                       const role = getUserRole(user);
+                      const locationDisplay = user.city && user.country 
+                        ? `${user.city}, ${user.country_code || user.country}`
+                        : user.country || null;
                       return (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">{user.email || 'N/A'}</TableCell>
                           <TableCell>{user.full_name || 'N/A'}</TableCell>
+                          <TableCell>
+                            {locationDisplay ? (
+                              <div className="flex items-center gap-1.5 text-sm">
+                                <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span>{locationDisplay}</span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">—</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Badge className={roleColors[role]}>
                               {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -357,6 +503,13 @@ export const UserManagement = () => {
                             <Badge className={planColors[user.plan]}>
                               {user.plan}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {user.last_login_at ? (
+                              <span className="text-sm">{formatDate(user.last_login_at)}</span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Never</span>
+                            )}
                           </TableCell>
                           <TableCell>{formatDate(user.created_at)}</TableCell>
                         </TableRow>

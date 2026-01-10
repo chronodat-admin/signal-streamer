@@ -1,0 +1,56 @@
+/**
+ * Shared CORS headers for Supabase Edge Functions
+ * 
+ * Usage:
+ * ```ts
+ * import { corsHeaders, handleCors } from "../_shared/cors.ts";
+ * 
+ * // In your handler:
+ * if (req.method === "OPTIONS") {
+ *   return handleCors();
+ * }
+ * 
+ * // In your response:
+ * return new Response(JSON.stringify(data), {
+ *   headers: { ...corsHeaders, "Content-Type": "application/json" },
+ *   status: 200,
+ * });
+ * ```
+ */
+
+export const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-vercel-proxy-secret",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
+
+/**
+ * Handle CORS preflight request
+ */
+export function handleCors(): Response {
+  return new Response(null, {
+    headers: corsHeaders,
+    status: 200,
+  });
+}
+
+/**
+ * Create a JSON response with CORS headers
+ */
+export function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status,
+  });
+}
+
+/**
+ * Create an error response with CORS headers
+ */
+export function errorResponse(message: string, status = 500): Response {
+  return new Response(JSON.stringify({ error: message }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status,
+  });
+}
+

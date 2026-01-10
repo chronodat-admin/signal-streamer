@@ -207,40 +207,58 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          city: string | null
+          country: string | null
+          country_code: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          last_login_at: string | null
+          last_login_ip: string | null
           plan: Database["public"]["Enums"]["plan_type"]
           plan_expires_at: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          timezone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          last_login_at?: string | null
+          last_login_ip?: string | null
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_expires_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          timezone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          last_login_at?: string | null
+          last_login_ip?: string | null
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_expires_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          timezone?: string | null
           updated_at?: string
           user_id?: string
         }

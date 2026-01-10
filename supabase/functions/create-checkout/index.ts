@@ -1,12 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+import { 
+  corsHeaders, 
+  handleCors, 
+  getClientIP, 
+  getGeoLocation, 
+  createLocationSummary,
+  createAuditLogger 
+} from "../_shared/index.ts";
 
 const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -15,14 +17,15 @@ const logStep = (step: string, details?: unknown) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200 
-    });
+    return handleCors();
   }
 
   try {
     logStep("Function started");
+
+    // Get client IP and location early for logging
+    const clientIP = getClientIP(req);
+    logStep("Client IP detected", { ip: clientIP });
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -44,6 +47,9 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // Get user's geolocation (non-blocking, we'll log it after checkout creation)
+    const geoPromise = getGeoLocation(clientIP);
 
     const body = await req.json();
     let priceId: string;
@@ -100,6 +106,28 @@ serve(async (req) => {
     });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
+
+    // Log the checkout attempt with geolocation (async, don't block response)
+    geoPromise.then(async (geoResult) => {
+      const locationSummary = createLocationSummary(geoResult.data);
+      logStep("User location", locationSummary);
+      
+      // Log audit event with location
+      const auditLogger = createAuditLogger(supabaseClient);
+      await auditLogger.log({
+        req,
+        userId: user.id,
+        eventType: "SUBSCRIPTION_CREATED",
+        metadata: {
+          checkout_session_id: session.id,
+          price_id: priceId,
+          location: locationSummary,
+        },
+        includeLocation: false, // Already have it
+      });
+    }).catch((err) => {
+      console.error("[CREATE-CHECKOUT] Geolocation/audit logging failed:", err);
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
