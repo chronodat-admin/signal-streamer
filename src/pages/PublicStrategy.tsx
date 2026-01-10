@@ -10,6 +10,9 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { useLanguage } from '@/i18n';
 import StrategyDiscussion from '@/components/strategy/StrategyDiscussion';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { ColorSchemePicker } from '@/components/ColorSchemePicker';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Strategy {
   id: string;
@@ -216,7 +219,7 @@ const PublicStrategy = () => {
             <Activity className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">TradeOrin</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {owner && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
@@ -225,6 +228,12 @@ const PublicStrategy = () => {
                 </span>
               </div>
             )}
+            {/* Appearance Controls */}
+            <div className="flex items-center gap-1 border-l border-border pl-3 ml-3">
+              <LanguageSwitcher />
+              <ColorSchemePicker />
+              <ThemeToggle />
+            </div>
             <Link to="/auth">
               <Button size="sm">{t.publicStrategy.getStarted}</Button>
             </Link>
