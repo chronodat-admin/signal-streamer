@@ -12,3 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap location
+Sitemap: https://signal-streamer.vercel.app/sitemap.xml
+
+# Disallow admin and dashboard pages from indexing
+Disallow: /dashboard
+Disallow: /admin
