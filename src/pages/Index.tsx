@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
+import { FooterDisclaimer } from '@/components/FooterDisclaimer';
 
 // Simulated live signals for the hero visualization
 const generateSignal = () => {
@@ -725,6 +726,12 @@ const Index = () => {
               </ul>
             </div>
           </div>
+          
+          {/* Disclaimer */}
+          <div className="mb-8">
+            <FooterDisclaimer />
+          </div>
+
           <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-sm text-muted-foreground">
               © 2026 SignalPulse. All rights reserved.

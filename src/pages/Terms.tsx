@@ -135,44 +135,94 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="font-heading text-2xl font-semibold mb-4">9. Trading Risk Disclaimer</h2>
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                <p className="text-muted-foreground leading-relaxed">
-                  <strong className="text-foreground">Important:</strong> Trading in financial markets involves substantial risk of loss and is not suitable for all investors. Past performance is not indicative of future results. SignalPulse does not guarantee the accuracy, completeness, or timeliness of any signal data. You are solely responsible for your trading decisions.
+              <h2 className="font-heading text-2xl font-semibold mb-4">9. Platform Disclaimer</h2>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-5 mb-4">
+                <p className="text-sm text-muted-foreground leading-relaxed uppercase tracking-wide">
+                  <strong className="text-foreground block mb-3">IMPORTANT – PLEASE READ CAREFULLY:</strong>
+                  SIGNALPULSE IS A SIGNAL ROUTING AND NOTIFICATION PLATFORM THAT ALLOWS USERS TO RECEIVE, MANAGE, AND FORWARD TRADING ALERTS FROM THEIR CHOSEN ALERT SOURCES (SUCH AS TRADINGVIEW, TRENDSPIDER, OR CUSTOM APIS) TO THEIR PREFERRED NOTIFICATION CHANNELS (SUCH AS DISCORD, TELEGRAM, EMAIL, OR WEBHOOKS).
                 </p>
+              </div>
+              <div className="space-y-4">
+                <div className="bg-muted/50 border border-border rounded-lg p-4">
+                  <h4 className="font-semibold text-sm mb-2">No Trading Advice</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    SignalPulse does not generate, provide, or recommend any trading signals, alerts, investment advice, market analysis, or research of any kind. We do not recommend any securities, cryptocurrencies, forex pairs, or other financial instruments to buy, sell, or hold. The platform is designed solely to assist traders and investors in organizing and receiving their own trading alerts. All trading decisions are made entirely by the user based on their own judgment and analysis.
+                  </p>
+                </div>
+                <div className="bg-muted/50 border border-border rounded-lg p-4">
+                  <h4 className="font-semibold text-sm mb-2">No Delivery Guarantees</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    SignalPulse shall not be liable for any delays, failures, or interruptions in the delivery of alerts or notifications. We do not guarantee real-time delivery or 100% uptime. Signal delivery depends on third-party services and network conditions outside our control.
+                  </p>
+                </div>
               </div>
             </section>
 
             <section>
-              <h2 className="font-heading text-2xl font-semibold mb-4">10. Indemnification</h2>
+              <h2 className="font-heading text-2xl font-semibold mb-4">10. Trading Risk Disclaimer</h2>
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-5">
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  <strong className="text-foreground">⚠️ HIGH RISK WARNING:</strong>
+                </p>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="text-destructive">•</span>
+                    Trading and investing in financial markets involves substantial risk of loss and is not suitable for all investors.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-destructive">•</span>
+                    Past performance is not indicative of future results.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-destructive">•</span>
+                    You should only trade with capital you can afford to lose.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-destructive">•</span>
+                    Consult with a qualified financial advisor before making any investment decisions.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-destructive">•</span>
+                    SignalPulse does not guarantee the accuracy, completeness, or timeliness of any signal data.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-destructive">•</span>
+                    You are solely responsible for your trading decisions and any resulting gains or losses.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="font-heading text-2xl font-semibold mb-4">11. Indemnification</h2>
               <p className="text-muted-foreground leading-relaxed">
                 You agree to indemnify and hold harmless SignalPulse and its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service or violation of these Terms.
               </p>
             </section>
 
             <section>
-              <h2 className="font-heading text-2xl font-semibold mb-4">11. Termination</h2>
+              <h2 className="font-heading text-2xl font-semibold mb-4">12. Termination</h2>
               <p className="text-muted-foreground leading-relaxed">
                 We may terminate or suspend your account and access to the Service immediately, without prior notice, for any reason, including breach of these Terms. Upon termination, your right to use the Service will cease immediately. You may request export of your data before account deletion.
               </p>
             </section>
 
             <section>
-              <h2 className="font-heading text-2xl font-semibold mb-4">12. Governing Law</h2>
+              <h2 className="font-heading text-2xl font-semibold mb-4">13. Governing Law</h2>
               <p className="text-muted-foreground leading-relaxed">
                 These Terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles. Any disputes arising from these Terms or the Service shall be resolved through binding arbitration.
               </p>
             </section>
 
             <section>
-              <h2 className="font-heading text-2xl font-semibold mb-4">13. Severability</h2>
+              <h2 className="font-heading text-2xl font-semibold mb-4">14. Severability</h2>
               <p className="text-muted-foreground leading-relaxed">
                 If any provision of these Terms is found to be unenforceable, the remaining provisions will continue in full force and effect.
               </p>
             </section>
 
             <section>
-              <h2 className="font-heading text-2xl font-semibold mb-4">14. Contact Information</h2>
+              <h2 className="font-heading text-2xl font-semibold mb-4">15. Contact Information</h2>
               <p className="text-muted-foreground leading-relaxed">
                 For questions about these Terms, please contact us at{' '}
                 <a href="mailto:legal@signalpulse.io" className="text-primary hover:underline">

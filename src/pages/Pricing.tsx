@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Activity, Check, X, ArrowLeft, ArrowUpRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { FooterDisclaimer } from '@/components/FooterDisclaimer';
 
 const plans = [
   {
@@ -302,13 +303,20 @@ const Pricing = () => {
       {/* Footer */}
       <footer className="border-t border-border py-12 px-6 mt-12">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Disclaimer */}
+          <div className="mb-8">
+            <FooterDisclaimer compact />
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
             <Link to="/" className="flex items-center gap-2">
               <Activity className="h-6 w-6 text-primary" />
               <span className="font-semibold">SignalPulse</span>
             </Link>
-            <div className="text-sm text-muted-foreground">
-              © 2026 SignalPulse. All rights reserved.
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <span>© 2026 SignalPulse</span>
             </div>
           </div>
         </div>
