@@ -267,6 +267,15 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             ))}
           </nav>
 
+          {/* Appearance Controls - Desktop */}
+          <div className={`px-3 py-2 border-t border-border hidden lg:flex items-center ${collapsed ? 'flex-col gap-2' : 'justify-between'}`}>
+            {!collapsed && <span className="text-sm text-muted-foreground">{t.preferences.appearance}</span>}
+            <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-1'}`}>
+              <LanguageSwitcher />
+              <ColorSchemePicker />
+              <ThemeToggle />
+            </div>
+          </div>
 
           {/* User Section */}
           <div className={`p-3 border-t border-border ${collapsed ? 'flex flex-col items-center' : ''}`}>
@@ -376,19 +385,18 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </aside>
 
-      {/* Desktop Top Header */}
-      <header className={`hidden lg:flex fixed top-0 right-0 z-40 h-14 bg-background/95 backdrop-blur-md border-b border-border transition-all duration-300 ${collapsed ? 'left-20' : 'left-72'}`}>
-        <div className="flex items-center justify-end gap-2 px-6 w-full">
-          <div className="flex items-center gap-1">
-            <LanguageSwitcher />
-            <ColorSchemePicker />
-            <ThemeToggle />
+          {/* Appearance Controls - Desktop */}
+          <div className={`px-3 py-2 border-t border-border hidden lg:flex items-center ${collapsed ? 'flex-col gap-2' : 'justify-between'}`}>
+            {!collapsed && <span className="text-sm text-muted-foreground">{t.preferences.appearance}</span>}
+            <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-1'}`}>
+              <LanguageSwitcher />
+              <ColorSchemePicker />
+              <ThemeToggle />
+            </div>
           </div>
-        </div>
-      </header>
 
       {/* Main Content */}
-      <main className={`pt-14 lg:pt-14 min-h-screen transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <main className={`pt-14 lg:pt-0 min-h-screen transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
         <div className="p-6 lg:p-8 max-w-7xl mx-auto">
           {children}
         </div>
