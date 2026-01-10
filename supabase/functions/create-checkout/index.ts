@@ -86,7 +86,7 @@ serve(async (req) => {
       logStep("Found existing Stripe customer", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://signal-streamer.vercel.app";
+    const origin = req.headers.get("origin") || "https://tradeorin.vercel.app";
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

@@ -33,7 +33,7 @@ async function sendDiscordAlert(
     color: color,
     timestamp: payload.signal_time,
     footer: {
-      text: "SignalPulse Trading Signals",
+      text: "TradeOrin Trading Signals",
     },
   };
 
@@ -161,7 +161,7 @@ async function sendSlackAlert(webhookUrl: string, payload: AlertPayload): Promis
             short: false,
           },
         ],
-        footer: "SignalPulse",
+        footer: "TradeOrin",
         ts: Math.floor(new Date(payload.signal_time).getTime() / 1000),
       },
     ],
@@ -243,7 +243,7 @@ async function sendEmailAlert(
         <p><strong>Price:</strong> $${payload.price.toFixed(2)}</p>
         <p><strong>Time:</strong> ${new Date(payload.signal_time).toLocaleString()}</p>
       </div>
-      <p style="color: #666; font-size: 12px;">SignalPulse Trading Signals</p>
+      <p style="color: #666; font-size: 12px;">TradeOrin Trading Signals</p>
     </div>
   `;
   const textBody = `${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}\n\nStrategy: ${payload.strategy_name}\nPrice: $${payload.price.toFixed(2)}\nTime: ${new Date(payload.signal_time).toLocaleString()}`;
@@ -290,7 +290,7 @@ async function sendEmailAlert(
           "Authorization": `Bearer ${config.api_key}`,
         },
         body: JSON.stringify({
-          from: config.from_email || "alerts@signalpulse.com",
+          from: config.from_email || "alerts@tradeorin.com",
           to: toEmail,
           subject: subject,
           html: htmlBody,
@@ -329,7 +329,7 @@ async function sendEmailAlert(
         },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: toEmail }] }],
-          from: { email: config.from_email || "alerts@signalpulse.com" },
+          from: { email: config.from_email || "alerts@tradeorin.com" },
           subject: subject,
           content: [
             { type: "text/plain", value: textBody },
@@ -380,7 +380,7 @@ async function sendEmailAlert(
 
         // Send the email
         await client.send({
-          from: config.from_email || config.smtp_user || "alerts@signalpulse.com",
+          from: config.from_email || config.smtp_user || "alerts@tradeorin.com",
           to: toEmail,
           subject: subject,
           content: textBody,

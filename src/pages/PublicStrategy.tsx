@@ -191,7 +191,7 @@ const PublicStrategy = () => {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <Activity className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">SignalPulse</span>
+            <span className="text-xl font-bold">TradeOrin</span>
           </Link>
           <Link to="/auth">
             <Button size="sm">Get Started</Button>

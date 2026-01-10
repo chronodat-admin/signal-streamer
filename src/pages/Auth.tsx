@@ -114,7 +114,7 @@ const Auth = () => {
         
         toast({
           title: 'Account Created!',
-          description: 'Welcome to SignalPulse. Let\'s set up your first strategy!',
+          description: 'Welcome to TradeOrin. Let\'s set up your first strategy!',
         });
         navigate('/dashboard');
       }
@@ -171,7 +171,7 @@ const Auth = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
           <Activity className="h-10 w-10 text-primary" />
-          <span className="text-2xl font-bold">SignalPulse</span>
+          <span className="text-2xl font-bold">TradeOrin</span>
         </Link>
 
         {/* Auth Card */}
@@ -183,7 +183,7 @@ const Auth = () => {
             <p className="text-muted-foreground">
               {isLogin
                 ? 'Sign in to access your dashboard'
-                : 'Get started with SignalPulse'}
+                : 'Get started with TradeOrin'}
             </p>
           </div>
 

@@ -129,7 +129,7 @@ export default function Contact() {
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                   <MessageSquare className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-bold text-lg">SignalPulse</span>
+                <span className="font-bold text-lg">TradeOrin</span>
               </Link>
               <div className="flex items-center gap-2">
                 <ColorSchemePicker />
@@ -182,7 +182,7 @@ export default function Contact() {
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                 <MessageSquare className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-lg">SignalPulse</span>
+              <span className="font-bold text-lg">TradeOrin</span>
             </Link>
             <div className="flex items-center gap-2">
               <ColorSchemePicker />
@@ -217,8 +217,8 @@ export default function Contact() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <a href="mailto:support@signalpulse.com" className="text-sm text-primary hover:underline">
-                  support@signalpulse.com
+                <a href="mailto:support@tradeorin.com" className="text-sm text-primary hover:underline">
+                  support@tradeorin.com
                 </a>
               </CardContent>
             </Card>

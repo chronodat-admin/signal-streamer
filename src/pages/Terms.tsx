@@ -13,7 +13,7 @@ const Terms = () => {
             <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary to-cyan-500 flex items-center justify-center shadow-lg shadow-primary/25">
               <Activity className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-heading font-bold tracking-tight">SignalPulse</span>
+            <span className="text-xl font-heading font-bold tracking-tight">TradeOrin</span>
           </Link>
           
           <div className="flex items-center gap-2">
@@ -38,14 +38,14 @@ const Terms = () => {
             <section>
               <h2 className="font-heading text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing or using SignalPulse ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not use the Service. We reserve the right to update these Terms at any time, and your continued use of the Service constitutes acceptance of any changes.
+                By accessing or using TradeOrin ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not use the Service. We reserve the right to update these Terms at any time, and your continued use of the Service constitutes acceptance of any changes.
               </p>
             </section>
 
             <section>
               <h2 className="font-heading text-2xl font-semibold mb-4">2. Description of Service</h2>
               <p className="text-muted-foreground leading-relaxed">
-                SignalPulse is a trading signal tracking and analytics platform that allows users to:
+                TradeOrin is a trading signal tracking and analytics platform that allows users to:
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4 mt-4">
                 <li>Receive and store trading signals via webhook integrations</li>
@@ -106,7 +106,7 @@ const Terms = () => {
             <section>
               <h2 className="font-heading text-2xl font-semibold mb-4">6. Intellectual Property</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The Service and its original content, features, and functionality are owned by SignalPulse and are protected by international copyright, trademark, and other intellectual property laws. Your trading data and signals remain your property.
+                The Service and its original content, features, and functionality are owned by TradeOrin and are protected by international copyright, trademark, and other intellectual property laws. Your trading data and signals remain your property.
               </p>
             </section>
 
@@ -118,7 +118,7 @@ const Terms = () => {
                 </p>
               </div>
               <p className="text-muted-foreground leading-relaxed mt-4">
-                SignalPulse is a signal tracking tool only. We do not provide financial advice, and the Service should not be used as the sole basis for any trading decisions.
+                TradeOrin is a signal tracking tool only. We do not provide financial advice, and the Service should not be used as the sole basis for any trading decisions.
               </p>
             </section>
 
@@ -146,13 +146,13 @@ const Terms = () => {
                 <div className="bg-muted/50 border border-border rounded-lg p-4">
                   <h4 className="font-semibold text-sm mb-2">No Trading Advice</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    SignalPulse does not generate, provide, or recommend any trading signals, alerts, investment advice, market analysis, or research of any kind. We do not recommend any securities, cryptocurrencies, forex pairs, or other financial instruments to buy, sell, or hold. The platform is designed solely to assist traders and investors in organizing and receiving their own trading alerts. All trading decisions are made entirely by the user based on their own judgment and analysis.
+                    TradeOrin does not generate, provide, or recommend any trading signals, alerts, investment advice, market analysis, or research of any kind. We do not recommend any securities, cryptocurrencies, forex pairs, or other financial instruments to buy, sell, or hold. The platform is designed solely to assist traders and investors in organizing and receiving their own trading alerts. All trading decisions are made entirely by the user based on their own judgment and analysis.
                   </p>
                 </div>
                 <div className="bg-muted/50 border border-border rounded-lg p-4">
                   <h4 className="font-semibold text-sm mb-2">No Delivery Guarantees</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    SignalPulse shall not be liable for any delays, failures, or interruptions in the delivery of alerts or notifications. We do not guarantee real-time delivery or 100% uptime. Signal delivery depends on third-party services and network conditions outside our control.
+                    TradeOrin shall not be liable for any delays, failures, or interruptions in the delivery of alerts or notifications. We do not guarantee real-time delivery or 100% uptime. Signal delivery depends on third-party services and network conditions outside our control.
                   </p>
                 </div>
               </div>
@@ -183,7 +183,7 @@ const Terms = () => {
                   </li>
                   <li className="flex gap-2">
                     <span className="text-destructive">•</span>
-                    SignalPulse does not guarantee the accuracy, completeness, or timeliness of any signal data.
+                    TradeOrin does not guarantee the accuracy, completeness, or timeliness of any signal data.
                   </li>
                   <li className="flex gap-2">
                     <span className="text-destructive">•</span>
@@ -196,7 +196,7 @@ const Terms = () => {
             <section>
               <h2 className="font-heading text-2xl font-semibold mb-4">11. Indemnification</h2>
               <p className="text-muted-foreground leading-relaxed">
-                You agree to indemnify and hold harmless SignalPulse and its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service or violation of these Terms.
+                You agree to indemnify and hold harmless TradeOrin and its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service or violation of these Terms.
               </p>
             </section>
 
@@ -225,8 +225,8 @@ const Terms = () => {
               <h2 className="font-heading text-2xl font-semibold mb-4">15. Contact Information</h2>
               <p className="text-muted-foreground leading-relaxed">
                 For questions about these Terms, please contact us at{' '}
-                <a href="mailto:legal@signalpulse.io" className="text-primary hover:underline">
-                  legal@signalpulse.io
+                <a href="mailto:legal@tradeorin.com" className="text-primary hover:underline">
+                  legal@tradeorin.com
                 </a>
               </p>
             </section>
@@ -238,7 +238,7 @@ const Terms = () => {
       <footer className="border-t border-border py-8 px-6 bg-muted/10">
         <div className="container mx-auto max-w-3xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2026 SignalPulse. All rights reserved.
+            © 2026 TradeOrin. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>

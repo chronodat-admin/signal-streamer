@@ -13,7 +13,7 @@ export const FooterDisclaimer = ({ compact = false }: FooterDisclaimerProps) => 
           <AlertTriangle className="h-3 w-3" />
           <strong>Risk Disclaimer:</strong>
         </span>{' '}
-        SignalPulse is a signal routing platform only. We do not provide trading advice or recommendations. 
+        TradeOrin is a signal routing platform only. We do not provide trading advice or recommendations. 
         Trading involves substantial risk of loss.{' '}
         <Link to="/terms" className="underline hover:text-foreground">
           Read full disclaimer
@@ -29,7 +29,7 @@ export const FooterDisclaimer = ({ compact = false }: FooterDisclaimerProps) => 
         <div>
           <strong className="text-foreground/70 block mb-1">Important Disclaimer</strong>
           <p>
-            SignalPulse is a signal routing and notification platform that allows users to receive, manage, and forward trading alerts. 
+            TradeOrin is a signal routing and notification platform that allows users to receive, manage, and forward trading alerts. 
             We do not generate, provide, or recommend any trading signals, investment advice, or market analysis. 
             All trading decisions are made entirely by the user. Trading in financial markets involves substantial risk of loss 
             and is not suitable for all investors. Past performance is not indicative of future results. 
