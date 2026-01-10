@@ -119,8 +119,8 @@ const Strategies = () => {
     const { allowed, reason } = await canCreateStrategy(user.id, strategies.length);
     if (!allowed) {
       toast({
-        title: 'Upgrade Required',
-        description: reason || 'You have reached your strategy limit.',
+        title: t.strategies.upgradeRequired,
+        description: reason || t.strategies.upgradeRequiredDescription,
         variant: 'destructive',
       });
       return;
@@ -207,8 +207,8 @@ const Strategies = () => {
   const copyPublicLink = async (strategy: Strategy) => {
     if (!strategy.is_public || !strategy.slug) {
       toast({
-        title: 'Strategy is not public',
-        description: 'Please make the strategy public first.',
+        title: t.strategies.strategyNotPublic,
+        description: t.strategies.strategyNotPublicDescription,
         variant: 'destructive',
       });
       return;
@@ -219,14 +219,14 @@ const Strategies = () => {
       await navigator.clipboard.writeText(publicUrl);
       setCopiedLink(strategy.id);
       toast({
-        title: 'Link copied!',
-        description: 'Public link copied to clipboard.',
+        title: t.strategies.linkCopied,
+        description: t.strategies.linkCopiedDescription,
       });
       setTimeout(() => setCopiedLink(null), 2000);
     } catch (error) {
       toast({
-        title: 'Failed to copy',
-        description: 'Could not copy link to clipboard.',
+        title: t.strategies.failedToCopy,
+        description: t.strategies.failedToCopyDescription,
         variant: 'destructive',
       });
     }
@@ -238,8 +238,8 @@ const Strategies = () => {
       const limits = getPlanLimits(userPlan);
       if (!limits.publicPages) {
         toast({
-          title: 'Upgrade Required',
-          description: 'Public pages are available on Pro and Elite plans. Upgrade to share your strategy publicly.',
+          title: t.strategies.upgradeRequired,
+          description: t.strategies.publicPagesUpgradeRequired,
           variant: 'destructive',
         });
         return;

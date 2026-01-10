@@ -15,6 +15,7 @@ import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { StrategyAnalytics } from '@/components/strategy/StrategyAnalytics';
 import { getUserPlan } from '@/lib/planUtils';
 import { calculateSignalPnL, formatPnL } from '@/lib/pnlUtils';
+import { useLanguage } from '@/i18n';
 
 interface Strategy {
   id: string;
@@ -44,6 +45,7 @@ const StrategyDetail = () => {
   const { user } = useAuth();
   const { preferences } = usePreferences();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [allSignals, setAllSignals] = useState<Signal[]>([]);
@@ -136,13 +138,13 @@ const StrategyDetail = () => {
       setCopied(type);
       setTimeout(() => setCopied(null), 2000);
       toast({
-        title: 'Copied!',
-        description: `${type} copied to clipboard`,
+        title: t.strategyDetail.copied,
+        description: t.strategyDetail.copiedDescription.replace('{type}', type),
       });
     } catch (error) {
       toast({
-        title: 'Failed to copy',
-        description: 'Please try again',
+        title: t.strategyDetail.failedToCopy,
+        description: t.strategyDetail.failedToCopyDescription,
         variant: 'destructive',
       });
     }
@@ -206,8 +208,8 @@ const StrategyDetail = () => {
   const exportCSV = () => {
     if (userPlan === 'FREE') {
       toast({
-        title: 'Upgrade Required',
-        description: 'CSV export is available for Pro users. Upgrade to unlock.',
+        title: t.strategyDetail.upgradeRequired,
+        description: t.strategyDetail.upgradeRequiredDescription,
         variant: 'destructive',
       });
       return;
@@ -215,15 +217,15 @@ const StrategyDetail = () => {
 
     if (signals.length === 0) {
       toast({
-        title: 'No Data',
-        description: 'There are no signals to export.',
+        title: t.strategyDetail.noData,
+        description: t.strategyDetail.noDataDescription,
         variant: 'destructive',
       });
       return;
     }
 
     // Create CSV content
-    const headers = ['Signal Type', 'Symbol', 'Price', 'Interval', 'Time', 'Created At'];
+    const headers = [t.strategyDetail.signal, t.strategyDetail.symbol, t.strategyDetail.price, t.strategyDetail.interval, t.strategyDetail.time, 'Created At'];
     const rows = signals.map((signal) => [
       signal.signal_type,
       signal.symbol,
@@ -250,8 +252,8 @@ const StrategyDetail = () => {
     document.body.removeChild(link);
 
     toast({
-      title: 'Export Successful',
-      description: `Exported ${signals.length} signals to CSV`,
+      title: t.strategyDetail.exportSuccessful,
+      description: t.strategyDetail.exportSuccessfulDescription.replace('{count}', signals.length.toString()),
     });
   };
 
@@ -272,7 +274,7 @@ const StrategyDetail = () => {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Loading strategy...</p>
+            <p className="text-sm text-muted-foreground">{t.strategyDetail.loadingStrategy}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -283,9 +285,9 @@ const StrategyDetail = () => {
     return (
       <DashboardLayout>
         <div className="text-center py-20">
-          <h2 className="text-xl font-semibold">Strategy not found</h2>
+          <h2 className="text-xl font-semibold">{t.strategyDetail.strategyNotFound}</h2>
           <Link to="/dashboard/strategies">
-            <Button className="mt-4">Back to Strategies</Button>
+            <Button className="mt-4">{t.strategyDetail.backToStrategies}</Button>
           </Link>
         </div>
       </DashboardLayout>
@@ -306,7 +308,7 @@ const StrategyDetail = () => {
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold tracking-tight">{strategy.name}</h1>
               {strategy.is_public && (
-                <Badge className="signal-buy border">Public</Badge>
+                <Badge className="signal-buy border">{t.strategyDetail.public}</Badge>
               )}
             </div>
             {strategy.description && (
@@ -317,7 +319,7 @@ const StrategyDetail = () => {
             <Link to={`/s/${strategy.slug}`} target="_blank">
               <Button variant="outline" className="gap-2">
                 <ExternalLink className="h-4 w-4" />
-                View Public Page
+                {t.strategyDetail.viewPublicPage}
               </Button>
             </Link>
           )}
@@ -327,15 +329,15 @@ const StrategyDetail = () => {
           <TabsList className="h-10 p-1 bg-muted/50">
             <TabsTrigger value="analytics" className="gap-2 h-10 px-4">
               <BarChart3 className="h-4 w-4" />
-              Analytics
+              {t.strategyDetail.analyticsTab}
             </TabsTrigger>
             <TabsTrigger value="signals" className="gap-2 h-10 px-4">
               <Clock className="h-4 w-4" />
-              Signals ({signals.length})
+              {t.strategyDetail.signalsTab} ({signals.length})
             </TabsTrigger>
             <TabsTrigger value="setup" className="gap-2 h-10 px-4">
               <Webhook className="h-4 w-4" />
-              Setup
+              {t.strategyDetail.setupTab}
             </TabsTrigger>
           </TabsList>
 
@@ -348,7 +350,7 @@ const StrategyDetail = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                          Total P&L
+                          {t.strategyDetail.totalPnL}
                         </p>
                         <p className={`text-2xl font-semibold ${formatPnL(pnlData.totalPnL).className}`}>
                           {formatPnL(pnlData.totalPnL).value}
@@ -364,7 +366,7 @@ const StrategyDetail = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                          Win Rate
+                          {t.strategyDetail.winRate}
                         </p>
                         <p className="text-2xl font-semibold">
                           {((pnlData.winningTrades / pnlData.totalTrades) * 100).toFixed(1)}%
@@ -380,11 +382,11 @@ const StrategyDetail = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                          Total Trades
+                          {t.strategyDetail.totalTrades}
                         </p>
                         <p className="text-2xl font-semibold">{pnlData.totalTrades}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {pnlData.winningTrades}W / {pnlData.losingTrades}L
+                          {pnlData.winningTrades}{t.strategyDetail.wins} / {pnlData.losingTrades}{t.strategyDetail.losses}
                         </p>
                       </div>
                       <BarChart3 className="h-5 w-5 text-primary" />
@@ -397,13 +399,13 @@ const StrategyDetail = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                          Avg Gain
+                          {t.strategyDetail.avgGain}
                         </p>
                         <p className="text-2xl font-semibold text-buy">
                           {pnlData.avgGain > 0 ? `+${pnlData.avgGain.toFixed(2)}%` : '—'}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Avg Loss: {pnlData.avgLoss > 0 ? `-${pnlData.avgLoss.toFixed(2)}%` : '—'}
+                          {t.strategyDetail.avgLoss}: {pnlData.avgLoss > 0 ? `-${pnlData.avgLoss.toFixed(2)}%` : '—'}
                         </p>
                       </div>
                       <TrendingUp className="h-5 w-5 text-buy" />
@@ -419,7 +421,7 @@ const StrategyDetail = () => {
             <div className="flex justify-end">
               <Button variant="outline" className="gap-2" onClick={exportCSV}>
                 <Download className="h-4 w-4" />
-                Export CSV
+                {t.strategyDetail.exportCSV}
               </Button>
             </div>
 
@@ -428,9 +430,9 @@ const StrategyDetail = () => {
                 {signals.length === 0 ? (
                   <div className="text-center py-16">
                     <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No signals yet</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t.strategyDetail.noSignalsYet}</h3>
                     <p className="text-muted-foreground">
-                      Signals will appear here when TradingView sends webhooks
+                      {t.strategyDetail.noSignalsDescription}
                     </p>
                   </div>
                 ) : (
@@ -438,11 +440,11 @@ const StrategyDetail = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Signal</TableHead>
-                          <TableHead>Symbol</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Interval</TableHead>
-                          <TableHead>Time</TableHead>
+                          <TableHead>{t.strategyDetail.signal}</TableHead>
+                          <TableHead>{t.strategyDetail.symbol}</TableHead>
+                          <TableHead>{t.strategyDetail.price}</TableHead>
+                          <TableHead>{t.strategyDetail.interval}</TableHead>
+                          <TableHead>{t.strategyDetail.time}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -477,9 +479,9 @@ const StrategyDetail = () => {
             {/* Webhook URL */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">1. Webhook URL</CardTitle>
+                <CardTitle className="text-lg">{t.strategyDetail.webhookUrlTitle}</CardTitle>
                 <CardDescription>
-                  Copy this URL and paste it into TradingView alert settings
+                  {t.strategyDetail.webhookDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -506,9 +508,9 @@ const StrategyDetail = () => {
             {/* JSON Template */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">2. Alert Message (JSON)</CardTitle>
+                <CardTitle className="text-lg">{t.strategyDetail.alertMessageTitle}</CardTitle>
                 <CardDescription>
-                  Use this JSON template in your TradingView alert message
+                  {t.strategyDetail.alertFormatDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -529,27 +531,36 @@ const StrategyDetail = () => {
                     )}
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground mt-3 space-y-1">
+                <div className="text-sm text-muted-foreground mt-3 space-y-1">
                   <div>
-                    The <code className="bg-muted px-1.5 py-0.5 rounded">signal</code> field uses 
-                    {' '}<code className="bg-muted px-1.5 py-0.5 rounded">{'{{strategy.order.action}}'}</code> which will automatically 
-                    {' '}be replaced with BUY, SELL, etc. by TradingView.
+                    {t.strategyDetail.jsonTemplateDescription
+                      .replace('{field}', t.strategyDetail.signalField)
+                      .split('{placeholder}').map((part, i, arr) => 
+                        i === arr.length - 1 ? (
+                          <span key={i}>{part}</span>
+                        ) : (
+                          <span key={i}>
+                            {part}
+                            <code className="bg-muted px-1.5 py-0.5 rounded">{'{{strategy.order.action}}'}</code>
+                          </span>
+                        )
+                      )}
                   </div>
-                </p>
+                </div>
               </CardContent>
             </Card>
 
             {/* Setup Steps */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">3. Setup Steps</CardTitle>
+                <CardTitle className="text-lg">{t.strategyDetail.setupStepsTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  { step: 1, title: 'Create TradingView Alert', desc: 'In TradingView, right-click on your chart and select "Add Alert"' },
-                  { step: 2, title: 'Enable Webhook', desc: 'Check "Webhook URL" and paste the URL from step 1' },
-                  { step: 3, title: 'Set Message', desc: 'In the "Message" field, paste the JSON template from step 2' },
-                  { step: 4, title: 'Save Alert', desc: 'Click "Create" and your signals will appear here in real-time' },
+                  { step: 1, title: t.strategyDetail.step1Title, desc: t.strategyDetail.step1Description },
+                  { step: 2, title: t.strategyDetail.step2Title, desc: t.strategyDetail.step2Description },
+                  { step: 3, title: t.strategyDetail.step3Title, desc: t.strategyDetail.step3Description },
+                  { step: 4, title: t.strategyDetail.step4Title, desc: t.strategyDetail.step4Description },
                 ].map((item) => (
                   <div key={item.step} className="flex gap-4">
                     <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
@@ -567,14 +578,14 @@ const StrategyDetail = () => {
             {/* Test with cURL */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">4. Test Your Webhook</CardTitle>
+                <CardTitle className="text-lg">{t.strategyDetail.testWebhookTitle}</CardTitle>
                 <CardDescription>
-                  Test your webhook integration before setting up TradingView alerts
+                  {t.strategyDetail.testWebhookDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2">Bash / Mac / Linux:</h4>
+                  <h4 className="font-medium mb-2">{t.strategyDetail.bashMacLinux}</h4>
                   <div className="relative">
                     <pre className="bg-muted/50 px-4 py-3 rounded-xl font-mono text-xs overflow-x-auto whitespace-pre-wrap">
                       {curlCommand}
@@ -595,7 +606,7 @@ const StrategyDetail = () => {
                 </div>
 
                 <div>
-                  <h4 className="font-medium mb-2">Windows (Command Prompt):</h4>
+                  <h4 className="font-medium mb-2">{t.strategyDetail.windowsCommandPrompt}</h4>
                   <div className="relative">
                     <pre className="bg-muted/50 px-4 py-3 rounded-xl font-mono text-xs overflow-x-auto whitespace-pre-wrap">
                       {curlCommandWindows}
@@ -616,18 +627,18 @@ const StrategyDetail = () => {
                 </div>
 
                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
-                  <h4 className="font-medium text-emerald-600 dark:text-emerald-400 mb-2">Using Postman?</h4>
+                  <h4 className="font-medium text-emerald-600 dark:text-emerald-400 mb-2">{t.strategyDetail.usingPostman}</h4>
                   <div className="text-sm text-muted-foreground space-y-1">
-                    <p><strong>Method:</strong> POST</p>
-                    <p><strong>URL:</strong> {webhookUrl}</p>
-                    <p><strong>Headers:</strong> Content-Type: application/json</p>
-                    <p><strong>Body:</strong> Copy the JSON template from step 2 (replace TradingView variables with test values)</p>
+                    <p><strong>{t.strategyDetail.method}:</strong> POST</p>
+                    <p><strong>{t.strategyDetail.url}:</strong> {webhookUrl}</p>
+                    <p><strong>{t.strategyDetail.headers}:</strong> Content-Type: application/json</p>
+                    <p><strong>{t.strategyDetail.body}:</strong> {t.strategyDetail.bodyDescription}</p>
                   </div>
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                  <strong>Expected response:</strong>{' '}
-                  <code className="bg-muted px-1.5 py-0.5 rounded">{'{"success":true,"message":"Signal received"}'}</code>
+                  <strong>{t.strategyDetail.expectedResponse}</strong>{' '}
+                  <code className="bg-muted px-1.5 py-0.5 rounded">{t.strategyDetail.expectedResponseValue}</code>
                 </p>
               </CardContent>
             </Card>

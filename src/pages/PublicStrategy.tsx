@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Activity, TrendingUp, TrendingDown, Clock, ArrowLeft, Loader2, Lock } from 'lucide-react';
+import { Activity, TrendingUp, TrendingDown, Clock, ArrowLeft, Loader2, Lock, User } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
+import { useLanguage } from '@/i18n';
+import StrategyDiscussion from '@/components/strategy/StrategyDiscussion';
 
 interface Strategy {
   id: string;
@@ -17,6 +19,12 @@ interface Strategy {
   timeframe: string | null;
   is_public: boolean;
   created_at: string;
+  user_id: string;
+}
+
+interface OwnerProfile {
+  full_name: string | null;
+  email: string | null;
 }
 
 interface Signal {
@@ -38,11 +46,13 @@ interface Stats {
 const PublicStrategy = () => {
   const { slug } = useParams<{ slug: string }>();
   const { preferences } = usePreferences();
+  const { t } = useLanguage();
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, buys: 0, sells: 0, latestSignal: null });
   const [loading, setLoading] = useState(true);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [owner, setOwner] = useState<OwnerProfile | null>(null);
 
   useEffect(() => {
     if (slug) {
@@ -88,6 +98,19 @@ const PublicStrategy = () => {
       }
 
       setStrategy(strategyData);
+
+      // Fetch owner profile
+      if (strategyData.user_id) {
+        const { data: ownerData } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('user_id', strategyData.user_id)
+          .maybeSingle();
+        
+        if (ownerData) {
+          setOwner(ownerData);
+        }
+      }
 
       // Fetch signals (last 50)
       const { data: signalsData, error: signalsError } = await supabase
@@ -149,14 +172,14 @@ const PublicStrategy = () => {
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center">
           <Lock className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-          <h1 className="text-2xl font-bold mb-2">This strategy is private</h1>
+          <h1 className="text-2xl font-bold mb-2">{t.publicStrategy.strategyPrivate}</h1>
           <p className="text-muted-foreground mb-6">
-            The owner has not made this strategy public
+            {t.publicStrategy.strategyPrivateDescription}
           </p>
           <Link to="/">
             <Button className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Go Home
+              {t.publicStrategy.goHome}
             </Button>
           </Link>
         </div>
@@ -169,14 +192,14 @@ const PublicStrategy = () => {
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center">
           <Activity className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-          <h1 className="text-2xl font-bold mb-2">Strategy not found</h1>
+          <h1 className="text-2xl font-bold mb-2">{t.publicStrategy.strategyNotFound}</h1>
           <p className="text-muted-foreground mb-6">
-            This strategy doesn't exist or has been deleted
+            {t.publicStrategy.strategyNotFoundDescription}
           </p>
           <Link to="/">
             <Button className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Go Home
+              {t.publicStrategy.goHome}
             </Button>
           </Link>
         </div>
@@ -193,9 +216,19 @@ const PublicStrategy = () => {
             <Activity className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">TradeOrin</span>
           </Link>
-          <Link to="/auth">
-            <Button size="sm">Get Started</Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            {owner && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>
+                  {t.publicStrategy.sharedBy} {owner.full_name || owner.email?.split('@')[0] || 'Anonymous'}
+                </span>
+              </div>
+            )}
+            <Link to="/auth">
+              <Button size="sm">{t.publicStrategy.getStarted}</Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -204,7 +237,7 @@ const PublicStrategy = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold">{strategy.name}</h1>
-            <Badge className="signal-buy border">Public</Badge>
+            <Badge className="signal-buy border">{t.publicStrategy.public}</Badge>
           </div>
           {strategy.description && (
             <p className="text-lg text-muted-foreground mb-4">{strategy.description}</p>
@@ -212,7 +245,7 @@ const PublicStrategy = () => {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             {strategy.exchange && <span>📊 {strategy.exchange}</span>}
             {strategy.timeframe && <span>⏱️ {strategy.timeframe}</span>}
-            <span>Created {formatDate(strategy.created_at, preferences.dateFormat)}</span>
+            <span>{t.publicStrategy.created} {formatDate(strategy.created_at, preferences.dateFormat)}</span>
           </div>
         </div>
 
@@ -222,7 +255,7 @@ const PublicStrategy = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Signals</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.publicStrategy.totalSignals}</p>
                   <p className="text-2xl font-semibold">{stats.total}</p>
                 </div>
                 <Activity className="h-5 w-5 text-primary" />
@@ -234,7 +267,7 @@ const PublicStrategy = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">BUY Signals</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.publicStrategy.buySignals}</p>
                   <p className="text-2xl font-semibold text-buy">{stats.buys}</p>
                 </div>
                 <TrendingUp className="h-5 w-5 text-buy" />
@@ -246,7 +279,7 @@ const PublicStrategy = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">SELL Signals</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.publicStrategy.sellSignals}</p>
                   <p className="text-2xl font-semibold text-destructive">{stats.sells}</p>
                 </div>
                 <TrendingDown className="h-5 w-5 text-destructive" />
@@ -258,7 +291,7 @@ const PublicStrategy = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Latest Signal</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.publicStrategy.latestSignal}</p>
                   {stats.latestSignal ? (
                     <div className="mt-1">{getSignalBadge(stats.latestSignal.signal_type)}</div>
                   ) : (
@@ -276,16 +309,16 @@ const PublicStrategy = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Clock className="h-4 w-4" />
-              Recent Signals
+              {t.publicStrategy.recentSignals}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {signals.length === 0 ? (
               <div className="text-center py-12">
                 <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No signals yet</h3>
+                <h3 className="text-lg font-semibold mb-2">{t.publicStrategy.noSignalsYet}</h3>
                 <p className="text-muted-foreground">
-                  This strategy hasn't received any signals yet
+                  {t.publicStrategy.noSignalsDescription}
                 </p>
               </div>
             ) : (
@@ -293,10 +326,10 @@ const PublicStrategy = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Signal</TableHead>
-                      <TableHead>Symbol</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Time</TableHead>
+                      <TableHead>{t.publicStrategy.signal}</TableHead>
+                      <TableHead>{t.publicStrategy.symbol}</TableHead>
+                      <TableHead>{t.publicStrategy.price}</TableHead>
+                      <TableHead>{t.publicStrategy.time}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -323,13 +356,16 @@ const PublicStrategy = () => {
           </CardContent>
         </Card>
 
+        {/* Discussion Section */}
+        {strategy && <StrategyDiscussion strategyId={strategy.id} />}
+
         {/* CTA */}
         <div className="mt-8 text-center">
           <p className="text-muted-foreground mb-4">
-            Want to track your own trading signals?
+            {t.publicStrategy.wantToTrack}
           </p>
           <Link to="/auth">
-            <Button className="glow-effect">Get Started Free</Button>
+            <Button className="glow-effect">{t.publicStrategy.getStartedFree}</Button>
           </Link>
         </div>
       </div>

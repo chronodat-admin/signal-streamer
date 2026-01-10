@@ -56,134 +56,135 @@ interface IntegrationOption {
   docsUrl?: string;
 }
 
-const availableIntegrations: IntegrationOption[] = [
+// Note: Integration descriptions and categories are now translated in the component
+const getAvailableIntegrations = (t: any): IntegrationOption[] => [
   {
     id: 'discord',
     name: 'Discord',
-    description: 'Send alerts to Discord channels via webhooks',
+    description: t.integrations.discordDescription,
     icon: <MessageSquare className="h-6 w-6" />,
     logoUrl: 'https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png',
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-500/10',
-    categories: ['Messaging', 'Webhooks'],
+    categories: [t.integrations.categoryMessaging, t.integrations.categoryWebhooks],
     docsUrl: 'https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks',
   },
   {
     id: 'slack',
     name: 'Slack',
-    description: 'Send alerts to Slack channels via webhooks',
+    description: t.integrations.slackDescription,
     icon: <Hash className="h-6 w-6" />,
     logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png',
     color: 'text-purple-600',
     bgColor: 'bg-purple-500/10',
-    categories: ['Messaging', 'Webhooks'],
+    categories: [t.integrations.categoryMessaging, t.integrations.categoryWebhooks],
     docsUrl: 'https://api.slack.com/messaging/webhooks',
   },
   {
     id: 'telegram',
     name: 'Telegram',
-    description: 'Send alerts via Telegram bot',
+    description: t.integrations.telegramDescription,
     icon: <Send className="h-6 w-6" />,
     logoUrl: 'https://telegram.org/img/t_logo.png',
     color: 'text-blue-600',
     bgColor: 'bg-blue-500/10',
-    categories: ['Messaging', 'Bot'],
+    categories: [t.integrations.categoryMessaging, t.integrations.categoryBot],
     docsUrl: 'https://core.telegram.org/bots/api',
   },
   {
     id: 'whatsapp',
     name: 'WhatsApp',
-    description: 'Send alerts via WhatsApp (Twilio)',
+    description: t.integrations.whatsappDescription,
     icon: <Phone className="h-6 w-6" />,
     logoUrl: 'https://static.whatsapp.net/rsrc.php/v3/yz/r/ujTY9i_Jhs1.png',
     color: 'text-green-600',
     bgColor: 'bg-green-500/10',
-    categories: ['Messaging', 'SMS'],
+    categories: [t.integrations.categoryMessaging, t.integrations.categorySMS],
     docsUrl: 'https://www.twilio.com/docs/whatsapp',
   },
   {
     id: 'email',
     name: 'Email',
-    description: 'Send alerts via email (SMTP)',
+    description: t.integrations.emailDescription,
     icon: <MessageSquare className="h-6 w-6" />,
     logoUrl: 'https://www.gstatic.com/images/branding/product/1x/gmail_48dp.png',
     color: 'text-gray-600',
     bgColor: 'bg-gray-500/10',
-    categories: ['Email'],
+    categories: [t.integrations.categoryEmail],
   },
   {
     id: 'webhook',
     name: 'Generic Webhook',
-    description: 'Send alerts to any webhook URL',
+    description: t.integrations.webhookDescription,
     icon: <ExternalLink className="h-6 w-6" />,
     color: 'text-orange-600',
     bgColor: 'bg-orange-500/10',
-    categories: ['Webhooks'],
+    categories: [t.integrations.categoryWebhooks],
   },
   {
     id: 'pushover',
     name: 'Pushover',
-    description: 'Send push notifications via Pushover',
+    description: t.integrations.pushoverDescription,
     icon: <Phone className="h-6 w-6" />,
     logoUrl: 'https://pushover.net/images/logo.png',
     color: 'text-cyan-600',
     bgColor: 'bg-cyan-500/10',
-    categories: ['Push Notifications'],
+    categories: [t.integrations.categoryPushNotifications],
     docsUrl: 'https://pushover.net/api',
   },
   {
     id: 'ntfy',
     name: 'ntfy',
-    description: 'Send push notifications via ntfy',
+    description: t.integrations.ntfyDescription,
     icon: <MessageSquare className="h-6 w-6" />,
     logoUrl: 'https://ntfy.sh/static/img/ntfy.png',
     color: 'text-teal-600',
     bgColor: 'bg-teal-500/10',
-    categories: ['Push Notifications'],
+    categories: [t.integrations.categoryPushNotifications],
     docsUrl: 'https://ntfy.sh/docs/publish/',
   },
   {
     id: 'zapier',
     name: 'Zapier',
-    description: 'Connect to Zapier workflows',
+    description: t.integrations.zapierDescription,
     icon: <ExternalLink className="h-6 w-6" />,
     logoUrl: 'https://cdn.zapier.com/zapier/images/logos/zapier-logo.png',
     color: 'text-red-600',
     bgColor: 'bg-red-500/10',
-    categories: ['Automation', 'Webhooks'],
+    categories: [t.integrations.categoryAutomation, t.integrations.categoryWebhooks],
     docsUrl: 'https://zapier.com/apps/webhook',
   },
   {
     id: 'ifttt',
     name: 'IFTTT',
-    description: 'Connect to IFTTT applets',
+    description: t.integrations.iftttDescription,
     icon: <ExternalLink className="h-6 w-6" />,
     logoUrl: 'https://ifttt.com/favicon.ico',
     color: 'text-pink-600',
     bgColor: 'bg-pink-500/10',
-    categories: ['Automation', 'Webhooks'],
+    categories: [t.integrations.categoryAutomation, t.integrations.categoryWebhooks],
     docsUrl: 'https://ifttt.com/maker_webhooks',
   },
   {
     id: 'microsoft-teams',
     name: 'Microsoft Teams',
-    description: 'Send alerts to Teams channels',
+    description: t.integrations.microsoftTeamsDescription,
     icon: <MessageSquare className="h-6 w-6" />,
     logoUrl: 'https://c.s-microsoft.com/favicon.ico',
     color: 'text-blue-600',
     bgColor: 'bg-blue-500/10',
-    categories: ['Messaging', 'Webhooks'],
+    categories: [t.integrations.categoryMessaging, t.integrations.categoryWebhooks],
     docsUrl: 'https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to-add-incoming-webhook',
   },
   {
     id: 'google-chat',
     name: 'Google Chat',
-    description: 'Send alerts to Google Chat spaces',
+    description: t.integrations.googleChatDescription,
     icon: <MessageSquare className="h-6 w-6" />,
     logoUrl: 'https://www.gstatic.com/images/branding/product/1x/chat_48dp.png',
     color: 'text-green-600',
     bgColor: 'bg-green-500/10',
-    categories: ['Messaging', 'Webhooks'],
+    categories: [t.integrations.categoryMessaging, t.integrations.categoryWebhooks],
     docsUrl: 'https://developers.google.com/chat/how-tos/webhooks',
   },
 ];
@@ -512,6 +513,8 @@ const Integrations = () => {
     });
   };
 
+  const availableIntegrations = getAvailableIntegrations(t);
+  
   const filteredIntegrations = availableIntegrations.filter(integration =>
     integration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     integration.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -804,13 +807,13 @@ const Integrations = () => {
               {formData.integration_type === 'webhook' && (
                 <>
                   <div>
-                    <Label htmlFor="http_method">HTTP Method</Label>
+                    <Label htmlFor="http_method">{t.integrations.httpMethod}</Label>
                     <Select
                       value={formData.http_method || 'POST'}
                       onValueChange={(value) => setFormData({ ...formData, http_method: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="POST" />
+                        <SelectValue placeholder={t.integrations.httpMethodPlaceholder} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="POST">POST</SelectItem>
@@ -820,33 +823,28 @@ const Integrations = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="auth_header">Authorization Header ({t.common.optional})</Label>
+                    <Label htmlFor="auth_header">{t.integrations.authorizationHeader} ({t.common.optional})</Label>
                     <Input
                       id="auth_header"
                       value={formData.auth_header || ''}
                       onChange={(e) => setFormData({ ...formData, auth_header: e.target.value })}
-                      placeholder="Bearer your-api-key or Basic base64..."
+                      placeholder={t.integrations.authorizationHeaderPlaceholder}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Add authentication header value (e.g., "Bearer your-token")
+                      {t.integrations.authorizationHeaderDescription}
                     </p>
                   </div>
                   <div>
-                    <Label htmlFor="payload_template">Payload Template ({t.common.optional})</Label>
+                    <Label htmlFor="payload_template">{t.integrations.payloadTemplate} ({t.common.optional})</Label>
                     <textarea
                       id="payload_template"
                       className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
                       value={formData.payload_template || ''}
                       onChange={(e) => setFormData({ ...formData, payload_template: e.target.value })}
-                      placeholder={`{
-  "action": "{{signal}}",
-  "ticker": "{{symbol}}",
-  "price": {{price}},
-  "time": "{{time}}"
-}`}
+                      placeholder={t.integrations.payloadTemplatePlaceholder}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Use placeholders: <code className="text-primary">{'{{signal}}'}</code>, <code className="text-primary">{'{{symbol}}'}</code>, <code className="text-primary">{'{{price}}'}</code>, <code className="text-primary">{'{{time}}'}</code>, <code className="text-primary">{'{{strategy}}'}</code>, <code className="text-primary">{'{{action}}'}</code>
+                      {t.integrations.payloadTemplateDescription}
                     </p>
                   </div>
                 </>
@@ -855,22 +853,22 @@ const Integrations = () => {
               {formData.integration_type === 'telegram' && (
                 <>
                   <div>
-                    <Label htmlFor="bot_token">Bot Token</Label>
+                    <Label htmlFor="bot_token">{t.integrations.botToken}</Label>
                     <Input
                       id="bot_token"
                       value={formData.bot_token}
                       onChange={(e) => setFormData({ ...formData, bot_token: e.target.value })}
-                      placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                      placeholder={t.integrations.botTokenPlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="chat_id">Chat ID</Label>
+                    <Label htmlFor="chat_id">{t.integrations.chatId}</Label>
                     <Input
                       id="chat_id"
                       value={formData.chat_id}
                       onChange={(e) => setFormData({ ...formData, chat_id: e.target.value })}
-                      placeholder="-1001234567890"
+                      placeholder={t.integrations.chatIdPlaceholder}
                       required
                     />
                   </div>
@@ -887,32 +885,32 @@ const Integrations = () => {
               {formData.integration_type === 'whatsapp' && (
                 <>
                   <div>
-                    <Label htmlFor="api_key">API Key</Label>
+                    <Label htmlFor="api_key">{t.integrations.apiKey}</Label>
                     <Input
                       id="api_key"
                       value={formData.api_key}
                       onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                      placeholder="Your Twilio API key"
+                      placeholder={t.integrations.apiKeyPlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone_number">Phone Number</Label>
+                    <Label htmlFor="phone_number">{t.integrations.phoneNumber}</Label>
                     <Input
                       id="phone_number"
                       value={formData.phone_number}
                       onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                      placeholder="+1234567890"
+                      placeholder={t.integrations.phoneNumberPlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="from_number">From Number</Label>
+                    <Label htmlFor="from_number">{t.integrations.fromNumber}</Label>
                     <Input
                       id="from_number"
                       value={formData.from_number}
                       onChange={(e) => setFormData({ ...formData, from_number: e.target.value })}
-                      placeholder="whatsapp:+14155238886"
+                      placeholder={t.integrations.fromNumberPlaceholder}
                     />
                   </div>
                   {selectedIntegration?.docsUrl && (
@@ -928,31 +926,31 @@ const Integrations = () => {
               {formData.integration_type === 'email' && (
                 <>
                   <div>
-                    <Label htmlFor="to_email">Recipient Email</Label>
+                    <Label htmlFor="to_email">{t.integrations.recipientEmail}</Label>
                     <Input
                       id="to_email"
                       type="email"
                       value={formData.to_email}
                       onChange={(e) => setFormData({ ...formData, to_email: e.target.value })}
-                      placeholder="alerts@example.com"
+                      placeholder={t.integrations.recipientEmailPlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="from_email">From Email</Label>
+                    <Label htmlFor="from_email">{t.integrations.fromEmail}</Label>
                     <Input
                       id="from_email"
                       type="email"
                       value={formData.from_email}
                       onChange={(e) => setFormData({ ...formData, from_email: e.target.value })}
-                      placeholder="noreply@yourdomain.com"
+                      placeholder={t.integrations.fromEmailPlaceholder}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Leave empty to use default
+                      {t.integrations.fromEmailDescription}
                     </p>
                   </div>
                   <div>
-                    <Label htmlFor="api_service">Email Service</Label>
+                    <Label htmlFor="api_service">{t.integrations.emailService}</Label>
                     <Select
                       value={formData.api_service}
                       onValueChange={(value) => setFormData({ ...formData, api_service: value })}
@@ -961,10 +959,10 @@ const Integrations = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="smtp">SMTP Server</SelectItem>
-                        <SelectItem value="resend">Resend API</SelectItem>
-                        <SelectItem value="sendgrid">SendGrid API</SelectItem>
-                        <SelectItem value="webhook">Webhook/API</SelectItem>
+                        <SelectItem value="smtp">{t.integrations.emailServiceSmtp}</SelectItem>
+                        <SelectItem value="resend">{t.integrations.emailServiceResend}</SelectItem>
+                        <SelectItem value="sendgrid">{t.integrations.emailServiceSendgrid}</SelectItem>
+                        <SelectItem value="webhook">{t.integrations.emailServiceWebhook}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -974,48 +972,48 @@ const Integrations = () => {
                     <>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label htmlFor="smtp_host">SMTP Host</Label>
+                          <Label htmlFor="smtp_host">{t.integrations.smtpHost}</Label>
                           <Input
                             id="smtp_host"
                             value={formData.smtp_host || ''}
                             onChange={(e) => setFormData({ ...formData, smtp_host: e.target.value })}
-                            placeholder="smtp.gmail.com"
+                            placeholder={t.integrations.smtpHostPlaceholder}
                             required
                           />
                         </div>
                         <div>
-                          <Label htmlFor="smtp_port">Port</Label>
+                          <Label htmlFor="smtp_port">{t.integrations.smtpPort}</Label>
                           <Input
                             id="smtp_port"
                             type="number"
                             value={formData.smtp_port || '587'}
                             onChange={(e) => setFormData({ ...formData, smtp_port: e.target.value })}
-                            placeholder="587"
+                            placeholder={t.integrations.smtpPortPlaceholder}
                           />
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="smtp_user">SMTP Username</Label>
+                        <Label htmlFor="smtp_user">{t.integrations.smtpUsername}</Label>
                         <Input
                           id="smtp_user"
                           value={formData.smtp_user || ''}
                           onChange={(e) => setFormData({ ...formData, smtp_user: e.target.value })}
-                          placeholder="your-email@gmail.com"
+                          placeholder={t.integrations.smtpUsernamePlaceholder}
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="smtp_password">SMTP Password / App Password</Label>
+                        <Label htmlFor="smtp_password">{t.integrations.smtpPassword}</Label>
                         <Input
                           id="smtp_password"
                           type="password"
                           value={formData.smtp_password || ''}
                           onChange={(e) => setFormData({ ...formData, smtp_password: e.target.value })}
-                          placeholder="••••••••••••••••"
+                          placeholder={t.integrations.smtpPasswordPlaceholder}
                           required
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                          For Gmail, use an App Password (not your regular password)
+                          {t.integrations.smtpPasswordDescription}
                         </p>
                       </div>
                     </>
@@ -1025,7 +1023,7 @@ const Integrations = () => {
                   {(formData.api_service === 'resend' || formData.api_service === 'sendgrid' || formData.api_service === 'webhook') && (
                     <div>
                       <Label htmlFor="api_key_email">
-                        {formData.api_service === 'webhook' ? 'Webhook URL' : 'API Key'}
+                        {formData.api_service === 'webhook' ? t.integrations.webhookUrl : t.integrations.apiKeyEmail}
                       </Label>
                       <Input
                         id="api_key_email"
@@ -1033,25 +1031,25 @@ const Integrations = () => {
                         onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
                         placeholder={
                           formData.api_service === 'webhook' 
-                            ? 'https://api.example.com/send-email' 
+                            ? t.integrations.apiKeyEmailWebhookPlaceholder
                             : formData.api_service === 'resend'
-                            ? 're_...'
-                            : 'SG....'
+                            ? t.integrations.apiKeyEmailPlaceholder
+                            : t.integrations.apiKeyEmailSendgridPlaceholder
                         }
                         required
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         {formData.api_service === 'resend' && (
                           <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                            Get your API key from resend.com →
+                            {t.integrations.getApiKeyResend}
                           </a>
                         )}
                         {formData.api_service === 'sendgrid' && (
                           <a href="https://app.sendgrid.com/settings/api_keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                            Get your API key from sendgrid.com →
+                            {t.integrations.getApiKeySendgrid}
                           </a>
                         )}
-                        {formData.api_service === 'webhook' && 'Enter your email webhook URL'}
+                        {formData.api_service === 'webhook' && t.integrations.webhookUrlDescription}
                       </p>
                     </div>
                   )}

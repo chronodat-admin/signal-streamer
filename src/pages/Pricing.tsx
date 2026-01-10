@@ -8,6 +8,7 @@ import { Activity, Check, X, ArrowLeft, ArrowUpRight, Loader2 } from 'lucide-rea
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
+import { useLanguage } from '@/i18n';
 
 const plans = [
   {
@@ -86,6 +87,7 @@ const Pricing = () => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [checkoutLoading, setCheckoutLoading] = useState<'PRO' | 'ELITE' | null>(null);
 
   const handleCheckout = async (plan: 'PRO' | 'ELITE') => {
@@ -157,7 +159,7 @@ const Pricing = () => {
       }
       
       toast({
-        title: 'Checkout Failed',
+        title: t.pricing.checkoutFailed,
         description: errorMessage,
         variant: 'destructive',
       });

@@ -41,6 +41,37 @@ export const es: TranslationKeys = {
     unknown: 'Desconocido',
     optional: 'Opcional',
     required: 'Requerido',
+    unexpectedError: 'Ocurrió un error inesperado. Por favor intenta de nuevo.',
+  },
+
+  // Auth Page
+  auth: {
+    loginFailed: 'Error al Iniciar Sesión',
+    loginFailedDescription: 'Correo electrónico o contraseña inválidos. Por favor intenta de nuevo.',
+    welcomeBack: '¡Bienvenido de nuevo!',
+    welcomeBackDescription: 'Has iniciado sesión exitosamente.',
+    accountExists: 'Cuenta Existente',
+    accountExistsDescription: 'Este correo electrónico ya está registrado. Por favor inicia sesión en su lugar.',
+    signUpFailed: 'Error al Registrarse',
+    accountCreated: '¡Cuenta Creada!',
+    accountCreatedDescription: 'Bienvenido a TradeOrin. ¡Configuremos tu primera estrategia!',
+    googleLoginFailed: 'Error al Iniciar Sesión con Google',
+    failedToConnectGoogle: 'Error al conectar con Google.',
+  },
+
+  // Contact Page
+  contact: {
+    missingFields: 'Campos requeridos faltantes',
+    missingFieldsDescription: 'Por favor completa todos los campos.',
+    invalidEmail: 'Correo inválido',
+    invalidEmailDescription: 'Por favor ingresa un correo electrónico válido.',
+    tooManyMessages: 'Demasiados mensajes',
+    tooManyMessagesDescription: 'Has enviado demasiados mensajes recientemente. Por favor espera una hora antes de enviar otro mensaje.',
+    systemNotAvailable: 'Sistema de contacto no disponible',
+    systemNotAvailableDescription: 'El sistema de contacto se está configurando. Por favor intenta más tarde.',
+    messageSent: '¡Mensaje enviado!',
+    messageSentDescription: 'Gracias por contactarnos. Te responderemos pronto.',
+    failedToSend: 'Error al enviar mensaje. Por favor intenta de nuevo.',
   },
 
   // Navigation
@@ -209,6 +240,61 @@ export const es: TranslationKeys = {
     strategyDeletedDescription: 'La estrategia ha sido eliminada',
     failedToCreate: 'Error al crear estrategia',
     failedToDelete: 'Error al eliminar estrategia',
+    upgradeRequired: 'Mejora Requerida',
+    upgradeRequiredDescription: 'Has alcanzado tu límite de estrategias.',
+    strategyNotPublic: 'La estrategia no es pública',
+    strategyNotPublicDescription: 'Por favor haz la estrategia pública primero.',
+    linkCopied: '¡Enlace copiado!',
+    linkCopiedDescription: 'Enlace público copiado al portapapeles.',
+    failedToCopy: 'Error al copiar',
+    failedToCopyDescription: 'No se pudo copiar el enlace al portapapeles.',
+    publicPagesUpgradeRequired: 'Las páginas públicas están disponibles en los planes Pro y Elite. Mejora para compartir tu estrategia públicamente.',
+  },
+
+  // Public Strategy Page
+  publicStrategy: {
+    loading: 'Cargando...',
+    strategyNotFound: 'Estrategia no encontrada',
+    strategyNotFoundDescription: 'Esta estrategia no existe o ha sido eliminada',
+    strategyPrivate: 'Esta estrategia es privada',
+    strategyPrivateDescription: 'El propietario no ha hecho pública esta estrategia',
+    goHome: 'Ir al Inicio',
+    getStarted: 'Comenzar',
+    getStartedFree: 'Comenzar Gratis',
+    public: 'Pública',
+    created: 'Creada',
+    sharedBy: 'Compartida por',
+    totalSignals: 'Total de Señales',
+    buySignals: 'Señales de COMPRA',
+    sellSignals: 'Señales de VENTA',
+    latestSignal: 'Última Señal',
+    recentSignals: 'Señales Recientes',
+    noSignalsYet: 'Sin señales aún',
+    noSignalsDescription: 'Esta estrategia aún no ha recibido señales',
+    signal: 'Señal',
+    symbol: 'Símbolo',
+    price: 'Precio',
+    time: 'Hora',
+    wantToTrack: '¿Quieres rastrear tus propias señales de trading?',
+    discussion: {
+      title: 'Discusión',
+      writeComment: 'Escribe un comentario...',
+      writeReply: 'Escribe una respuesta...',
+      postComment: 'Publicar Comentario',
+      postReply: 'Publicar Respuesta',
+      reply: 'Responder',
+      loginToComment: 'Por favor inicia sesión para unirte a la discusión',
+      login: 'Iniciar Sesión',
+      noComments: 'Aún no hay comentarios. ¡Sé el primero en comentar!',
+      commentPosted: 'Comentario publicado exitosamente',
+      replyPosted: 'Respuesta publicada exitosamente',
+      failedToPost: 'Error al publicar comentario',
+      failedToLoad: 'Error al cargar comentarios',
+      failedToDelete: 'Error al eliminar comentario',
+      commentDeleted: 'Comentario eliminado exitosamente',
+      deleteComment: 'Eliminar Comentario',
+      deleteCommentDescription: '¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer.',
+    },
   },
 
   // Strategy Detail Page
@@ -218,28 +304,96 @@ export const es: TranslationKeys = {
     setup: 'Configuración',
     analytics: 'Analíticas',
     
-    // Setup Tab
-    webhookUrl: 'URL del Webhook',
-    webhookDescription: 'Usa esta URL en las alertas de TradingView para enviar señales a esta estrategia',
-    copyUrl: 'Copiar URL',
-    alertMessageFormat: 'Formato del Mensaje de Alerta',
-    alertFormatDescription: 'Configura tu alerta de TradingView con este formato JSON',
-    copyFormat: 'Copiar Formato',
-    testConnection: 'Probar Conexión',
-    sendTestSignal: 'Enviar Señal de Prueba',
-    sending: 'Enviando...',
+    // Header
+    loadingStrategy: 'Cargando estrategia...',
+    strategyNotFound: 'Estrategia no encontrada',
+    backToStrategies: 'Volver a Estrategias',
+    public: 'Pública',
+    viewPublicPage: 'Ver Página Pública',
+    
+    // Tabs
+    analyticsTab: 'Analíticas',
+    signalsTab: 'Señales',
+    setupTab: 'Configuración',
     
     // Analytics Tab
     totalSignals: 'Total de Señales',
     todaySignals: 'Hoy',
     weekSignals: 'Semana',
     monthSignals: 'Mes',
-
+    totalPnL: 'P&G Total',
+    winRate: 'Tasa de Éxito',
+    totalTrades: 'Total de Operaciones',
+    avgGain: 'Ganancia Promedio',
+    avgLoss: 'Pérdida Promedio',
+    wins: 'G',
+    losses: 'P',
+    
+    // Signals Tab
+    exportCSV: 'Exportar CSV',
+    noSignalsYet: 'Sin señales aún',
+    noSignalsDescription: 'Las señales aparecerán aquí cuando TradingView envíe webhooks',
+    signal: 'Señal',
+    symbol: 'Símbolo',
+    price: 'Precio',
+    interval: 'Intervalo',
+    time: 'Hora',
+    
+    // Setup Tab
+    webhookUrl: 'URL del Webhook',
+    webhookUrlTitle: '1. URL del Webhook',
+    webhookDescription: 'Copia esta URL y pégala en la configuración de alertas de TradingView',
+    alertMessageFormat: 'Formato del Mensaje de Alerta',
+    alertMessageTitle: '2. Mensaje de Alerta (JSON)',
+    alertFormatDescription: 'Usa esta plantilla JSON en el mensaje de tu alerta de TradingView',
+    copyUrl: 'Copiar URL',
+    copyFormat: 'Copiar Formato',
+    jsonTemplateDescription: 'El campo {field} usa {placeholder} que será reemplazado automáticamente con BUY, SELL, etc. por TradingView.',
+    signalField: 'signal',
+    
+    // Setup Steps
+    setupStepsTitle: '3. Pasos de Configuración',
+    step1Title: 'Crear Alerta de TradingView',
+    step1Description: 'En TradingView, haz clic derecho en tu gráfico y selecciona "Agregar Alerta"',
+    step2Title: 'Habilitar Webhook',
+    step2Description: 'Marca "Webhook URL" y pega la URL del paso 1',
+    step3Title: 'Establecer Mensaje',
+    step3Description: 'En el campo "Mensaje", pega la plantilla JSON del paso 2',
+    step4Title: 'Guardar Alerta',
+    step4Description: 'Haz clic en "Crear" y tus señales aparecerán aquí en tiempo real',
+    
+    // Test Webhook
+    testWebhookTitle: '4. Probar Tu Webhook',
+    testWebhookDescription: 'Prueba tu integración de webhook antes de configurar alertas de TradingView',
+    bashMacLinux: 'Bash / Mac / Linux:',
+    windowsCommandPrompt: 'Windows (Símbolo del Sistema):',
+    usingPostman: '¿Usando Postman?',
+    method: 'Método',
+    url: 'URL',
+    headers: 'Encabezados',
+    body: 'Cuerpo',
+    bodyDescription: 'Copia la plantilla JSON del paso 2 (reemplaza las variables de TradingView con valores de prueba)',
+    expectedResponse: 'Respuesta esperada:',
+    expectedResponseValue: '{"success":true,"message":"Signal received"}',
+    
     // Toast messages
     urlCopied: 'URL del webhook copiada al portapapeles',
     formatCopied: 'Formato de alerta copiado al portapapeles',
+    curlCommandCopied: 'Comando cURL copiado al portapapeles',
+    windowsCurlCopied: 'cURL de Windows copiado al portapapeles',
+    jsonTemplateCopied: 'Plantilla JSON copiada al portapapeles',
     testSent: 'Señal de prueba enviada exitosamente',
     testFailed: 'Error al enviar señal de prueba',
+    copied: '¡Copiado!',
+    copiedDescription: '{type} copiado al portapapeles',
+    failedToCopy: 'Error al copiar',
+    failedToCopyDescription: 'Por favor intenta de nuevo',
+    exportSuccessful: 'Exportación Exitosa',
+    exportSuccessfulDescription: 'Se exportaron {count} señales a CSV',
+    upgradeRequired: 'Mejora Requerida',
+    upgradeRequiredDescription: 'La exportación CSV está disponible para usuarios Pro. Mejora para desbloquear.',
+    noData: 'Sin Datos',
+    noDataDescription: 'No hay señales para exportar.',
   },
 
   // Alert Logs Page
@@ -432,6 +586,29 @@ export const es: TranslationKeys = {
     configured: 'Configurada',
     allStrategies: 'Todas las Estrategias',
     
+    // Integration Types Descriptions
+    discordDescription: 'Envía alertas a canales de Discord mediante webhooks',
+    slackDescription: 'Envía alertas a canales de Slack mediante webhooks',
+    telegramDescription: 'Envía alertas mediante bot de Telegram',
+    whatsappDescription: 'Envía alertas mediante WhatsApp (Twilio)',
+    emailDescription: 'Envía alertas mediante correo electrónico (SMTP)',
+    webhookDescription: 'Envía alertas a cualquier URL de webhook',
+    pushoverDescription: 'Envía notificaciones push mediante Pushover',
+    ntfyDescription: 'Envía notificaciones push mediante ntfy',
+    zapierDescription: 'Conecta con flujos de trabajo de Zapier',
+    iftttDescription: 'Conecta con applets de IFTTT',
+    microsoftTeamsDescription: 'Envía alertas a canales de Teams',
+    googleChatDescription: 'Envía alertas a espacios de Google Chat',
+    
+    // Categories
+    categoryMessaging: 'Mensajería',
+    categoryWebhooks: 'Webhooks',
+    categoryBot: 'Bot',
+    categorySMS: 'SMS',
+    categoryEmail: 'Correo',
+    categoryPushNotifications: 'Notificaciones Push',
+    categoryAutomation: 'Automatización',
+    
     // Dialog
     editIntegration: 'Editar Integración',
     configureIntegration: 'Configurar {name}',
@@ -451,6 +628,58 @@ export const es: TranslationKeys = {
     create: 'Crear',
     updateIntegration: 'Actualizar Integración',
     createIntegration: 'Crear Integración',
+    
+    // Webhook Advanced Options
+    httpMethod: 'Método HTTP',
+    httpMethodPlaceholder: 'POST',
+    authorizationHeader: 'Encabezado de Autorización',
+    authorizationHeaderPlaceholder: 'Bearer tu-clave-api o Basic base64...',
+    authorizationHeaderDescription: 'Agrega el valor del encabezado de autenticación (ej., "Bearer tu-token")',
+    payloadTemplate: 'Plantilla de Carga',
+    payloadTemplatePlaceholder: '{\n  "action": "{{signal}}",\n  "ticker": "{{symbol}}",\n  "price": {{price}},\n  "time": "{{time}}"\n}',
+    payloadTemplateDescription: 'Usa marcadores de posición: {{signal}}, {{symbol}}, {{price}}, {{time}}, {{strategy}}, {{action}}',
+    
+    // Telegram Fields
+    botToken: 'Token del Bot',
+    botTokenPlaceholder: '123456789:ABCdefGHIjklMNOpqrsTUVwxyz',
+    chatId: 'ID del Chat',
+    chatIdPlaceholder: '-1001234567890',
+    
+    // WhatsApp Fields
+    apiKey: 'Clave API',
+    apiKeyPlaceholder: 'Tu clave API de Twilio',
+    phoneNumber: 'Número de Teléfono',
+    phoneNumberPlaceholder: '+1234567890',
+    fromNumber: 'Número de Origen',
+    fromNumberPlaceholder: 'whatsapp:+14155238886',
+    
+    // Email Fields
+    recipientEmail: 'Correo del Destinatario',
+    recipientEmailPlaceholder: 'alerts@ejemplo.com',
+    fromEmail: 'Correo de Origen',
+    fromEmailPlaceholder: 'noreply@tudominio.com',
+    fromEmailDescription: 'Deja vacío para usar el predeterminado',
+    emailService: 'Servicio de Correo',
+    emailServiceSmtp: 'Servidor SMTP',
+    emailServiceResend: 'API de Resend',
+    emailServiceSendgrid: 'API de SendGrid',
+    emailServiceWebhook: 'Webhook/API',
+    smtpHost: 'Host SMTP',
+    smtpHostPlaceholder: 'smtp.gmail.com',
+    smtpPort: 'Puerto',
+    smtpPortPlaceholder: '587',
+    smtpUsername: 'Usuario SMTP',
+    smtpUsernamePlaceholder: 'tu-correo@gmail.com',
+    smtpPassword: 'Contraseña SMTP / Contraseña de Aplicación',
+    smtpPasswordPlaceholder: '••••••••••••••••',
+    smtpPasswordDescription: 'Para Gmail, usa una Contraseña de Aplicación (no tu contraseña regular)',
+    apiKeyEmail: 'Clave API',
+    apiKeyEmailPlaceholder: 're_...',
+    apiKeyEmailSendgridPlaceholder: 'SG....',
+    apiKeyEmailWebhookPlaceholder: 'https://api.ejemplo.com/enviar-correo',
+    getApiKeyResend: 'Obtén tu clave API de resend.com →',
+    getApiKeySendgrid: 'Obtén tu clave API de sendgrid.com →',
+    webhookUrlDescription: 'Ingresa la URL del webhook de correo',
     
     // Status
     active: 'Activa',
@@ -487,6 +716,11 @@ export const es: TranslationKeys = {
     ninetyDayHistory: 'Historial de señales de 90 días',
     csvExport: 'Exportar CSV',
     publicPages: 'Páginas públicas',
+  },
+
+  // Pricing Page
+  pricing: {
+    checkoutFailed: 'Error en el Checkout',
   },
 
   // Billing Page

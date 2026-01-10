@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Activity, Loader2, Mail } from 'lucide-react';
 import { z } from 'zod';
+import { useLanguage } from '@/i18n';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -24,6 +25,7 @@ const Auth = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -66,13 +68,13 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast({
-              title: 'Login Failed',
-              description: 'Invalid email or password. Please try again.',
+              title: t.auth.loginFailed,
+              description: t.auth.loginFailedDescription,
               variant: 'destructive',
             });
           } else {
             toast({
-              title: 'Login Failed',
+              title: t.auth.loginFailed,
               description: error.message,
               variant: 'destructive',
             });
@@ -81,8 +83,8 @@ const Auth = () => {
         }
         
         toast({
-          title: 'Welcome back!',
-          description: 'You have successfully logged in.',
+          title: t.auth.welcomeBack,
+          description: t.auth.welcomeBackDescription,
         });
         navigate('/dashboard');
       } else {
@@ -97,14 +99,14 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('already registered')) {
             toast({
-              title: 'Account Exists',
-              description: 'This email is already registered. Please sign in instead.',
+              title: t.auth.accountExists,
+              description: t.auth.accountExistsDescription,
               variant: 'destructive',
             });
             setIsLogin(true);
           } else {
             toast({
-              title: 'Sign Up Failed',
+              title: t.auth.signUpFailed,
               description: error.message,
               variant: 'destructive',
             });
@@ -113,15 +115,15 @@ const Auth = () => {
         }
         
         toast({
-          title: 'Account Created!',
-          description: 'Welcome to TradeOrin. Let\'s set up your first strategy!',
+          title: t.auth.accountCreated,
+          description: t.auth.accountCreatedDescription,
         });
         navigate('/dashboard');
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
+        title: t.common.error,
+        description: t.common.unexpectedError,
         variant: 'destructive',
       });
     } finally {
@@ -141,15 +143,15 @@ const Auth = () => {
       
       if (error) {
         toast({
-          title: 'Google Login Failed',
+          title: t.auth.googleLoginFailed,
           description: error.message,
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to connect with Google.',
+        title: t.common.error,
+        description: t.auth.failedToConnectGoogle,
         variant: 'destructive',
       });
     } finally {

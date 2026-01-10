@@ -10,9 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, MessageSquare, Send, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
+import { useLanguage } from '@/i18n';
 
 export default function Contact() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [honeypot, setHoneypot] = useState(''); // Honeypot field for bot detection
@@ -35,8 +37,8 @@ export default function Contact() {
 
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
       toast({
-        title: 'Missing required fields',
-        description: 'Please fill in all fields.',
+        title: t.contact.missingFields,
+        description: t.contact.missingFieldsDescription,
         variant: 'destructive',
       });
       return;
@@ -46,8 +48,8 @@ export default function Contact() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast({
-        title: 'Invalid email',
-        description: 'Please enter a valid email address.',
+        title: t.contact.invalidEmail,
+        description: t.contact.invalidEmailDescription,
         variant: 'destructive',
       });
       return;
@@ -66,8 +68,8 @@ export default function Contact() {
         console.warn('Rate limit check failed:', rateLimitError);
       } else if (rateLimitCheck === false) {
         toast({
-          title: 'Too many messages',
-          description: 'You\'ve sent too many messages recently. Please wait an hour before sending another message.',
+          title: t.contact.tooManyMessages,
+          description: t.contact.tooManyMessagesDescription,
           variant: 'destructive',
         });
         setLoading(false);
@@ -85,8 +87,8 @@ export default function Contact() {
       if (error) {
         if (error.code === '42P01') {
           toast({
-            title: 'Contact system not available',
-            description: 'The contact system is being set up. Please try again later.',
+            title: t.contact.systemNotAvailable,
+            description: t.contact.systemNotAvailableDescription,
             variant: 'destructive',
           });
         } else {
@@ -102,15 +104,15 @@ export default function Contact() {
         });
         setHoneypot(''); // Reset honeypot
         toast({
-          title: 'Message sent!',
-          description: 'Thank you for contacting us. We\'ll get back to you soon.',
+          title: t.contact.messageSent,
+          description: t.contact.messageSentDescription,
         });
       }
     } catch (error) {
       console.error('Error submitting contact form:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to send message. Please try again.',
+        title: t.common.error,
+        description: t.contact.failedToSend,
         variant: 'destructive',
       });
     } finally {

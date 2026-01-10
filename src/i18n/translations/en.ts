@@ -39,6 +39,37 @@ export const en = {
     unknown: 'Unknown',
     optional: 'Optional',
     required: 'Required',
+    unexpectedError: 'An unexpected error occurred. Please try again.',
+  },
+
+  // Auth Page
+  auth: {
+    loginFailed: 'Login Failed',
+    loginFailedDescription: 'Invalid email or password. Please try again.',
+    welcomeBack: 'Welcome back!',
+    welcomeBackDescription: 'You have successfully logged in.',
+    accountExists: 'Account Exists',
+    accountExistsDescription: 'This email is already registered. Please sign in instead.',
+    signUpFailed: 'Sign Up Failed',
+    accountCreated: 'Account Created!',
+    accountCreatedDescription: 'Welcome to TradeOrin. Let\'s set up your first strategy!',
+    googleLoginFailed: 'Google Login Failed',
+    failedToConnectGoogle: 'Failed to connect with Google.',
+  },
+
+  // Contact Page
+  contact: {
+    missingFields: 'Missing required fields',
+    missingFieldsDescription: 'Please fill in all fields.',
+    invalidEmail: 'Invalid email',
+    invalidEmailDescription: 'Please enter a valid email address.',
+    tooManyMessages: 'Too many messages',
+    tooManyMessagesDescription: 'You\'ve sent too many messages recently. Please wait an hour before sending another message.',
+    systemNotAvailable: 'Contact system not available',
+    systemNotAvailableDescription: 'The contact system is being set up. Please try again later.',
+    messageSent: 'Message sent!',
+    messageSentDescription: 'Thank you for contacting us. We\'ll get back to you soon.',
+    failedToSend: 'Failed to send message. Please try again.',
   },
 
   // Navigation
@@ -207,6 +238,61 @@ export const en = {
     strategyDeletedDescription: 'Strategy has been deleted',
     failedToCreate: 'Failed to create strategy',
     failedToDelete: 'Failed to delete strategy',
+    upgradeRequired: 'Upgrade Required',
+    upgradeRequiredDescription: 'You have reached your strategy limit.',
+    strategyNotPublic: 'Strategy is not public',
+    strategyNotPublicDescription: 'Please make the strategy public first.',
+    linkCopied: 'Link copied!',
+    linkCopiedDescription: 'Public link copied to clipboard.',
+    failedToCopy: 'Failed to copy',
+    failedToCopyDescription: 'Could not copy link to clipboard.',
+    publicPagesUpgradeRequired: 'Public pages are available on Pro and Elite plans. Upgrade to share your strategy publicly.',
+  },
+
+  // Public Strategy Page
+  publicStrategy: {
+    loading: 'Loading...',
+    strategyNotFound: 'Strategy not found',
+    strategyNotFoundDescription: 'This strategy doesn\'t exist or has been deleted',
+    strategyPrivate: 'This strategy is private',
+    strategyPrivateDescription: 'The owner has not made this strategy public',
+    goHome: 'Go Home',
+    getStarted: 'Get Started',
+    getStartedFree: 'Get Started Free',
+    public: 'Public',
+    created: 'Created',
+    sharedBy: 'Shared by',
+    totalSignals: 'Total Signals',
+    buySignals: 'BUY Signals',
+    sellSignals: 'SELL Signals',
+    latestSignal: 'Latest Signal',
+    recentSignals: 'Recent Signals',
+    noSignalsYet: 'No signals yet',
+    noSignalsDescription: 'This strategy hasn\'t received any signals yet',
+    signal: 'Signal',
+    symbol: 'Symbol',
+    price: 'Price',
+    time: 'Time',
+    wantToTrack: 'Want to track your own trading signals?',
+    discussion: {
+      title: 'Discussion',
+      writeComment: 'Write a comment...',
+      writeReply: 'Write a reply...',
+      postComment: 'Post Comment',
+      postReply: 'Post Reply',
+      reply: 'Reply',
+      loginToComment: 'Please log in to join the discussion',
+      login: 'Log In',
+      noComments: 'No comments yet. Be the first to comment!',
+      commentPosted: 'Comment posted successfully',
+      replyPosted: 'Reply posted successfully',
+      failedToPost: 'Failed to post comment',
+      failedToLoad: 'Failed to load comments',
+      failedToDelete: 'Failed to delete comment',
+      commentDeleted: 'Comment deleted successfully',
+      deleteComment: 'Delete Comment',
+      deleteCommentDescription: 'Are you sure you want to delete this comment? This action cannot be undone.',
+    },
   },
 
   // Strategy Detail Page
@@ -216,28 +302,96 @@ export const en = {
     setup: 'Setup',
     analytics: 'Analytics',
     
-    // Setup Tab
-    webhookUrl: 'Webhook URL',
-    webhookDescription: 'Use this URL in TradingView alerts to send signals to this strategy',
-    copyUrl: 'Copy URL',
-    alertMessageFormat: 'Alert Message Format',
-    alertFormatDescription: 'Configure your TradingView alert with this JSON format',
-    copyFormat: 'Copy Format',
-    testConnection: 'Test Connection',
-    sendTestSignal: 'Send Test Signal',
-    sending: 'Sending...',
+    // Header
+    loadingStrategy: 'Loading strategy...',
+    strategyNotFound: 'Strategy not found',
+    backToStrategies: 'Back to Strategies',
+    public: 'Public',
+    viewPublicPage: 'View Public Page',
+    
+    // Tabs
+    analyticsTab: 'Analytics',
+    signalsTab: 'Signals',
+    setupTab: 'Setup',
     
     // Analytics Tab
     totalSignals: 'Total Signals',
     todaySignals: 'Today',
     weekSignals: 'Week',
     monthSignals: 'Month',
-
+    totalPnL: 'Total P&L',
+    winRate: 'Win Rate',
+    totalTrades: 'Total Trades',
+    avgGain: 'Avg Gain',
+    avgLoss: 'Avg Loss',
+    wins: 'W',
+    losses: 'L',
+    
+    // Signals Tab
+    exportCSV: 'Export CSV',
+    noSignalsYet: 'No signals yet',
+    noSignalsDescription: 'Signals will appear here when TradingView sends webhooks',
+    signal: 'Signal',
+    symbol: 'Symbol',
+    price: 'Price',
+    interval: 'Interval',
+    time: 'Time',
+    
+    // Setup Tab
+    webhookUrl: 'Webhook URL',
+    webhookUrlTitle: '1. Webhook URL',
+    webhookDescription: 'Copy this URL and paste it into TradingView alert settings',
+    alertMessageFormat: 'Alert Message Format',
+    alertMessageTitle: '2. Alert Message (JSON)',
+    alertFormatDescription: 'Use this JSON template in your TradingView alert message',
+    copyUrl: 'Copy URL',
+    copyFormat: 'Copy Format',
+    jsonTemplateDescription: 'The {field} field uses {placeholder} which will automatically be replaced with BUY, SELL, etc. by TradingView.',
+    signalField: 'signal',
+    
+    // Setup Steps
+    setupStepsTitle: '3. Setup Steps',
+    step1Title: 'Create TradingView Alert',
+    step1Description: 'In TradingView, right-click on your chart and select "Add Alert"',
+    step2Title: 'Enable Webhook',
+    step2Description: 'Check "Webhook URL" and paste the URL from step 1',
+    step3Title: 'Set Message',
+    step3Description: 'In the "Message" field, paste the JSON template from step 2',
+    step4Title: 'Save Alert',
+    step4Description: 'Click "Create" and your signals will appear here in real-time',
+    
+    // Test Webhook
+    testWebhookTitle: '4. Test Your Webhook',
+    testWebhookDescription: 'Test your webhook integration before setting up TradingView alerts',
+    bashMacLinux: 'Bash / Mac / Linux:',
+    windowsCommandPrompt: 'Windows (Command Prompt):',
+    usingPostman: 'Using Postman?',
+    method: 'Method',
+    url: 'URL',
+    headers: 'Headers',
+    body: 'Body',
+    bodyDescription: 'Copy the JSON template from step 2 (replace TradingView variables with test values)',
+    expectedResponse: 'Expected response:',
+    expectedResponseValue: '{"success":true,"message":"Signal received"}',
+    
     // Toast messages
     urlCopied: 'Webhook URL copied to clipboard',
     formatCopied: 'Alert format copied to clipboard',
+    curlCommandCopied: 'cURL Command copied to clipboard',
+    windowsCurlCopied: 'Windows cURL copied to clipboard',
+    jsonTemplateCopied: 'JSON Template copied to clipboard',
     testSent: 'Test signal sent successfully',
     testFailed: 'Failed to send test signal',
+    copied: 'Copied!',
+    copiedDescription: '{type} copied to clipboard',
+    failedToCopy: 'Failed to copy',
+    failedToCopyDescription: 'Please try again',
+    exportSuccessful: 'Export Successful',
+    exportSuccessfulDescription: 'Exported {count} signals to CSV',
+    upgradeRequired: 'Upgrade Required',
+    upgradeRequiredDescription: 'CSV export is available for Pro users. Upgrade to unlock.',
+    noData: 'No Data',
+    noDataDescription: 'There are no signals to export.',
   },
 
   // Alert Logs Page
@@ -430,6 +584,29 @@ export const en = {
     configured: 'Configured',
     allStrategies: 'All Strategies',
     
+    // Integration Types Descriptions
+    discordDescription: 'Send alerts to Discord channels via webhooks',
+    slackDescription: 'Send alerts to Slack channels via webhooks',
+    telegramDescription: 'Send alerts via Telegram bot',
+    whatsappDescription: 'Send alerts via WhatsApp (Twilio)',
+    emailDescription: 'Send alerts via email (SMTP)',
+    webhookDescription: 'Send alerts to any webhook URL',
+    pushoverDescription: 'Send push notifications via Pushover',
+    ntfyDescription: 'Send push notifications via ntfy',
+    zapierDescription: 'Connect to Zapier workflows',
+    iftttDescription: 'Connect to IFTTT applets',
+    microsoftTeamsDescription: 'Send alerts to Teams channels',
+    googleChatDescription: 'Send alerts to Google Chat spaces',
+    
+    // Categories
+    categoryMessaging: 'Messaging',
+    categoryWebhooks: 'Webhooks',
+    categoryBot: 'Bot',
+    categorySMS: 'SMS',
+    categoryEmail: 'Email',
+    categoryPushNotifications: 'Push Notifications',
+    categoryAutomation: 'Automation',
+    
     // Dialog
     editIntegration: 'Edit Integration',
     configureIntegration: 'Configure {name}',
@@ -449,6 +626,58 @@ export const en = {
     create: 'Create',
     updateIntegration: 'Update Integration',
     createIntegration: 'Create Integration',
+    
+    // Webhook Advanced Options
+    httpMethod: 'HTTP Method',
+    httpMethodPlaceholder: 'POST',
+    authorizationHeader: 'Authorization Header',
+    authorizationHeaderPlaceholder: 'Bearer your-api-key or Basic base64...',
+    authorizationHeaderDescription: 'Add authentication header value (e.g., "Bearer your-token")',
+    payloadTemplate: 'Payload Template',
+    payloadTemplatePlaceholder: '{\n  "action": "{{signal}}",\n  "ticker": "{{symbol}}",\n  "price": {{price}},\n  "time": "{{time}}"\n}',
+    payloadTemplateDescription: 'Use placeholders: {{signal}}, {{symbol}}, {{price}}, {{time}}, {{strategy}}, {{action}}',
+    
+    // Telegram Fields
+    botToken: 'Bot Token',
+    botTokenPlaceholder: '123456789:ABCdefGHIjklMNOpqrsTUVwxyz',
+    chatId: 'Chat ID',
+    chatIdPlaceholder: '-1001234567890',
+    
+    // WhatsApp Fields
+    apiKey: 'API Key',
+    apiKeyPlaceholder: 'Your Twilio API key',
+    phoneNumber: 'Phone Number',
+    phoneNumberPlaceholder: '+1234567890',
+    fromNumber: 'From Number',
+    fromNumberPlaceholder: 'whatsapp:+14155238886',
+    
+    // Email Fields
+    recipientEmail: 'Recipient Email',
+    recipientEmailPlaceholder: 'alerts@example.com',
+    fromEmail: 'From Email',
+    fromEmailPlaceholder: 'noreply@yourdomain.com',
+    fromEmailDescription: 'Leave empty to use default',
+    emailService: 'Email Service',
+    emailServiceSmtp: 'SMTP Server',
+    emailServiceResend: 'Resend API',
+    emailServiceSendgrid: 'SendGrid API',
+    emailServiceWebhook: 'Webhook/API',
+    smtpHost: 'SMTP Host',
+    smtpHostPlaceholder: 'smtp.gmail.com',
+    smtpPort: 'Port',
+    smtpPortPlaceholder: '587',
+    smtpUsername: 'SMTP Username',
+    smtpUsernamePlaceholder: 'your-email@gmail.com',
+    smtpPassword: 'SMTP Password / App Password',
+    smtpPasswordPlaceholder: '••••••••••••••••',
+    smtpPasswordDescription: 'For Gmail, use an App Password (not your regular password)',
+    apiKeyEmail: 'API Key',
+    apiKeyEmailPlaceholder: 're_...',
+    apiKeyEmailSendgridPlaceholder: 'SG....',
+    apiKeyEmailWebhookPlaceholder: 'https://api.example.com/send-email',
+    getApiKeyResend: 'Get your API key from resend.com →',
+    getApiKeySendgrid: 'Get your API key from sendgrid.com →',
+    webhookUrlDescription: 'Enter your email webhook URL',
     
     // Status
     active: 'Active',
@@ -485,6 +714,11 @@ export const en = {
     ninetyDayHistory: '90-day signal history',
     csvExport: 'CSV export',
     publicPages: 'Public pages',
+  },
+
+  // Pricing Page
+  pricing: {
+    checkoutFailed: 'Checkout Failed',
   },
 
   // Billing Page
