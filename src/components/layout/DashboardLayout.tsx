@@ -261,7 +261,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-3 space-y-1.5">
+          <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto min-h-0">
             {navigation.map((item) => (
               <NavItem key={item.name} item={item} />
             ))}
@@ -376,7 +376,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       </aside>
 
       {/* Desktop Top Header */}
-      <header className={`hidden lg:flex fixed top-0 right-0 z-40 h-14 bg-background/95 backdrop-blur-md border-b border-border transition-all duration-300 ${collapsed ? 'left-20' : 'left-72'}`}>
+      <header className={`hidden lg:flex fixed top-0 right-0 z-40 h-14 bg-background/95 backdrop-blur-md transition-all duration-300 ${collapsed ? 'left-20' : 'left-72'}`}>
         <div className="flex items-center justify-end gap-2 px-6 w-full">
           <div className="flex items-center gap-1">
             <LanguageSwitcher />
