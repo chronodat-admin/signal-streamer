@@ -273,7 +273,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <>
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-2 ring-primary/20 mb-2 cursor-default">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-2 ring-primary/20 cursor-default">
                       <span className="text-sm font-bold text-primary">
                         {user.email?.[0].toUpperCase()}
                       </span>
@@ -284,23 +284,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     <p className="text-xs text-muted-foreground">{userPlan} Plan</p>
                   </TooltipContent>
                 </Tooltip>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{t.nav.signOut}</TooltipContent>
-                </Tooltip>
               </>
             ) : (
               <>
-                <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-muted/30">
+                <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-muted/30">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-2 ring-primary/20 flex-shrink-0">
                     <span className="text-sm font-bold text-primary">
                       {user.email?.[0].toUpperCase()}
@@ -313,14 +300,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     </Badge>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="h-5 w-5" />
-                  {t.nav.signOut}
-                </Button>
               </>
             )}
           </div>
@@ -356,6 +335,15 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <ColorSchemePicker />
             <ThemeToggle />
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-l border-border pl-2 ml-1"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4" />
+            {t.nav.signOut}
+          </Button>
         </div>
       </header>
 
