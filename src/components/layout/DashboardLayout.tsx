@@ -267,16 +267,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             ))}
           </nav>
 
-          {/* Appearance Controls - Desktop */}
-          <div className={`px-3 py-2 border-t border-border hidden lg:flex items-center ${collapsed ? 'flex-col gap-2' : 'justify-between'}`}>
-            {!collapsed && <span className="text-sm text-muted-foreground">{t.preferences.appearance}</span>}
-            <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-1'}`}>
-              <LanguageSwitcher />
-              <ColorSchemePicker />
-              <ThemeToggle />
-            </div>
-          </div>
-
           {/* User Section */}
           <div className={`p-3 border-t border-border ${collapsed ? 'flex flex-col items-center' : ''}`}>
             {collapsed ? (

@@ -17,6 +17,9 @@ import { DashboardPageSkeleton, StatsCardSkeleton } from '@/components/dashboard
 import { EmptyTrades } from '@/components/dashboard/EmptyState';
 import { DateFilter, DateFilterType, DateRange } from '@/components/dashboard/DateFilter';
 import { useLanguage } from '@/i18n';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { ColorSchemePicker } from '@/components/ColorSchemePicker';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Signal {
   id: string;
@@ -326,6 +329,12 @@ const Dashboard = () => {
             <p className="text-muted-foreground text-lg">{t.dashboard.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Appearance Controls */}
+            <div className="flex items-center gap-1">
+              <LanguageSwitcher />
+              <ColorSchemePicker />
+              <ThemeToggle />
+            </div>
             <DateFilter
               value={dateFilter}
               dateRange={dateRange}
