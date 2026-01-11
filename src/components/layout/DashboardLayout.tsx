@@ -284,35 +284,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     <p className="text-xs text-muted-foreground">{userPlan} Plan</p>
                   </TooltipContent>
                 </Tooltip>
-                {isAdmin && (
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <Link to="/admin">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-primary hover:bg-primary/10 mb-1"
-                        >
-                          <Shield className="h-5 w-5" />
-                        </Button>
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">{t.nav.adminPanel}</TooltipContent>
-                  </Tooltip>
-                )}
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10 mb-1"
-                      onClick={() => setFeedbackOpen(true)}
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{t.feedback.title}</TooltipContent>
-                </Tooltip>
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
                     <Button
@@ -342,25 +313,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     </Badge>
                   </div>
                 </div>
-                {isAdmin && (
-                  <Link to="/admin">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start gap-3 text-muted-foreground hover:text-primary hover:bg-primary/10 mb-1"
-                    >
-                      <Shield className="h-5 w-5" />
-                      {t.nav.adminPanel}
-                    </Button>
-                  </Link>
-                )}
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3 text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10 mb-1"
-                  onClick={() => setFeedbackOpen(true)}
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  {t.feedback.title}
-                </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
@@ -378,7 +330,28 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Desktop Top Header */}
       <header className={`hidden lg:flex fixed top-0 right-0 z-40 h-14 bg-background/95 backdrop-blur-md transition-all duration-300 ${collapsed ? 'left-20' : 'left-72'}`}>
         <div className="flex items-center justify-end gap-2 px-6 w-full">
-          <div className="flex items-center gap-1">
+          {isAdmin && (
+            <Link to="/admin">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              >
+                <Shield className="h-4 w-4" />
+                {t.nav.adminPanel}
+              </Button>
+            </Link>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10"
+            onClick={() => setFeedbackOpen(true)}
+          >
+            <MessageSquare className="h-4 w-4" />
+            {t.feedback.title}
+          </Button>
+          <div className="flex items-center gap-1 border-l border-border pl-2 ml-1">
             <LanguageSwitcher />
             <ColorSchemePicker />
             <ThemeToggle />
