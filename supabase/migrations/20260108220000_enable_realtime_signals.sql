@@ -15,3 +15,4 @@ ALTER TABLE public.signals REPLICA IDENTITY FULL;
 
 
 
+

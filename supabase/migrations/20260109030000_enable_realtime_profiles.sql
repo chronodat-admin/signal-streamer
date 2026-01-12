@@ -15,3 +15,4 @@ ALTER TABLE public.profiles REPLICA IDENTITY FULL;
 
 
 
+
