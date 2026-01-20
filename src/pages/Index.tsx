@@ -186,10 +186,11 @@ const Index = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary to-cyan-500 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-              <Activity className="h-5 w-5 text-white" />
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-cyan-500 blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
-            </div>
+            <img 
+              src="/tm_logo.svg" 
+              alt="TradeMoq Logo" 
+              className="h-10 w-auto transition-transform group-hover:scale-105"
+            />
             <span className="text-xl font-heading font-bold tracking-tight">TradeMoq</span>
           </Link>
           
@@ -700,9 +701,11 @@ const Index = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <Link to="/" className="flex items-center gap-3 mb-4">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center">
-                  <Activity className="h-5 w-5 text-white" />
-                </div>
+                <img 
+                  src="/tm_logo.svg" 
+                  alt="TradeMoq Logo" 
+                  className="h-9 w-auto"
+                />
                 <span className="font-heading text-lg font-bold">TradeMoq</span>
               </Link>
               <p className="text-sm text-muted-foreground max-w-xs">
