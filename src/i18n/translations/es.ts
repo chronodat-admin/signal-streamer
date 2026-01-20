@@ -54,7 +54,7 @@ export const es: TranslationKeys = {
     accountExistsDescription: 'Este correo electrónico ya está registrado. Por favor inicia sesión en su lugar.',
     signUpFailed: 'Error al Registrarse',
     accountCreated: '¡Cuenta Creada!',
-    accountCreatedDescription: 'Bienvenido a TradeOrin. ¡Configuremos tu primera estrategia!',
+    accountCreatedDescription: 'Bienvenido a TradeMoq. ¡Configuremos tu primera estrategia!',
     googleLoginFailed: 'Error al Iniciar Sesión con Google',
     failedToConnectGoogle: 'Error al conectar con Google.',
   },

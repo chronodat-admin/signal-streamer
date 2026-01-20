@@ -14,7 +14,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://tradeorin.vercel.app/sitemap.xml
+Sitemap: https://trademoq.vercel.app/sitemap.xml
 
 # Disallow admin and dashboard pages from indexing
 Disallow: /dashboard

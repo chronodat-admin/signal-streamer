@@ -29,7 +29,7 @@ function formatDiscordMessage(payload: NotificationPayload) {
       color: color,
       timestamp: payload.signal_time,
       footer: {
-        text: 'TradeOrin',
+        text: 'TradeMoq',
       },
     }],
   };
@@ -62,7 +62,7 @@ function formatSlackMessage(payload: NotificationPayload) {
           short: true,
         },
       ],
-      footer: 'TradeOrin',
+      footer: 'TradeMoq',
       ts: Math.floor(new Date(payload.signal_time).getTime() / 1000),
     }],
   };

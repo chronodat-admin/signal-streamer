@@ -13,7 +13,7 @@ const Privacy = () => {
             <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary to-cyan-500 flex items-center justify-center shadow-lg shadow-primary/25">
               <Activity className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-heading font-bold tracking-tight">TradeOrin</span>
+            <span className="text-xl font-heading font-bold tracking-tight">TradeMoq</span>
           </Link>
           
           <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ const Privacy = () => {
             <section>
               <h2 className="font-heading text-2xl font-semibold mb-4">1. Introduction</h2>
               <p className="text-muted-foreground leading-relaxed">
-                TradeOrin ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our trading signal tracking service.
+                TradeMoq ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our trading signal tracking service.
               </p>
             </section>
 
@@ -157,8 +157,8 @@ const Privacy = () => {
               <h2 className="font-heading text-2xl font-semibold mb-4">10. Contact Us</h2>
               <p className="text-muted-foreground leading-relaxed">
                 If you have any questions about this Privacy Policy, please contact us at{' '}
-                <a href="mailto:privacy@tradeorin.com" className="text-primary hover:underline">
-                  privacy@tradeorin.com
+                <a href="mailto:privacy@trademoq.com" className="text-primary hover:underline">
+                  privacy@trademoq.com
                 </a>
               </p>
             </section>
@@ -170,7 +170,7 @@ const Privacy = () => {
       <footer className="border-t border-border py-8 px-6 bg-muted/10">
         <div className="container mx-auto max-w-3xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2026 TradeOrin. All rights reserved.
+            © 2026 TradeMoq. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <Link to="/privacy" className="text-foreground font-medium">Privacy</Link>

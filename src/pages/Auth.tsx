@@ -173,7 +173,7 @@ const Auth = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
           <Activity className="h-10 w-10 text-primary" />
-          <span className="text-2xl font-bold">TradeOrin</span>
+          <span className="text-2xl font-bold">TradeMoq</span>
         </Link>
 
         {/* Auth Card */}
@@ -185,7 +185,7 @@ const Auth = () => {
             <p className="text-muted-foreground">
               {isLogin
                 ? 'Sign in to access your dashboard'
-                : 'Get started with TradeOrin'}
+                : 'Get started with TradeMoq'}
             </p>
           </div>
 

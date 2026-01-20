@@ -186,7 +186,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
             <Activity className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg">TradeOrin</span>
+          <span className="font-bold text-lg">TradeMoq</span>
         </Link>
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
@@ -243,7 +243,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     <Activity className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <span className="text-xl font-bold">TradeOrin</span>
+                    <span className="text-xl font-bold">TradeMoq</span>
                     <p className="text-xs text-muted-foreground">Trading Signals</p>
                   </div>
                 </Link>

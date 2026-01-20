@@ -131,7 +131,7 @@ export default function Contact() {
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                   <MessageSquare className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-bold text-lg">TradeOrin</span>
+                <span className="font-bold text-lg">TradeMoq</span>
               </Link>
               <div className="flex items-center gap-2">
                 <ColorSchemePicker />
@@ -184,7 +184,7 @@ export default function Contact() {
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                 <MessageSquare className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-lg">TradeOrin</span>
+              <span className="font-bold text-lg">TradeMoq</span>
             </Link>
             <div className="flex items-center gap-2">
               <ColorSchemePicker />
@@ -219,8 +219,8 @@ export default function Contact() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <a href="mailto:support@tradeorin.com" className="text-sm text-primary hover:underline">
-                  support@tradeorin.com
+                <a href="mailto:support@trademoq.com" className="text-sm text-primary hover:underline">
+                  support@trademoq.com
                 </a>
               </CardContent>
             </Card>

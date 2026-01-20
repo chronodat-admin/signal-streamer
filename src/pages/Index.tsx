@@ -190,7 +190,7 @@ const Index = () => {
               <Activity className="h-5 w-5 text-white" />
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-cyan-500 blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
             </div>
-            <span className="text-xl font-heading font-bold tracking-tight">TradeOrin</span>
+            <span className="text-xl font-heading font-bold tracking-tight">TradeMoq</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-1">
@@ -249,7 +249,7 @@ const Index = () => {
               </h1>
               
               <p className="text-lg lg:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-slide-up" style={{ animationDelay: '200ms' }}>
-                Connect TradingView webhooks to TradeOrin. Track, analyze, and share your trading signals with{' '}
+                Connect TradingView webhooks to TradeMoq. Track, analyze, and share your trading signals with{' '}
                 <span className="text-foreground font-medium">sub-50ms latency</span>.
               </p>
               
@@ -353,7 +353,7 @@ const Index = () => {
               <span className="gradient-text">3 Steps</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              No coding required. Connect TradingView to TradeOrin in under a minute.
+              No coding required. Connect TradingView to TradeMoq in under a minute.
             </p>
           </div>
           
@@ -460,7 +460,7 @@ const Index = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <div className="px-4 py-1 rounded-md bg-background text-xs text-muted-foreground font-mono">
-                      app.tradeorin.io/dashboard
+                      app.trademoq.io/dashboard
                     </div>
                   </div>
                 </div>
@@ -472,7 +472,7 @@ const Index = () => {
                       <h4 className="font-heading font-semibold text-lg mb-4">Your Webhook URL</h4>
                       <div className="p-4 rounded-lg bg-muted/50 font-mono text-sm break-all">
                         <span className="text-muted-foreground">https://</span>
-                        <span className="text-primary">tradeorin.io/api/webhook/</span>
+                        <span className="text-primary">trademoq.io/api/webhook/</span>
                         <span className="text-cyan-500">abc123xyz</span>
                       </div>
                       <div className="grid grid-cols-2 gap-4 mt-6">
@@ -537,7 +537,7 @@ const Index = () => {
                       <div className="p-4 rounded-lg bg-muted/50">
                         <div className="flex items-center gap-2 text-sm mb-2">
                           <ExternalLink className="h-4 w-4 text-primary" />
-                          <span className="font-mono">tradeorin.io/s/</span>
+                          <span className="font-mono">trademoq.io/s/</span>
                           <span className="font-mono text-primary">your-strategy</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Share this link with your community</p>
@@ -678,7 +678,7 @@ const Index = () => {
             <span className="gradient-text">Signal Tracking?</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Join thousands of traders already using TradeOrin to track and analyze their trading signals.
+            Join thousands of traders already using TradeMoq to track and analyze their trading signals.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/auth">
@@ -703,7 +703,7 @@ const Index = () => {
                 <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center">
                   <Activity className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-heading text-lg font-bold">TradeOrin</span>
+                <span className="font-heading text-lg font-bold">TradeMoq</span>
               </Link>
               <p className="text-sm text-muted-foreground max-w-xs">
                 The modern way to track, analyze, and share your trading signals from TradingView and beyond.
@@ -734,7 +734,7 @@ const Index = () => {
 
           <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-sm text-muted-foreground">
-              © 2026 TradeOrin. All rights reserved.
+              © 2026 TradeMoq. All rights reserved.
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>

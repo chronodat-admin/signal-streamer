@@ -28,7 +28,7 @@ const PreferencesContext = createContext<PreferencesContextType | undefined>(und
 export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   const [preferences, setPreferencesState] = useState<Preferences>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('tradeorin-preferences');
+      const stored = localStorage.getItem('trademoq-preferences');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
@@ -63,7 +63,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         console.error('Invalid preference values detected:', { currency, dateFormat });
         // Reset to defaults if invalid
         setPreferencesState(defaultPreferences);
-        localStorage.setItem('tradeorin-preferences', JSON.stringify(defaultPreferences));
+        localStorage.setItem('trademoq-preferences', JSON.stringify(defaultPreferences));
         return;
       }
 
@@ -81,12 +81,12 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Failed to stringify preferences');
       }
       
-      localStorage.setItem('tradeorin-preferences', testStringify);
+      localStorage.setItem('trademoq-preferences', testStringify);
     } catch (error) {
       console.error('Error saving preferences to localStorage:', error);
       // If there's an error, try to save with default values as fallback
       try {
-        localStorage.setItem('tradeorin-preferences', JSON.stringify(defaultPreferences));
+        localStorage.setItem('trademoq-preferences', JSON.stringify(defaultPreferences));
         setPreferencesState(defaultPreferences);
       } catch (fallbackError) {
         console.error('Error saving default preferences:', fallbackError);

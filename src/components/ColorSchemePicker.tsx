@@ -27,7 +27,7 @@ const colorSchemes: ColorScheme[] = [
 export const ColorSchemePicker = () => {
   const [currentScheme, setCurrentScheme] = useState<ColorScheme>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('tradeorin-color-scheme');
+      const saved = localStorage.getItem('trademoq-color-scheme');
       if (saved) {
         const parsed = JSON.parse(saved);
         return colorSchemes.find(s => s.name === parsed.name) || colorSchemes[0];
@@ -57,7 +57,7 @@ export const ColorSchemePicker = () => {
         saturation: scheme.saturation,
         lightness: scheme.lightness,
       };
-      localStorage.setItem('tradeorin-color-scheme', JSON.stringify(serializable));
+      localStorage.setItem('trademoq-color-scheme', JSON.stringify(serializable));
     } catch (error) {
       console.error('Error saving color scheme to localStorage:', error);
     }

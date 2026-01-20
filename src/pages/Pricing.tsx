@@ -174,7 +174,7 @@ const Pricing = () => {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <Activity className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">TradeOrin</span>
+            <span className="text-xl font-bold">TradeMoq</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/auth">
@@ -292,7 +292,7 @@ const Pricing = () => {
         <div className="text-center mt-20">
           <h2 className="text-2xl font-bold mb-4">Ready to get started?</h2>
           <p className="text-muted-foreground mb-6">
-            Join hundreds of traders already using TradeOrin
+            Join hundreds of traders already using TradeMoq
           </p>
           <Link to="/auth">
             <Button size="lg" className="glow-effect">
@@ -313,12 +313,12 @@ const Pricing = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
             <Link to="/" className="flex items-center gap-2">
               <Activity className="h-6 w-6 text-primary" />
-              <span className="font-semibold">TradeOrin</span>
+              <span className="font-semibold">TradeMoq</span>
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <span>© 2026 TradeOrin</span>
+              <span>© 2026 TradeMoq</span>
             </div>
           </div>
         </div>

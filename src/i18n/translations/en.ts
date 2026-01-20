@@ -52,7 +52,7 @@ export const en = {
     accountExistsDescription: 'This email is already registered. Please sign in instead.',
     signUpFailed: 'Sign Up Failed',
     accountCreated: 'Account Created!',
-    accountCreatedDescription: 'Welcome to TradeOrin. Let\'s set up your first strategy!',
+    accountCreatedDescription: 'Welcome to TradeMoq. Let\'s set up your first strategy!',
     googleLoginFailed: 'Google Login Failed',
     failedToConnectGoogle: 'Failed to connect with Google.',
   },
