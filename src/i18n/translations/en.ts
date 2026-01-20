@@ -94,7 +94,6 @@ export const en = {
     
     // Stats
     totalPnL: 'Total P&L',
-    closedTrades: 'closed trades',
     winRate: 'Win Rate',
     wins: 'wins',
     noTrades: 'No trades',
@@ -534,7 +533,6 @@ export const en = {
     yourApiKey: 'YOUR_API_KEY',
     payloadMappingLabel: 'payload mapping',
     dataTicker: 'data.ticker',
-    timeField: 'time',
 
     // New Key Dialog
     apiKeyCreated: 'API Key Created',

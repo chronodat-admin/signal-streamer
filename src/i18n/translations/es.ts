@@ -96,7 +96,6 @@ export const es: TranslationKeys = {
     
     // Stats
     totalPnL: 'P&G Total',
-    closedTrades: 'operaciones cerradas',
     winRate: 'Tasa de Éxito',
     wins: 'victorias',
     noTrades: 'Sin operaciones',
@@ -536,7 +535,6 @@ export const es: TranslationKeys = {
     yourApiKey: 'TU_CLAVE_API',
     payloadMappingLabel: 'mapeo de carga útil',
     dataTicker: 'data.ticker',
-    timeField: 'tiempo',
 
     // New Key Dialog
     apiKeyCreated: 'Clave API Creada',
