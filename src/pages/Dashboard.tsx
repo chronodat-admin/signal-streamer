@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -84,93 +84,7 @@ const Dashboard = () => {
   const [dateFilter, setDateFilter] = useState<DateFilterType>('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
-  useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  // Helper function to get date range based on filter type
-  const getDateRange = (filter: DateFilterType, customRange?: DateRange): { from: Date | null; to: Date | null } => {
-    const now = new Date();
-    now.setHours(23, 59, 59, 999); // End of today
-
-    switch (filter) {
-      case 'today': {
-        const todayStart = new Date(now);
-        todayStart.setHours(0, 0, 0, 0);
-        return { from: todayStart, to: now };
-      }
-      case 'week': {
-        const weekStart = new Date(now);
-        weekStart.setDate(weekStart.getDate() - 6);
-        weekStart.setHours(0, 0, 0, 0);
-        return { from: weekStart, to: now };
-      }
-      case 'month': {
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        monthStart.setHours(0, 0, 0, 0);
-        return { from: monthStart, to: now };
-      }
-      case 'year': {
-        const yearStart = new Date(now.getFullYear(), 0, 1);
-        yearStart.setHours(0, 0, 0, 0);
-        return { from: yearStart, to: now };
-      }
-      case 'custom': {
-        if (customRange?.from && customRange?.to) {
-          const from = new Date(customRange.from);
-          from.setHours(0, 0, 0, 0);
-          const to = new Date(customRange.to);
-          to.setHours(23, 59, 59, 999);
-          return { from, to };
-        }
-        return { from: null, to: null };
-      }
-      default:
-        return { from: null, to: null };
-    }
-  };
-
-  // Filter trades based on selected date range
-  const filteredTrades = useMemo(() => {
-    if (dateFilter === 'all') {
-      return allTrades;
-    }
-
-    const range = getDateRange(dateFilter, dateRange);
-    if (!range.from || !range.to) {
-      return allTrades;
-    }
-
-    return allTrades.filter((trade) => {
-      const tradeDate = new Date(trade.entry_time);
-      return tradeDate >= range.from! && tradeDate <= range.to!;
-    });
-  }, [allTrades, dateFilter, dateRange]);
-
-  // Calculate filtered stats
-  const filteredStats = useMemo(() => {
-    const closedTrades = filteredTrades.filter((t) => t.status === 'closed');
-    const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl_percent || 0), 0);
-    const totalTrades = closedTrades.length;
-    const winningTrades = closedTrades.filter((t) => (t.pnl_percent || 0) > 0).length;
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-    const openPositions = filteredTrades.filter((t) => t.status === 'open').length;
-    const bestTrade = closedTrades.length > 0
-      ? Math.max(...closedTrades.map(t => t.pnl_percent || 0))
-      : null;
-
-    return {
-      totalPnL,
-      totalTrades,
-      winRate,
-      openPositions,
-      bestTrade,
-    };
-  }, [filteredTrades]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -295,7 +209,147 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user, fetchDashboardData]);
+
+  // Subscribe to real-time updates for signals and trades
+  useEffect(() => {
+    if (!user) return;
+
+    const channelName = `dashboard:${user.id}`;
+    
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'signals',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // Refresh dashboard data when a new signal is received
+          fetchDashboardData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'trades',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // Refresh dashboard data when a new trade is created
+          fetchDashboardData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'trades',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // Refresh dashboard data when a trade is updated (e.g., closed)
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchDashboardData]);
+
+  // Helper function to get date range based on filter type
+  const getDateRange = (filter: DateFilterType, customRange?: DateRange): { from: Date | null; to: Date | null } => {
+    const now = new Date();
+    now.setHours(23, 59, 59, 999); // End of today
+
+    switch (filter) {
+      case 'today': {
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        return { from: todayStart, to: now };
+      }
+      case 'week': {
+        const weekStart = new Date(now);
+        weekStart.setDate(weekStart.getDate() - 6);
+        weekStart.setHours(0, 0, 0, 0);
+        return { from: weekStart, to: now };
+      }
+      case 'month': {
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        monthStart.setHours(0, 0, 0, 0);
+        return { from: monthStart, to: now };
+      }
+      case 'year': {
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        yearStart.setHours(0, 0, 0, 0);
+        return { from: yearStart, to: now };
+      }
+      case 'custom': {
+        if (customRange?.from && customRange?.to) {
+          const from = new Date(customRange.from);
+          from.setHours(0, 0, 0, 0);
+          const to = new Date(customRange.to);
+          to.setHours(23, 59, 59, 999);
+          return { from, to };
+        }
+        return { from: null, to: null };
+      }
+      default:
+        return { from: null, to: null };
+    }
   };
+
+  // Filter trades based on selected date range
+  const filteredTrades = useMemo(() => {
+    if (dateFilter === 'all') {
+      return allTrades;
+    }
+
+    const range = getDateRange(dateFilter, dateRange);
+    if (!range.from || !range.to) {
+      return allTrades;
+    }
+
+    return allTrades.filter((trade) => {
+      const tradeDate = new Date(trade.entry_time);
+      return tradeDate >= range.from! && tradeDate <= range.to!;
+    });
+  }, [allTrades, dateFilter, dateRange]);
+
+  // Calculate filtered stats
+  const filteredStats = useMemo(() => {
+    const closedTrades = filteredTrades.filter((t) => t.status === 'closed');
+    const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl_percent || 0), 0);
+    const totalTrades = closedTrades.length;
+    const winningTrades = closedTrades.filter((t) => (t.pnl_percent || 0) > 0).length;
+    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+    const openPositions = filteredTrades.filter((t) => t.status === 'open').length;
+    const bestTrade = closedTrades.length > 0
+      ? Math.max(...closedTrades.map(t => t.pnl_percent || 0))
+      : null;
+
+    return {
+      totalPnL,
+      totalTrades,
+      winRate,
+      openPositions,
+      bestTrade,
+    };
+  }, [filteredTrades]);
 
   const getSignalBadge = (type: string) => {
     const upperType = type.toUpperCase();
