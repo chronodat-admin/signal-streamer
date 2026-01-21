@@ -147,8 +147,26 @@ const AnimatedCounter = ({ value, suffix = '' }: { value: string; suffix?: strin
 
 const Index = () => {
   const { user } = useAuth();
-  const { theme } = useTheme();
   const [activeFeature, setActiveFeature] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const features = [
     {
@@ -188,7 +206,7 @@ const Index = () => {
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link to="/" className="flex items-center group h-full">
             <img 
-              src="/tm_logo.svg" 
+              src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
               alt="TradeMoq Logo" 
               className="h-48 w-auto transition-transform group-hover:scale-105"
             />
@@ -700,9 +718,9 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
-              <Link to="/" className="flex items-center mb-4">
+              <Link to="/" className="flex items-center -my-4">
                 <img 
-                  src={theme === 'light' ? '/tm_logo_black.svg' : '/tm_logo.svg'} 
+                  src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
                   alt="TradeMoq Logo" 
                   className="h-56 w-auto"
                 />
