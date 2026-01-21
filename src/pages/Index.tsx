@@ -205,10 +205,11 @@ const Index = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl overflow-hidden" style={{ height: '64px' }}>
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link to="/" className="flex items-center group h-full">
-            <div className="text-4xl transition-transform group-hover:scale-105">
-              <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
-              <span style={{ fontFamily: "'Rubik', 'Nunito', sans-serif", fontWeight: 800 }}>Moq</span>
-            </div>
+            <img 
+              src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
+              alt="TradeMoq Logo" 
+              className="h-48 w-auto transition-transform group-hover:scale-105"
+            />
           </Link>
           
           <div className="hidden md:flex items-center gap-1">
@@ -718,10 +719,11 @@ const Index = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <Link to="/" className="flex items-center -my-4">
-                <div className="text-3xl">
-                  <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
-                  <span style={{ fontFamily: "'Rubik', 'Nunito', sans-serif", fontWeight: 800 }}>Moq</span>
-                </div>
+                <img 
+                  src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
+                  alt="TradeMoq Logo" 
+                  className="h-56 w-auto"
+                />
               </Link>
               <p className="text-sm text-muted-foreground max-w-xs">
                 The modern way to track, analyze, and share your trading signals from TradingView and beyond.
