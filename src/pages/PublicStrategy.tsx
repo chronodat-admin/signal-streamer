@@ -230,7 +230,7 @@ const PublicStrategy = () => {
             <img
               src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'}
               alt="TradeMoq Logo"
-              className="h-10 w-auto transition-all duration-300 group-hover:scale-105"
+              className="h-48 w-auto transition-all duration-300 group-hover:scale-105"
               key={theme}
             />
           </Link>
