@@ -1,53 +1,65 @@
--- Fix infinite recursion in RLS policies
--- The issue: has_role() queries user_roles, but user_roles policy uses has_role(), creating recursion
--- Solution: Temporarily disable RLS on user_roles for the function, or use a different approach
+-- ============================================================================
+-- FIX: Infinite recursion in RLS policies for user_roles
+-- ============================================================================
+-- 
+-- PROBLEM: The "Admins can manage roles" policy on user_roles calls has_role(),
+-- which queries user_roles, which triggers the policy again → infinite loop.
+--
+-- SOLUTION: 
+-- 1. Drop ALL problematic policies on user_roles
+-- 2. Create has_role() with SECURITY DEFINER + explicit RLS bypass
+-- 3. Only allow simple, non-recursive policies on user_roles
+-- ============================================================================
 
--- Drop the problematic policy that causes recursion
+-- Step 1: Drop ALL policies on user_roles to start fresh
 DROP POLICY IF EXISTS "Admins can manage roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Users can view their own roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Users can view own roles" ON public.user_roles;
 
--- Update has_role() function
--- SECURITY DEFINER functions should bypass RLS when owned by postgres
--- In Supabase, functions are owned by postgres by default, which should bypass RLS
+-- Step 2: Create a helper function that bypasses RLS completely
+-- This uses a direct query with RLS disabled for the function execution
 CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
 RETURNS boolean
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
+SET row_security = off  -- This explicitly disables RLS for this function
 AS $$
-  -- SECURITY DEFINER functions run with the privileges of the function owner (postgres)
-  -- This should bypass RLS policies on user_roles
-  SELECT EXISTS (
+BEGIN
+  RETURN EXISTS (
     SELECT 1
     FROM public.user_roles
     WHERE user_id = _user_id
       AND role = _role
-  )
+  );
+END;
 $$;
 
--- Ensure the function is owned by postgres (should be default, but explicit is better)
--- This ensures SECURITY DEFINER functions run with postgres privileges, bypassing RLS
-DO $$
-BEGIN
-  -- Change function owner to postgres if not already
-  ALTER FUNCTION public.has_role(uuid, app_role) OWNER TO postgres;
-EXCEPTION
-  WHEN OTHERS THEN
-    -- Function might not exist or already owned by postgres, continue
-    NULL;
-END $$;
+-- Step 3: Grant execute permissions
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, app_role) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, app_role) TO anon;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, app_role) TO service_role;
 
--- Recreate the user_roles admin policy
--- SECURITY DEFINER functions owned by postgres should bypass RLS
-CREATE POLICY "Admins can manage roles"
-ON public.user_roles FOR ALL
-USING (public.has_role(auth.uid(), 'admin'));
+-- Step 4: Recreate ONLY the simple, non-recursive policy on user_roles
+-- Users can only see their own roles - this doesn't cause recursion
+CREATE POLICY "Users can view their own roles"
+ON public.user_roles FOR SELECT
+USING (auth.uid() = user_id);
+
+-- NOTE: Admins should use the service_role key for managing user_roles
+-- We intentionally do NOT add an admin policy on user_roles to avoid recursion
+
+-- ============================================================================
+-- Admin policies for profiles table (these are safe - no recursion)
+-- ============================================================================
 
 -- Drop existing policies if they exist (idempotent)
 DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
 
 -- Add RLS policy to allow admins to view all profiles
+-- This is safe because has_role() now bypasses RLS on user_roles
 CREATE POLICY "Admins can view all profiles"
 ON public.profiles FOR SELECT
 USING (public.has_role(auth.uid(), 'admin'));
