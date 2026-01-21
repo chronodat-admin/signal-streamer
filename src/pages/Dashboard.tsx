@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Target, Trophy, Shield } from 'lucide-react';
+import { Activity, TrendingUp, Layers, Clock, ArrowRight, Plus, Sparkles, BarChart3, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Target, Trophy, Shield, RefreshCw } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useLivePrices, formatPnL as formatLivePnL, getPnLColorClass } from '@/hooks/useLivePrices';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { formatPnL } from '@/lib/pnlUtils';
@@ -330,6 +331,25 @@ const Dashboard = () => {
     });
   }, [allTrades, dateFilter, dateRange]);
 
+  // Get unique symbols from open trades for live price fetching
+  const openTradeSymbols = useMemo(() => {
+    const openTrades = filteredTrades.filter(t => t.status === 'open');
+    const symbols = [...new Set(openTrades.map(t => t.symbol))];
+    return symbols;
+  }, [filteredTrades]);
+
+  // Fetch live prices for open trades
+  const { 
+    prices: livePrices, 
+    loading: pricesLoading, 
+    lastUpdated: pricesLastUpdated,
+    refresh: refreshPrices,
+    calculatePnL 
+  } = useLivePrices(openTradeSymbols, { 
+    pollingInterval: 30000, // Update every 30 seconds
+    enabled: openTradeSymbols.length > 0 
+  });
+
   // Calculate filtered stats
   const filteredStats = useMemo(() => {
     const closedTrades = filteredTrades.filter((t) => t.status === 'closed');
@@ -539,14 +559,36 @@ const Dashboard = () => {
             <CardTitle className="flex items-center gap-2 text-base font-semibold">
               <Activity className="h-4 w-4 text-muted-foreground" />
               {t.dashboard.openTrades}
+              {pricesLastUpdated && (
+                <span className="text-xs font-normal text-muted-foreground ml-2">
+                  {pricesLoading ? (
+                    <RefreshCw className="h-3 w-3 animate-spin inline" />
+                  ) : (
+                    `Updated ${pricesLastUpdated.toLocaleTimeString()}`
+                  )}
+                </span>
+              )}
             </CardTitle>
-            {filteredTrades.filter(tr => tr.status === 'open').length > 0 && (
-              <Link to="/dashboard/signals">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  {t.common.viewAll} <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
+            <div className="flex items-center gap-2">
+              {filteredTrades.filter(tr => tr.status === 'open').length > 0 && (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={refreshPrices}
+                    disabled={pricesLoading}
+                    className="gap-1.5 text-muted-foreground hover:text-foreground"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${pricesLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Link to="/dashboard/signals">
+                    <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                      {t.common.viewAll} <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {filteredTrades.filter(tr => tr.status === 'open').length === 0 ? (
@@ -560,47 +602,64 @@ const Dashboard = () => {
                       <TableHead>{t.dashboard.symbol}</TableHead>
                       <TableHead>{t.dashboard.entryPrice}</TableHead>
                       <TableHead>{t.dashboard.current}</TableHead>
+                      <TableHead>P&L</TableHead>
                       <TableHead>{t.dashboard.strategy}</TableHead>
                       <TableHead>{t.dashboard.entryTime}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTrades.filter(tr => tr.status === 'open').map((trade) => (
-                      <TableRow key={trade.id}>
-                        <TableCell>
-                          <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
-                            {trade.direction === 'long' ? (
-                              <span className="flex items-center gap-1">
-                                <ArrowUpRight className="h-3 w-3" />
-                                {t.dashboard.long}
-                              </span>
+                    {filteredTrades.filter(tr => tr.status === 'open').map((trade) => {
+                      const { currentPrice, pnlPercent } = calculatePnL(
+                        trade.symbol, 
+                        Number(trade.entry_price), 
+                        trade.direction
+                      );
+                      return (
+                        <TableRow key={trade.id}>
+                          <TableCell>
+                            <Badge variant="outline" className={trade.direction === 'long' ? 'signal-buy border px-3 py-1' : 'signal-sell border px-3 py-1'}>
+                              {trade.direction === 'long' ? (
+                                <span className="flex items-center gap-1">
+                                  <ArrowUpRight className="h-3 w-3" />
+                                  {t.dashboard.long}
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <ArrowDownRight className="h-3 w-3" />
+                                  {t.dashboard.short}
+                                </span>
+                              )}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-mono font-medium">{trade.symbol}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-mono">{formatCurrency(Number(trade.entry_price), preferences.currency)}</span>
+                          </TableCell>
+                          <TableCell>
+                            {currentPrice !== null ? (
+                              <span className="font-mono">{formatCurrency(currentPrice, preferences.currency)}</span>
                             ) : (
-                              <span className="flex items-center gap-1">
-                                <ArrowDownRight className="h-3 w-3" />
-                                {t.dashboard.short}
-                              </span>
+                              <span className="text-muted-foreground">—</span>
                             )}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-mono font-medium">{trade.symbol}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-mono">{formatCurrency(Number(trade.entry_price), preferences.currency)}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-muted-foreground">—</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-muted-foreground">{trade.strategy_name}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-muted-foreground">
-                            {formatDateTime(trade.entry_time, preferences.dateFormat)}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-mono font-medium ${getPnLColorClass(pnlPercent)}`}>
+                              {formatLivePnL(pnlPercent)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-muted-foreground">{trade.strategy_name}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-muted-foreground">
+                              {formatDateTime(trade.entry_time, preferences.dateFormat)}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
