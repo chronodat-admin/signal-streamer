@@ -223,6 +223,7 @@ const Index = () => {
           <div className="hidden md:flex items-center gap-1">
             <a href="#features" className="nav-link">Features</a>
             <a href="#how-it-works" className="nav-link">How It Works</a>
+            <Link to="/leaderboard" className="nav-link">Leaderboard</Link>
             <a href="#pricing" className="nav-link">Pricing</a>
             <Link to="/blog" className="nav-link">Blog</Link>
           </div>
@@ -742,6 +743,7 @@ const Index = () => {
               <h4 className="font-heading font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+                <li><Link to="/leaderboard" className="hover:text-foreground transition-colors">Leaderboard</Link></li>
                 <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
                 <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</a></li>
                 <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>

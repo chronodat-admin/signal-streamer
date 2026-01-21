@@ -25,6 +25,8 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Leaderboard from "./pages/Leaderboard";
+import CreatorDashboard from "./pages/CreatorDashboard";
 import NotFound from "./pages/NotFound";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { UserManagement } from "./pages/admin/UserManagement";
@@ -56,6 +58,7 @@ const App = () => (
               <Route path="/dashboard/logs" element={<AlertLogs />} />
               <Route path="/dashboard/api-keys" element={<ApiKeys />} />
               <Route path="/s/:slug" element={<PublicStrategy />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
@@ -64,6 +67,7 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/dashboard/billing" element={<Billing />} />
               <Route path="/dashboard/preferences" element={<Preferences />} />
+              <Route path="/dashboard/creator" element={<CreatorDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
               <Route path="/admin/subscriptions" element={<SubscribedUsers />} />

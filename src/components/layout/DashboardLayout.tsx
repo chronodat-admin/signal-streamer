@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, Settings, Radio, Plug, FileText, Key, MessageSquare, Shield } from 'lucide-react';
+import { Activity, LayoutDashboard, Layers, CreditCard, LogOut, Loader2, Menu, X, Settings, Radio, Plug, FileText, Key, MessageSquare, Shield, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -20,7 +20,7 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-type NavKey = 'dashboard' | 'strategies' | 'signals' | 'integrations' | 'apiKeys' | 'alertLogs' | 'billing' | 'preferences';
+type NavKey = 'dashboard' | 'strategies' | 'signals' | 'integrations' | 'apiKeys' | 'alertLogs' | 'creator' | 'billing' | 'preferences';
 
 const navigationConfig: { key: NavKey; href: string; icon: typeof LayoutDashboard }[] = [
   { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -29,6 +29,7 @@ const navigationConfig: { key: NavKey; href: string; icon: typeof LayoutDashboar
   { key: 'integrations', href: '/dashboard/integrations', icon: Plug },
   { key: 'apiKeys', href: '/dashboard/api-keys', icon: Key },
   { key: 'alertLogs', href: '/dashboard/logs', icon: FileText },
+  { key: 'creator', href: '/dashboard/creator', icon: Crown },
   { key: 'billing', href: '/dashboard/billing', icon: CreditCard },
   { key: 'preferences', href: '/dashboard/preferences', icon: Settings },
 ];
