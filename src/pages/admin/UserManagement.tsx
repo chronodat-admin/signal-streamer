@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
   Users, 
   Crown, 
@@ -17,7 +18,8 @@ import {
   ChevronDown,
   Loader2,
   MapPin,
-  Globe
+  Globe,
+  AlertCircle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -66,6 +68,7 @@ interface UserStats {
 export const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'moderator' | 'user'>('all');
   const [stats, setStats] = useState<UserStats>({
@@ -88,6 +91,7 @@ export const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // Fetch all profiles with their roles
       const { data: profiles, error: profilesError } = await supabase
@@ -95,14 +99,20 @@ export const UserManagement = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw new Error(`Failed to fetch profiles: ${profilesError.message}. Make sure you have admin permissions and RLS policies are configured correctly.`);
+      }
 
       // Fetch all user roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+        throw new Error(`Failed to fetch user roles: ${rolesError.message}`);
+      }
 
       // Create a map of user_id to roles
       const rolesMap = new Map<string, { role: 'admin' | 'moderator' | 'user' }[]>();
@@ -196,6 +206,8 @@ export const UserManagement = () => {
       });
     } catch (error) {
       console.error('Error fetching users:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred while fetching users';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -264,6 +276,15 @@ export const UserManagement = () => {
         <h1 className="text-3xl font-bold tracking-tight mb-2">User Management</h1>
         <p className="text-muted-foreground">Manage user roles, permissions, and view analytics</p>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error Loading Users</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       {/* User Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
