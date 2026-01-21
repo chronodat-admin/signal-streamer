@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { generateSignalInsight } from "../_shared/openai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,11 @@ interface AlertPayload {
   signal_time: string;
   strategy_name: string;
   strategy_id: string;
+  // AI-generated insight (optional)
+  ai_insight?: string;
+  // Strategy stats for context
+  win_rate?: number;
+  total_trades?: number;
 }
 
 // Discord webhook format
@@ -23,17 +29,30 @@ async function sendDiscordAlert(
   supabase: any,
   logData: { userId: string; strategyId: string; signalId: string; integrationId: string }
 ): Promise<{ success: boolean; error?: string; responseStatus?: number; responseBody?: string }> {
-  const color = payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG" 
-    ? 0x22c55e // Green
-    : 0xef4444; // Red
+  const isBuy = payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG";
+  const color = isBuy ? 0x22c55e : 0xef4444; // Green or Red
+  const emoji = isBuy ? "🟢" : "🔴";
+
+  // Build description with optional AI insight
+  let description = `**Strategy:** ${payload.strategy_name}\n**Price:** $${payload.price.toFixed(2)}\n**Time:** ${new Date(payload.signal_time).toLocaleString()}`;
+  
+  // Add strategy stats if available
+  if (payload.win_rate !== undefined && payload.total_trades !== undefined && payload.total_trades >= 5) {
+    description += `\n\n📊 **Strategy Stats:** ${payload.win_rate.toFixed(1)}% win rate (${payload.total_trades} trades)`;
+  }
+  
+  // Add AI insight if available
+  if (payload.ai_insight) {
+    description += `\n\n🤖 **AI Insight:** ${payload.ai_insight}`;
+  }
 
   const embed = {
-    title: `${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}`,
-    description: `**Strategy:** ${payload.strategy_name}\n**Price:** $${payload.price.toFixed(2)}\n**Time:** ${new Date(payload.signal_time).toLocaleString()}`,
+    title: `${emoji} ${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}`,
+    description: description,
     color: color,
     timestamp: payload.signal_time,
     footer: {
-      text: "trademoq Trading Signals",
+      text: "TradeMoq AI-Powered Signals",
     },
   };
 
@@ -182,14 +201,23 @@ async function sendSlackAlert(webhookUrl: string, payload: AlertPayload): Promis
 
 // Telegram bot API
 async function sendTelegramAlert(config: { bot_token: string; chat_id: string }, payload: AlertPayload): Promise<boolean> {
-  const emoji = payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG" 
-    ? "🟢" 
-    : "🔴";
+  const isBuy = payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG";
+  const emoji = isBuy ? "🟢" : "🔴";
 
-  const message = `${emoji} *${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}*\n\n` +
+  let message = `${emoji} *${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}*\n\n` +
     `📊 *Strategy:* ${payload.strategy_name}\n` +
     `💰 *Price:* $${payload.price.toFixed(2)}\n` +
     `🕐 *Time:* ${new Date(payload.signal_time).toLocaleString()}`;
+
+  // Add strategy stats if available
+  if (payload.win_rate !== undefined && payload.total_trades !== undefined && payload.total_trades >= 5) {
+    message += `\n\n📈 *Win Rate:* ${payload.win_rate.toFixed(1)}% (${payload.total_trades} trades)`;
+  }
+
+  // Add AI insight if available
+  if (payload.ai_insight) {
+    message += `\n\n🤖 *AI Insight:* ${payload.ai_insight}`;
+  }
 
   const url = `https://api.telegram.org/bot${config.bot_token}/sendMessage`;
 
@@ -739,6 +767,53 @@ serve(async (req) => {
       });
     }
 
+    // Fetch strategy stats for context
+    let strategyStats: { win_rate: number; total_trades: number } | null = null;
+    try {
+      const { data: stats } = await supabase
+        .from("strategy_stats")
+        .select("win_rate, total_trades")
+        .eq("strategy_id", strategy_id)
+        .maybeSingle();
+      
+      if (stats && stats.total_trades >= 5) {
+        strategyStats = {
+          win_rate: Number(stats.win_rate),
+          total_trades: stats.total_trades,
+        };
+      }
+    } catch (e) {
+      console.log("Could not fetch strategy stats:", e);
+    }
+
+    // Generate AI insight if OpenAI is configured
+    let aiInsight: string | undefined;
+    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+    
+    if (openaiApiKey) {
+      try {
+        console.log("Generating AI insight for signal...");
+        const insight = await generateSignalInsight(
+          {
+            signal_type: signal.signal_type,
+            symbol: signal.symbol,
+            price: signal.price,
+            strategy_name: signal.strategies?.name || "Unknown",
+            win_rate: strategyStats?.win_rate,
+            total_trades: strategyStats?.total_trades,
+          },
+          openaiApiKey
+        );
+        
+        if (insight?.insight) {
+          aiInsight = insight.insight;
+          console.log("AI insight generated:", aiInsight);
+        }
+      } catch (e) {
+        console.log("AI insight generation failed (non-critical):", e);
+      }
+    }
+
     const payload: AlertPayload = {
       signal_type: signal.signal_type,
       symbol: signal.symbol,
@@ -746,6 +821,9 @@ serve(async (req) => {
       signal_time: signal.signal_time,
       strategy_name: signal.strategies?.name || "Unknown",
       strategy_id: strategy_id,
+      ai_insight: aiInsight,
+      win_rate: strategyStats?.win_rate,
+      total_trades: strategyStats?.total_trades,
     };
 
     const results = [];

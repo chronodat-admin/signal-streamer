@@ -20,6 +20,7 @@ import Billing from "./pages/Billing";
 import Preferences from "./pages/Preferences";
 import AlertLogs from "./pages/AlertLogs";
 import ApiKeys from "./pages/ApiKeys";
+import ApiDocs from "./pages/ApiDocs";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/s/:slug" element={<PublicStrategy />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/api-docs" element={<ApiDocs />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/contact" element={<Contact />} />

@@ -151,9 +151,9 @@ export default function Contact() {
                   <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-              <CardTitle className="text-2xl">Message Sent Successfully!</CardTitle>
+              <CardTitle className="text-2xl">{t.contact.messageSent}</CardTitle>
               <CardDescription className="text-base mt-2">
-                Thank you for contacting us. We've received your message and will get back to you as soon as possible.
+                {t.contact.messageSentDescription}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -161,7 +161,7 @@ export default function Contact() {
                 <Button asChild variant="outline">
                   <Link to="/">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Home
+                    {t.common.back} to Home
                   </Link>
                 </Button>
                 <Button onClick={() => setSubmitted(false)}>
@@ -260,7 +260,7 @@ export default function Contact() {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4 relative">
                   {/* Honeypot field - hidden from users but visible to bots */}
-                  <div className="absolute opacity-0 pointer-events-none" style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
+                  <div className="sr-only" aria-hidden="true">
                     <Label htmlFor="website">Website (leave blank)</Label>
                     <Input
                       id="website"
