@@ -426,8 +426,13 @@ const Leaderboard = () => {
           <div className="container mx-auto max-w-6xl">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <Link to="/" className="flex items-center gap-2">
-                <Activity className="h-6 w-6 text-primary" />
-                <span className="font-semibold">TradeMoq</span>
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-white" />
+                </div>
+                <div className="text-lg">
+                  <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
+                  <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 800 }}>moq</span>
+                </div>
               </Link>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
