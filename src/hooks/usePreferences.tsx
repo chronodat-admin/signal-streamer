@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export type Currency = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CNY' | 'INR' | 'BTC' | 'ETH';
 export type DateFormat = 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD' | 'DD MMM YYYY' | 'MMM DD, YYYY';
@@ -7,6 +8,7 @@ interface Preferences {
   currency: Currency;
   dateFormat: DateFormat;
   signalNotifications: boolean;
+  aiInsightsEnabled: boolean;
 }
 
 interface PreferencesContextType {
@@ -14,6 +16,7 @@ interface PreferencesContextType {
   setCurrency: (currency: Currency) => void;
   setDateFormat: (format: DateFormat) => void;
   setSignalNotifications: (enabled: boolean) => void;
+  setAiInsightsEnabled: (enabled: boolean) => void;
   updatePreferences: (prefs: Partial<Preferences>) => void;
 }
 
@@ -21,6 +24,7 @@ const defaultPreferences: Preferences = {
   currency: 'USD',
   dateFormat: 'MMM DD, YYYY',
   signalNotifications: true,
+  aiInsightsEnabled: true,
 };
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
@@ -43,6 +47,9 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
             signalNotifications: typeof parsed.signalNotifications === 'boolean'
               ? parsed.signalNotifications
               : defaultPreferences.signalNotifications,
+            aiInsightsEnabled: typeof parsed.aiInsightsEnabled === 'boolean'
+              ? parsed.aiInsightsEnabled
+              : defaultPreferences.aiInsightsEnabled,
           };
           return loaded;
         } catch {
@@ -52,6 +59,28 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     }
     return defaultPreferences;
   });
+
+  // Fetch AI insights preference from database on mount
+  useEffect(() => {
+    const fetchAiPreference = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('ai_insights_enabled')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profile && typeof profile.ai_insights_enabled === 'boolean') {
+          setPreferencesState(prev => ({
+            ...prev,
+            aiInsightsEnabled: profile.ai_insights_enabled,
+          }));
+        }
+      }
+    };
+    fetchAiPreference();
+  }, []);
 
   useEffect(() => {
     try {
@@ -73,6 +102,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         currency: currency as Currency,
         dateFormat: dateFormat as DateFormat,
         signalNotifications: preferences.signalNotifications,
+        aiInsightsEnabled: preferences.aiInsightsEnabled,
       };
       
       // Double-check that the object is serializable
@@ -94,7 +124,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     }
     // Only depend on the actual values, not the object reference
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preferences.currency, preferences.dateFormat, preferences.signalNotifications]);
+  }, [preferences.currency, preferences.dateFormat, preferences.signalNotifications, preferences.aiInsightsEnabled]);
 
   const setCurrency = (currency: Currency) => {
     // Validate that currency is a valid string value
@@ -107,6 +137,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       currency: currency as Currency,
       dateFormat: prev.dateFormat,
       signalNotifications: prev.signalNotifications,
+      aiInsightsEnabled: prev.aiInsightsEnabled,
     }));
   };
 
@@ -121,6 +152,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       currency: prev.currency,
       dateFormat: format as DateFormat,
       signalNotifications: prev.signalNotifications,
+      aiInsightsEnabled: prev.aiInsightsEnabled,
     }));
   };
 
@@ -129,7 +161,35 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       currency: prev.currency,
       dateFormat: prev.dateFormat,
       signalNotifications: enabled,
+      aiInsightsEnabled: prev.aiInsightsEnabled,
     }));
+  };
+
+  const setAiInsightsEnabled = async (enabled: boolean) => {
+    // Update local state immediately
+    setPreferencesState((prev) => ({
+      currency: prev.currency,
+      dateFormat: prev.dateFormat,
+      signalNotifications: prev.signalNotifications,
+      aiInsightsEnabled: enabled,
+    }));
+
+    // Sync to database
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ ai_insights_enabled: enabled })
+          .eq('user_id', user.id);
+        
+        if (error) {
+          console.error('Error saving AI insights preference:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating AI insights preference:', error);
+    }
   };
 
   const updatePreferences = (prefs: Partial<Preferences>) => {
@@ -146,6 +206,9 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         signalNotifications: typeof prefs.signalNotifications === 'boolean'
           ? prefs.signalNotifications
           : prev.signalNotifications,
+        aiInsightsEnabled: typeof prefs.aiInsightsEnabled === 'boolean'
+          ? prefs.aiInsightsEnabled
+          : prev.aiInsightsEnabled,
       };
       return updated;
     });
@@ -156,6 +219,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     currency: preferences.currency,
     dateFormat: preferences.dateFormat,
     signalNotifications: preferences.signalNotifications,
+    aiInsightsEnabled: preferences.aiInsightsEnabled,
   };
 
   return (
@@ -165,6 +229,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         setCurrency,
         setDateFormat,
         setSignalNotifications,
+        setAiInsightsEnabled,
         updatePreferences,
       }}
     >

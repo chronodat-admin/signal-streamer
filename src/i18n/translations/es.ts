@@ -848,6 +848,12 @@ export const es: TranslationKeys = {
     pushNotifications: 'Notificaciones Push',
     pushNotificationsDescription: 'Recibe notificaciones push en tu navegador',
     
+    // AI Features
+    aiFeatures: 'Funciones de IA',
+    aiFeaturesDescription: 'Configura las funciones de IA para tus señales de trading',
+    aiInsights: 'Análisis de IA',
+    aiInsightsDescription: 'Incluir análisis e insights generados por IA en tus alertas de Discord/Slack. La IA analiza el rendimiento de tu estrategia y operaciones recientes para proporcionar contexto.',
+    
     // Toast messages
     preferencesSaved: 'Preferencias guardadas',
     failedToSave: 'Error al guardar preferencias',

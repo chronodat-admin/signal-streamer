@@ -802,16 +802,24 @@ serve(async (req) => {
       });
     }
 
-    // Fetch strategy stats for context
+    // Fetch comprehensive strategy stats and history for AI context
     let strategyStats: { win_rate: number; total_trades: number } | null = null;
+    let recentSignals: Array<{ signal_type: string; symbol: string; price?: number; pnl_percent?: number; created_at?: string }> = [];
+    let currentStreak = 0;
+    let streakType: 'winning' | 'losing' | 'none' = 'none';
+    let symbolStats: { total_signals: number; wins: number; losses: number; avg_pnl: number; last_signal_type?: string; last_signal_result?: 'win' | 'loss' | 'open' } | null = null;
+    let signalsToday = 0;
+    let signalsThisWeek = 0;
+
     try {
+      // Fetch strategy stats
       const { data: stats } = await supabase
         .from("strategy_stats")
         .select("win_rate, total_trades")
         .eq("strategy_id", strategy_id)
         .maybeSingle();
       
-      if (stats && stats.total_trades >= 5) {
+      if (stats && stats.total_trades >= 3) {
         strategyStats = {
           win_rate: Number(stats.win_rate),
           total_trades: stats.total_trades,
@@ -821,13 +829,119 @@ serve(async (req) => {
       console.log("Could not fetch strategy stats:", e);
     }
 
-    // Generate AI insight if OpenAI is configured
+    try {
+      // Fetch recent trades for this strategy (last 10)
+      const { data: recentTrades } = await supabase
+        .from("trades")
+        .select("symbol, direction, status, pnl_percent, entry_time, created_at")
+        .eq("strategy_id", strategy_id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (recentTrades && recentTrades.length > 0) {
+        // Calculate current streak
+        let streak = 0;
+        for (const trade of recentTrades) {
+          if (trade.status !== 'closed' || trade.pnl_percent === null) continue;
+          
+          const isWin = trade.pnl_percent > 0;
+          if (streak === 0) {
+            streak = isWin ? 1 : -1;
+          } else if ((streak > 0 && isWin) || (streak < 0 && !isWin)) {
+            streak = streak > 0 ? streak + 1 : streak - 1;
+          } else {
+            break; // Streak ended
+          }
+        }
+        currentStreak = streak;
+        streakType = streak > 0 ? 'winning' : streak < 0 ? 'losing' : 'none';
+
+        // Map to recent signals format
+        recentSignals = recentTrades.map(t => ({
+          signal_type: t.direction === 'long' ? 'BUY' : 'SELL',
+          symbol: t.symbol,
+          pnl_percent: t.pnl_percent,
+          created_at: t.created_at,
+        }));
+
+        // Calculate symbol-specific stats
+        const symbolTrades = recentTrades.filter(t => t.symbol === signal.symbol);
+        if (symbolTrades.length > 0) {
+          const closedSymbolTrades = symbolTrades.filter(t => t.status === 'closed' && t.pnl_percent !== null);
+          const wins = closedSymbolTrades.filter(t => t.pnl_percent! > 0).length;
+          const losses = closedSymbolTrades.filter(t => t.pnl_percent! <= 0).length;
+          const avgPnl = closedSymbolTrades.length > 0 
+            ? closedSymbolTrades.reduce((sum, t) => sum + (t.pnl_percent || 0), 0) / closedSymbolTrades.length
+            : 0;
+          
+          const lastSymbolTrade = symbolTrades[0];
+          symbolStats = {
+            total_signals: symbolTrades.length,
+            wins,
+            losses,
+            avg_pnl: avgPnl,
+            last_signal_type: lastSymbolTrade.direction === 'long' ? 'BUY' : 'SELL',
+            last_signal_result: lastSymbolTrade.status === 'closed' 
+              ? (lastSymbolTrade.pnl_percent && lastSymbolTrade.pnl_percent > 0 ? 'win' : 'loss')
+              : 'open',
+          };
+        }
+      }
+    } catch (e) {
+      console.log("Could not fetch recent trades:", e);
+    }
+
+    try {
+      // Count signals today and this week
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { count: todayCount } = await supabase
+        .from("signals")
+        .select("*", { count: "exact", head: true })
+        .eq("strategy_id", strategy_id)
+        .gte("created_at", todayStart);
+      
+      signalsToday = (todayCount || 0) + 1; // +1 for current signal
+
+      const { count: weekCount } = await supabase
+        .from("signals")
+        .select("*", { count: "exact", head: true })
+        .eq("strategy_id", strategy_id)
+        .gte("created_at", weekStart);
+      
+      signalsThisWeek = (weekCount || 0) + 1;
+    } catch (e) {
+      console.log("Could not count recent signals:", e);
+    }
+
+    // Check if user has AI insights enabled
+    let aiInsightsEnabled = true; // Default to enabled
+    try {
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("ai_insights_enabled")
+        .eq("user_id", userId)
+        .single();
+      
+      if (userProfile && typeof userProfile.ai_insights_enabled === 'boolean') {
+        aiInsightsEnabled = userProfile.ai_insights_enabled;
+      }
+      console.log(`AI insights enabled for user ${userId}: ${aiInsightsEnabled}`);
+    } catch (e) {
+      console.log("Could not fetch AI insights preference, defaulting to enabled:", e);
+    }
+
+    // Generate AI insight if OpenAI is configured AND user has it enabled
     let aiInsight: string | undefined;
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
     
-    if (openaiApiKey) {
+    if (openaiApiKey && aiInsightsEnabled) {
       try {
-        console.log("Generating AI insight for signal...");
+        console.log("Generating enhanced AI insight for signal...");
+        console.log(`Context: win_rate=${strategyStats?.win_rate}, streak=${currentStreak}, symbol_stats=${JSON.stringify(symbolStats)}`);
+        
         const insight = await generateSignalInsight(
           {
             signal_type: signal.signal_type,
@@ -836,13 +950,19 @@ serve(async (req) => {
             strategy_name: signal.strategies?.name || "Unknown",
             win_rate: strategyStats?.win_rate,
             total_trades: strategyStats?.total_trades,
+            recent_signals: recentSignals,
+            current_streak: currentStreak,
+            streak_type: streakType,
+            symbol_stats: symbolStats || undefined,
+            signals_today: signalsToday,
+            signals_this_week: signalsThisWeek,
           },
           openaiApiKey
         );
         
         if (insight?.insight) {
           aiInsight = insight.insight;
-          console.log("AI insight generated:", aiInsight);
+          console.log("Enhanced AI insight generated:", aiInsight);
         }
       } catch (e) {
         console.log("AI insight generation failed (non-critical):", e);

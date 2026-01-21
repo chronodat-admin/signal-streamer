@@ -206,6 +206,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_insights_enabled: boolean
           avatar_url: string | null
           city: string | null
           country: string | null
@@ -225,6 +226,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_insights_enabled?: boolean
           avatar_url?: string | null
           city?: string | null
           country?: string | null
@@ -244,6 +246,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_insights_enabled?: boolean
           avatar_url?: string | null
           city?: string | null
           country?: string | null

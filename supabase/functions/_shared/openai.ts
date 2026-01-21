@@ -11,21 +11,39 @@ interface SignalData {
   // Optional historical context
   win_rate?: number;
   total_trades?: number;
+  // Enhanced context
   recent_signals?: Array<{
     signal_type: string;
     symbol: string;
+    price?: number;
     pnl_percent?: number;
+    created_at?: string;
   }>;
+  // Strategy streak info
+  current_streak?: number; // positive = winning streak, negative = losing streak
+  streak_type?: 'winning' | 'losing' | 'none';
+  // Symbol-specific stats
+  symbol_stats?: {
+    total_signals: number;
+    wins: number;
+    losses: number;
+    avg_pnl: number;
+    last_signal_type?: string;
+    last_signal_result?: 'win' | 'loss' | 'open';
+  };
+  // Time context
+  signals_today?: number;
+  signals_this_week?: number;
 }
 
 interface AIInsight {
   insight: string;
-  confidence?: string;
+  confidence?: 'high' | 'medium' | 'low';
   emoji?: string;
 }
 
 /**
- * Generate AI insight for a trading signal
+ * Generate AI insight for a trading signal with enhanced context
  */
 export async function generateSignalInsight(
   signal: SignalData,
@@ -38,29 +56,116 @@ export async function generateSignalInsight(
 
   try {
     const isBuy = signal.signal_type.toUpperCase() === "BUY" || signal.signal_type.toUpperCase() === "LONG";
+    const signalAction = isBuy ? "buying" : "selling";
     
-    // Build context about the strategy
-    let context = "";
-    if (signal.win_rate !== undefined && signal.total_trades !== undefined) {
-      context = `This strategy has a ${signal.win_rate.toFixed(1)}% win rate over ${signal.total_trades} trades. `;
+    // Build comprehensive context
+    let strategyContext = "";
+    let symbolContext = "";
+    let streakContext = "";
+    let activityContext = "";
+    let confidence: 'high' | 'medium' | 'low' = 'medium';
+
+    // Strategy performance context
+    if (signal.win_rate !== undefined && signal.total_trades !== undefined && signal.total_trades >= 5) {
+      strategyContext = `Strategy "${signal.strategy_name}" has ${signal.win_rate.toFixed(1)}% win rate over ${signal.total_trades} trades.`;
+      
+      if (signal.win_rate >= 60) {
+        confidence = 'high';
+      } else if (signal.win_rate < 45) {
+        confidence = 'low';
+      }
     }
+
+    // Streak context
+    if (signal.current_streak !== undefined && Math.abs(signal.current_streak) >= 2) {
+      if (signal.current_streak > 0) {
+        streakContext = `Currently on a ${signal.current_streak}-trade winning streak.`;
+        if (signal.current_streak >= 4) confidence = 'high';
+      } else {
+        streakContext = `Currently on a ${Math.abs(signal.current_streak)}-trade losing streak.`;
+        if (Math.abs(signal.current_streak) >= 3) confidence = 'low';
+      }
+    }
+
+    // Symbol-specific context
+    if (signal.symbol_stats) {
+      const stats = signal.symbol_stats;
+      if (stats.total_signals >= 3) {
+        const symbolWinRate = stats.total_signals > 0 ? (stats.wins / stats.total_signals * 100) : 0;
+        symbolContext = `For ${signal.symbol}: ${stats.wins}W/${stats.losses}L (${symbolWinRate.toFixed(0)}% win rate)`;
+        
+        if (stats.avg_pnl !== undefined && stats.avg_pnl !== 0) {
+          symbolContext += `, avg P&L: ${stats.avg_pnl > 0 ? '+' : ''}${stats.avg_pnl.toFixed(2)}%`;
+        }
+        
+        if (stats.last_signal_type && stats.last_signal_result) {
+          const lastWasWin = stats.last_signal_result === 'win';
+          const sameDirection = (stats.last_signal_type.toUpperCase() === 'BUY' || stats.last_signal_type.toUpperCase() === 'LONG') === isBuy;
+          if (lastWasWin && sameDirection) {
+            symbolContext += `. Last ${stats.last_signal_type} was profitable.`;
+          }
+        }
+      }
+    }
+
+    // Recent activity context
     if (signal.recent_signals && signal.recent_signals.length > 0) {
       const recentWins = signal.recent_signals.filter(s => s.pnl_percent && s.pnl_percent > 0).length;
-      context += `Recent performance: ${recentWins}/${signal.recent_signals.length} profitable trades. `;
+      const recentTotal = signal.recent_signals.filter(s => s.pnl_percent !== undefined).length;
+      if (recentTotal >= 3) {
+        activityContext = `Recent ${recentTotal} trades: ${recentWins} winners, ${recentTotal - recentWins} losers.`;
+      }
+      
+      // Check for same symbol recent signals
+      const sameSymbolRecent = signal.recent_signals.filter(s => s.symbol === signal.symbol);
+      if (sameSymbolRecent.length > 0) {
+        const lastSameSymbol = sameSymbolRecent[0];
+        const timeSince = lastSameSymbol.created_at 
+          ? Math.round((Date.now() - new Date(lastSameSymbol.created_at).getTime()) / (1000 * 60 * 60))
+          : null;
+        if (timeSince !== null && timeSince < 24) {
+          activityContext += ` Last ${signal.symbol} signal was ${timeSince}h ago.`;
+        }
+      }
     }
 
-    const prompt = `You are a concise trading assistant. Generate a brief, insightful one-liner (max 15 words) for this trading signal:
+    // Activity frequency context
+    if (signal.signals_today !== undefined && signal.signals_today > 1) {
+      activityContext += ` This is signal #${signal.signals_today} today.`;
+    }
 
-Signal: ${signal.signal_type.toUpperCase()} ${signal.symbol} at $${signal.price.toFixed(2)}
-Strategy: ${signal.strategy_name}
-${context}
+    const fullContext = [strategyContext, streakContext, symbolContext, activityContext]
+      .filter(c => c.length > 0)
+      .join(' ');
 
-Provide a quick insight about this trade. Be specific to the symbol if you know it (crypto, stock, forex).
-Focus on being helpful, not generic. Don't include emojis.
-Example good responses:
-- "Breaking above key resistance, momentum looks strong"
-- "Third consecutive buy signal this week - trend continuation"
-- "Strategy is on a 5-trade winning streak"`;
+    const prompt = `You are an expert trading analyst assistant. Generate a specific, data-driven insight (max 20 words) for this trading signal.
+
+SIGNAL DETAILS:
+- Action: ${signal.signal_type.toUpperCase()} ${signal.symbol}
+- Price: $${signal.price.toFixed(2)}
+- Strategy: ${signal.strategy_name}
+
+PERFORMANCE DATA:
+${fullContext || "No historical data available for this strategy yet."}
+
+INSTRUCTIONS:
+1. If there's performance data, reference it specifically (e.g., "Strategy's 65% win rate supports this entry")
+2. If there's a streak, mention it (e.g., "5-trade winning streak suggests momentum")
+3. If symbol has good/bad history, note it (e.g., "AAPL signals have 80% accuracy historically")
+4. If no data, give a brief technical context based on the strategy name (e.g., "20 SMA crossover typically indicates trend shift")
+5. Be specific, not generic. Avoid phrases like "consider" or "potential"
+6. Don't include emojis
+
+GOOD EXAMPLES:
+- "Strategy's 72% win rate and 4-trade streak favor this SELL entry"
+- "CVX signals historically 3W/1L; current momentum supports position"
+- "20 SMA crossover with 65% accuracy; third signal this week"
+- "First signal after 2-trade losing streak; exercise caution"
+
+BAD EXAMPLES (too generic):
+- "Consider selling for potential profit"
+- "This could be a good entry point"
+- "Market conditions may favor this trade"`;
 
     const response = await fetch(OPENAI_API_URL, {
       method: "POST",
@@ -73,15 +178,15 @@ Example good responses:
         messages: [
           {
             role: "system",
-            content: "You are a concise trading assistant. Provide brief, actionable insights for trading signals. Keep responses under 15 words. Be specific, not generic."
+            content: "You are a data-driven trading analyst. Provide specific, actionable insights based on the performance data provided. Always reference actual numbers when available. Keep responses under 20 words. Never be generic."
           },
           {
             role: "user",
             content: prompt
           }
         ],
-        max_tokens: 50,
-        temperature: 0.7,
+        max_tokens: 60,
+        temperature: 0.5, // Lower temperature for more consistent, data-driven responses
       }),
     });
 
@@ -100,6 +205,7 @@ Example good responses:
 
     return {
       insight,
+      confidence,
       emoji: isBuy ? "📈" : "📉",
     };
   } catch (error) {

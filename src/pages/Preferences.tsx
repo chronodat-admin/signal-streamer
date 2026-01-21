@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Palette, Moon, Sun, Save, DollarSign, Calendar, Bell, Globe } from 'lucide-react';
+import { Palette, Moon, Sun, Save, DollarSign, Calendar, Bell, Globe, Sparkles } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { usePreferences, type Currency, type DateFormat } from '@/hooks/usePreferences';
 import { toast } from '@/hooks/use-toast';
@@ -17,7 +17,7 @@ import { useLanguage, type Language } from '@/i18n';
 
 const Preferences = () => {
   const { theme, setTheme } = useTheme();
-  const { preferences, setCurrency, setDateFormat, setSignalNotifications } = usePreferences();
+  const { preferences, setCurrency, setDateFormat, setSignalNotifications, setAiInsightsEnabled } = usePreferences();
   const { t, language, setLanguage } = useLanguage();
 
   const handleSave = (e?: React.MouseEvent<HTMLButtonElement>) => {
@@ -145,6 +145,35 @@ const Preferences = () => {
                   id="signal-notifications"
                   checked={preferences.signalNotifications}
                   onCheckedChange={setSignalNotifications}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Features Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                {t.preferences.aiFeatures || 'AI Features'}
+              </CardTitle>
+              <CardDescription>
+                {t.preferences.aiFeaturesDescription || 'Configure AI-powered features for your trading signals'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* AI Insights Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="ai-insights">{t.preferences.aiInsights || 'AI Insights'}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t.preferences.aiInsightsDescription || 'Include AI-generated analysis and insights in your Discord/Slack alerts'}
+                  </p>
+                </div>
+                <Switch
+                  id="ai-insights"
+                  checked={preferences.aiInsightsEnabled}
+                  onCheckedChange={setAiInsightsEnabled}
                 />
               </div>
             </CardContent>

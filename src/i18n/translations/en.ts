@@ -846,6 +846,12 @@ export const en = {
     pushNotifications: 'Push Notifications',
     pushNotificationsDescription: 'Receive push notifications in your browser',
     
+    // AI Features
+    aiFeatures: 'AI Features',
+    aiFeaturesDescription: 'Configure AI-powered features for your trading signals',
+    aiInsights: 'AI Insights',
+    aiInsightsDescription: 'Include AI-generated analysis and insights in your Discord/Slack alerts. The AI analyzes your strategy performance and recent trades to provide context.',
+    
     // Toast messages
     preferencesSaved: 'Preferences saved',
     failedToSave: 'Failed to save preferences',
