@@ -740,6 +740,21 @@ serve(async (req) => {
       console.error("Error fetching user integrations:", userError);
     }
 
+    // Debug: Log all integrations (including disabled/inactive ones) to help diagnose
+    const { data: allStrategyIntegrations } = await supabase
+      .from("integrations")
+      .select("id, name, integration_type, type, enabled, status, strategy_id")
+      .eq("strategy_id", strategy_id);
+    
+    const { data: allUserIntegrations } = await supabase
+      .from("integrations")
+      .select("id, name, integration_type, type, enabled, status, strategy_id")
+      .is("strategy_id", null)
+      .eq("user_id", userId);
+    
+    console.log(`All integrations for strategy ${strategy_id}:`, JSON.stringify(allStrategyIntegrations || []));
+    console.log(`All user-level integrations for user ${userId}:`, JSON.stringify(allUserIntegrations || []));
+
     // Combine both types of integrations
     const filteredIntegrations = [
       ...(strategyIntegrations || []),
@@ -836,9 +851,11 @@ serve(async (req) => {
         const integrationType = integration.integration_type || integration.type;
         
         if (!integrationType) {
-          console.error(`Integration ${integration.id} has no type specified`);
+          console.error(`Integration ${integration.id} has no type specified. Integration data:`, JSON.stringify(integration));
           continue;
         }
+
+        console.log(`Processing integration ${integration.id}: type=${integrationType}, name=${integration.name}, enabled=${integration.enabled}, status=${integration.status}`);
 
         // Get webhook_url - could be in column or config
         const webhookUrl = integration.webhook_url || integration.config?.webhook_url;
@@ -945,6 +962,10 @@ serve(async (req) => {
               console.error(`Webhook integration ${integration.id} has no webhook_url configured`);
               success = false;
             }
+            break;
+          default:
+            console.error(`Unknown integration type: ${integrationType} for integration ${integration.id}`);
+            success = false;
             break;
         }
 
