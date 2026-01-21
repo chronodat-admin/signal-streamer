@@ -19,13 +19,13 @@ const Privacy = () => {
       />
       <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl overflow-hidden" style={{ height: '64px' }}>
+        <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link to="/" className="flex items-center group h-full">
             <img
               src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'}
               alt="TradeMoq Logo"
-              className="h-10 w-auto transition-all duration-300 group-hover:scale-105"
+              className="h-48 w-auto transition-all duration-300 group-hover:scale-105"
               key={theme}
             />
           </Link>
