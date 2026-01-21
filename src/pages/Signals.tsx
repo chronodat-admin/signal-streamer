@@ -869,17 +869,32 @@ const Signals = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedSignals.size === filteredSignals.length && filteredSignals.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all signals"
+                        />
+                      </TableHead>
                       <TableHead>{t.signals.dateTime}</TableHead>
                       <TableHead>{t.dashboard.strategy}</TableHead>
                       <TableHead>{t.signals.signal}</TableHead>
                       <TableHead>{t.dashboard.symbol}</TableHead>
                       <TableHead>{t.signals.price}</TableHead>
                       <TableHead>{t.signals.source}</TableHead>
+                      <TableHead className="w-16">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredSignals.map((signal) => (
                       <TableRow key={signal.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedSignals.has(signal.id)}
+                            onCheckedChange={() => toggleSignalSelection(signal.id)}
+                            aria-label={`Select signal ${signal.id}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">
