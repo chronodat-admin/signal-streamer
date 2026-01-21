@@ -7,13 +7,23 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, Filter, RefreshCw, AlertCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Loader2, Search, Filter, RefreshCw, AlertCircle, CheckCircle2, Clock, XCircle, Trash2 } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate, formatDateTime } from '@/lib/formatUtils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyAlertLogs } from '@/components/dashboard/EmptyState';
 import { useLanguage } from '@/i18n';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AlertLog {
   id: string;
@@ -43,9 +53,14 @@ export default function AlertLogs() {
   const [integrationTypeFilter, setIntegrationTypeFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [selectedLogs, setSelectedLogs] = useState<Set<string>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const logsPerPage = 50;
   const { preferences } = usePreferences();
   const { t } = useLanguage();
+  const { toast } = useToast();
 
   const fetchLogs = async () => {
     if (!user) return;
@@ -102,6 +117,97 @@ export default function AlertLogs() {
   const handleSearch = () => {
     setPage(1);
     fetchLogs();
+  };
+
+  const handleDeleteLog = async (logId: string) => {
+    if (!user) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('alert_logs')
+        .delete()
+        .eq('id', logId)
+        .eq('user_id', user.id); // Extra safety check
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Log deleted',
+        description: 'The alert log has been deleted successfully.',
+      });
+
+      // Refresh logs
+      await fetchLogs();
+      setDeleteDialogOpen(false);
+      setLogToDelete(null);
+    } catch (error) {
+      console.error('Error deleting log:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the log. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!user || selectedLogs.size === 0) return;
+
+    setDeleting(true);
+    try {
+      const logIds = Array.from(selectedLogs);
+      const { error } = await supabase
+        .from('alert_logs')
+        .delete()
+        .in('id', logIds)
+        .eq('user_id', user.id); // Extra safety check
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Logs deleted',
+        description: `${logIds.length} log(s) have been deleted successfully.`,
+      });
+
+      // Clear selection and refresh
+      setSelectedLogs(new Set());
+      await fetchLogs();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting logs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the logs. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const toggleLogSelection = (logId: string) => {
+    const newSelection = new Set(selectedLogs);
+    if (newSelection.has(logId)) {
+      newSelection.delete(logId);
+    } else {
+      newSelection.add(logId);
+    }
+    setSelectedLogs(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedLogs.size === logs.length) {
+      setSelectedLogs(new Set());
+    } else {
+      setSelectedLogs(new Set(logs.map(log => log.id)));
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -208,10 +314,25 @@ export default function AlertLogs() {
                   {t.alertLogs.totalLogsFound.replace('{count}', totalCount.toString())}
                 </CardDescription>
               </div>
-              <Button onClick={fetchLogs} variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {t.alertLogs.refresh}
-              </Button>
+              <div className="flex gap-2">
+                {selectedLogs.size > 0 && (
+                  <Button 
+                    onClick={() => {
+                      setLogToDelete(null);
+                      setDeleteDialogOpen(true);
+                    }} 
+                    variant="destructive" 
+                    size="sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Selected ({selectedLogs.size})
+                  </Button>
+                )}
+                <Button onClick={fetchLogs} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t.alertLogs.refresh}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -236,6 +357,13 @@ export default function AlertLogs() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectedLogs.size === logs.length && logs.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="Select all logs"
+                          />
+                        </TableHead>
                         <TableHead>{t.alertLogs.time}</TableHead>
                         <TableHead>{t.alertLogs.integration}</TableHead>
                         <TableHead>{t.alertLogs.strategy}</TableHead>
@@ -243,11 +371,19 @@ export default function AlertLogs() {
                         <TableHead>{t.alertLogs.status}</TableHead>
                         <TableHead>{t.alertLogs.message}</TableHead>
                         <TableHead>{t.alertLogs.response}</TableHead>
+                        <TableHead className="w-16">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {logs.map((log) => (
                         <TableRow key={log.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedLogs.has(log.id)}
+                              onCheckedChange={() => toggleLogSelection(log.id)}
+                              aria-label={`Select log ${log.id}`}
+                            />
+                          </TableCell>
                           <TableCell className="font-mono text-xs">
                             {formatDateTime(log.created_at, preferences.dateFormat)}
                           </TableCell>
@@ -314,11 +450,72 @@ export default function AlertLogs() {
                               <span className="text-muted-foreground text-sm">-</span>
                             )}
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setLogToDelete(log.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {logToDelete ? 'Delete Alert Log' : `Delete ${selectedLogs.size} Alert Log(s)`}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {logToDelete
+                          ? 'Are you sure you want to delete this alert log? This action cannot be undone.'
+                          : `Are you sure you want to delete ${selectedLogs.size} selected alert log(s)? This action cannot be undone.`}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setDeleteDialogOpen(false);
+                          setLogToDelete(null);
+                        }}
+                        disabled={deleting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          if (logToDelete) {
+                            handleDeleteLog(logToDelete);
+                          } else {
+                            handleBulkDelete();
+                          }
+                        }}
+                        disabled={deleting}
+                      >
+                        {deleting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          'Delete'
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Pagination */}
                 {totalPages > 1 && (

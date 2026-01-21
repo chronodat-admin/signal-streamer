@@ -18,7 +18,7 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from '@/components/ui/dialog';
-import { Activity, Filter, Download, Search, AlertCircle, CheckCircle2, XCircle, Plus, Loader2 } from 'lucide-react';
+import { Activity, Filter, Download, Search, AlertCircle, CheckCircle2, XCircle, Plus, Loader2, Trash2 } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatCurrency, formatDate, formatDateTime, getSourceBadgeConfig } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
@@ -94,6 +94,12 @@ const Signals = () => {
   // Date filter state
   const [dateFilter, setDateFilter] = useState<DateFilterType>('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Delete state
+  const [selectedSignals, setSelectedSignals] = useState<Set<string>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [signalToDelete, setSignalToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -177,7 +183,6 @@ const Signals = () => {
         .from('signals')
         .select(`
           *,
-          source,
           strategies (name)
         `)
         .eq('user_id', user.id);
@@ -191,7 +196,7 @@ const Signals = () => {
         .limit(1000);
 
       if (error) throw error;
-      setSignals(data || []);
+      setSignals((data || []) as Signal[]);
     } catch (error) {
       console.error('Error fetching signals:', error);
       toast({
@@ -306,6 +311,97 @@ const Signals = () => {
       ...initialFormState,
       signal_time: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     });
+  };
+
+  const handleDeleteSignal = async (signalId: string) => {
+    if (!user) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('signals')
+        .delete()
+        .eq('id', signalId)
+        .eq('user_id', user.id); // Extra safety check
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Signal deleted',
+        description: 'The signal has been deleted successfully.',
+      });
+
+      // Refresh signals
+      await fetchSignals();
+      setDeleteDialogOpen(false);
+      setSignalToDelete(null);
+    } catch (error) {
+      console.error('Error deleting signal:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the signal. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!user || selectedSignals.size === 0) return;
+
+    setDeleting(true);
+    try {
+      const signalIds = Array.from(selectedSignals);
+      const { error } = await supabase
+        .from('signals')
+        .delete()
+        .in('id', signalIds)
+        .eq('user_id', user.id); // Extra safety check
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Signals deleted',
+        description: `${signalIds.length} signal(s) have been deleted successfully.`,
+      });
+
+      // Clear selection and refresh
+      setSelectedSignals(new Set());
+      await fetchSignals();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting signals:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the signals. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const toggleSignalSelection = (signalId: string) => {
+    const newSelection = new Set(selectedSignals);
+    if (newSelection.has(signalId)) {
+      newSelection.delete(signalId);
+    } else {
+      newSelection.add(signalId);
+    }
+    setSelectedSignals(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSignals.size === filteredSignals.length) {
+      setSelectedSignals(new Set());
+    } else {
+      setSelectedSignals(new Set(filteredSignals.map(signal => signal.id)));
+    }
   };
 
   const handleSubmitManualSignal = async () => {
@@ -744,7 +840,22 @@ const Signals = () => {
         {/* Signals Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t.nav.signals} ({filteredSignals.length})</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">{t.nav.signals} ({filteredSignals.length})</CardTitle>
+              {selectedSignals.size > 0 && (
+                <Button 
+                  onClick={() => {
+                    setSignalToDelete(null);
+                    setDeleteDialogOpen(true);
+                  }} 
+                  variant="destructive" 
+                  size="sm"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Selected ({selectedSignals.size})
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {filteredSignals.length === 0 ? (
@@ -792,6 +903,19 @@ const Signals = () => {
                         <TableCell>
                           {getSourceBadge(signal.source)}
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSignalToDelete(signal.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -800,6 +924,54 @@ const Signals = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {signalToDelete ? 'Delete Signal' : `Delete ${selectedSignals.size} Signal(s)`}
+              </DialogTitle>
+              <DialogDescription>
+                {signalToDelete
+                  ? 'Are you sure you want to delete this signal? This action cannot be undone.'
+                  : `Are you sure you want to delete ${selectedSignals.size} selected signal(s)? This action cannot be undone.`}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setSignalToDelete(null);
+                }}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (signalToDelete) {
+                    handleDeleteSignal(signalToDelete);
+                  } else {
+                    handleBulkDelete();
+                  }
+                }}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

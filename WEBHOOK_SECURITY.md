@@ -78,7 +78,8 @@ Your TradingView alert must include the `secret` field:
   "price": "{{close}}",
   "time": "{{timenow}}",
   "interval": "{{interval}}",
-  "alertId": "{{alert.id}}"
+  "alertId": "{{alert.id}}",
+  "source": "trendspider"
 }
 ```
 
@@ -89,6 +90,7 @@ Your TradingView alert must include the `secret` field:
 - `symbol`: Trading symbol (e.g., AAPL, BTCUSD)
 - `price`: Current price
 - `time`: Timestamp (ISO format recommended)
+- `source`: Source of the signal (e.g., "trendspider", "tradingview", "api", "manual", "other")
 
 ### TradingView Alert Setup Steps
 
@@ -148,7 +150,8 @@ curl -X POST https://<your-vercel-domain>/api/tradingview \
     "symbol": "AAPL",
     "price": 192.34,
     "time": "2026-01-08T12:00:00Z",
-    "interval": "5"
+    "interval": "5",
+    "source": "trendspider"
   }'
 ```
 

@@ -34,7 +34,8 @@ Content-Type: application/json
   "symbol": "AAPL",
   "price": 192.34,
   "time": "2026-01-08T03:00:22.156Z",
-  "interval": "5"
+  "interval": "5",
+  "source": "trendspider"
 }
 ```
 **Note:** Replace `YOUR_STRATEGY_TOKEN` and `YOUR_STRATEGY_ID` with values from your Strategy Detail page → Setup tab.
@@ -101,7 +102,7 @@ Content-Type: application/json
 On Windows Command Prompt, you need to use double quotes and escape inner quotes:
 
 ```cmd
-curl.exe -X POST "https://trademoq.com/api/tradingview" -H "Content-Type: application/json" -d "{\"token\": \"YOUR_STRATEGY_TOKEN\", \"strategyId\": \"YOUR_STRATEGY_ID\", \"signal\": \"BUY\", \"symbol\": \"AAPL\", \"price\": 192.34, \"time\": \"2026-01-08T20:48:30.608Z\", \"interval\": \"5\"}"
+curl.exe -X POST "https://trademoq.com/api/tradingview" -H "Content-Type: application/json" -d "{\"token\": \"YOUR_STRATEGY_TOKEN\", \"strategyId\": \"YOUR_STRATEGY_ID\", \"signal\": \"BUY\", \"symbol\": \"AAPL\", \"price\": 192.34, \"time\": \"2026-01-08T20:48:30.608Z\", \"interval\": \"5\", \"source\": \"trendspider\"}"
 ```
 
 **Or use a JSON file** (recommended for Windows cmd.exe):
@@ -115,7 +116,8 @@ curl.exe -X POST "https://trademoq.com/api/tradingview" -H "Content-Type: applic
   "symbol": "AAPL",
   "price": 192.34,
   "time": "2026-01-08T20:48:30.608Z",
-  "interval": "5"
+  "interval": "5",
+  "source": "trendspider"
 }
 ```
 **Note:** Get your token and strategyId from the Strategy Detail page → Setup tab.
@@ -139,7 +141,8 @@ curl.exe -X POST "https://trademoq.com/api/tradingview" `
     "symbol": "AAPL",
     "price": 192.34,
     "time": "2026-01-08T20:48:30.608Z",
-    "interval": "5"
+    "interval": "5",
+    "source": "trendspider"
   }'
 ```
 
@@ -155,7 +158,8 @@ curl -X POST https://trademoq.com/api/tradingview \
     "symbol": "AAPL",
     "price": 192.34,
     "time": "2026-01-08T20:48:30.608Z",
-    "interval": "5"
+    "interval": "5",
+    "source": "trendspider"
   }'
 ```
 

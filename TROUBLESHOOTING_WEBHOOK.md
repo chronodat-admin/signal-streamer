@@ -148,7 +148,8 @@ curl -v -X POST https://trademoq.com/api/tradingview \
     "symbol": "AAPL",
     "price": 192.34,
     "time": "2026-01-08T20:48:30.608Z",
-    "interval": "5"
+    "interval": "5",
+    "source": "trendspider"
   }'
 ```
 
@@ -169,6 +170,7 @@ Your JSON must include all required fields:
 - ✅ `time` (ISO 8601 string)
 - ⚪ `interval` (optional string)
 - ⚪ `alertId` (optional string)
+- ⚪ `source` (optional string: "trendspider", "tradingview", "api", "manual", "other")
 
 ## Quick Checklist
 
