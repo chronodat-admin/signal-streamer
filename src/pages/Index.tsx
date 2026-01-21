@@ -224,6 +224,7 @@ const Index = () => {
             <a href="#features" className="nav-link">Features</a>
             <a href="#how-it-works" className="nav-link">How It Works</a>
             <a href="#pricing" className="nav-link">Pricing</a>
+            <Link to="/blog" className="nav-link">Blog</Link>
           </div>
           
           <div className="flex items-center gap-2">
@@ -743,6 +744,7 @@ const Index = () => {
                 <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
                 <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
                 <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</a></li>
+                <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
               </ul>
             </div>
             <div>

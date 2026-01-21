@@ -23,6 +23,8 @@ import ApiKeys from "./pages/ApiKeys";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { UserManagement } from "./pages/admin/UserManagement";
@@ -58,6 +60,8 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/dashboard/billing" element={<Billing />} />
               <Route path="/dashboard/preferences" element={<Preferences />} />
               <Route path="/admin" element={<AdminDashboard />} />
