@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createErrorLogger } from "../_shared/error-logger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const vercelProxySecret = Deno.env.get("VERCEL_PROXY_SECRET");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const errorLogger = createErrorLogger(supabase);
 
     // Check for Vercel proxy secret if configured
     // If VERCEL_PROXY_SECRET is set, require it; otherwise allow direct access (backward compatibility)
@@ -73,6 +75,15 @@ serve(async (req) => {
 
     if (strategyError || !strategy) {
       console.log("Strategy not found:", strategyId);
+      errorLogger.logAsync({
+        req,
+        errorType: 'webhook',
+        severity: 'warning',
+        source: 'tradingview-webhook',
+        message: 'Strategy not found',
+        error: strategyError || new Error('Strategy not found'),
+        metadata: { strategyId },
+      });
       return new Response(JSON.stringify({ error: "Strategy not found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -81,6 +92,14 @@ serve(async (req) => {
 
     if (strategy.secret_token !== token) {
       console.log("Invalid token for strategy:", strategyId);
+      errorLogger.logAsync({
+        req,
+        errorType: 'webhook',
+        severity: 'warning',
+        source: 'tradingview-webhook',
+        message: 'Invalid token for strategy',
+        metadata: { strategyId },
+      });
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -205,6 +224,16 @@ serve(async (req) => {
 
     if (insertError) {
       console.error("Error inserting signal:", insertError);
+      errorLogger.logAsync({
+        req,
+        userId: strategy.user_id,
+        errorType: 'webhook',
+        severity: 'error',
+        source: 'tradingview-webhook',
+        message: 'Failed to store signal',
+        error: insertError,
+        metadata: { strategyId, signal, symbol, price },
+      });
       return new Response(JSON.stringify({ error: "Failed to store signal" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -269,6 +298,15 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Webhook error:", error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    errorLogger.logAsync({
+      req,
+      errorType: 'webhook',
+      severity: 'critical',
+      source: 'tradingview-webhook',
+      message: 'Unexpected error in tradingview webhook',
+      error: err,
+    });
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

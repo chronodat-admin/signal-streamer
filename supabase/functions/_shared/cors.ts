@@ -18,9 +18,28 @@
  * ```
  */
 
+// Allow requests from your domain and localhost for development
+const allowedOrigins = [
+  "https://trademoq.com",
+  "https://www.trademoq.com",
+  "http://localhost:8080",
+  "http://localhost:5173",
+];
+
+export function getCorsHeaders(origin?: string | null): Record<string, string> {
+  const allowedOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-vercel-proxy-secret, x-api-key",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
+
+// Legacy export for backward compatibility (webhook endpoints need to accept any origin)
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-vercel-proxy-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-vercel-proxy-secret, x-api-key",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 

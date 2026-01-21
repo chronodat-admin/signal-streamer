@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createErrorLogger } from "../_shared/error-logger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -90,6 +91,8 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const errorLogger = createErrorLogger(supabase);
+    const errorLogger = createErrorLogger(supabase);
 
     // Only allow POST
     if (req.method !== "POST") {
@@ -138,6 +141,14 @@ serve(async (req) => {
 
     if (keyError || !apiKeyData) {
       console.log("Invalid API key:", apiKey.substring(0, 10) + "...");
+      errorLogger.logAsync({
+        req,
+        errorType: 'api',
+        severity: 'warning',
+        source: 'signal-api',
+        message: 'Invalid API key',
+        metadata: { apiKeyPrefix: apiKey.substring(0, 10) },
+      });
       return new Response(
         JSON.stringify({ error: "Invalid API key" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -216,13 +227,13 @@ serve(async (req) => {
     if (!transformedPayload.price || isNaN(transformedPayload.price)) missingFields.push("price");
 
     if (missingFields.length > 0) {
+      // Log debug info server-side only
+      console.log("Missing fields debug:", { missingFields, rawPayload, mapping });
       return new Response(
         JSON.stringify({ 
           error: "Missing required fields",
           missing: missingFields,
-          message: `Could not extract: ${missingFields.join(", ")}. Check your payload_mapping configuration.`,
-          received_payload: rawPayload,
-          current_mapping: mapping
+          message: `Could not extract: ${missingFields.join(", ")}. Check your payload_mapping configuration.`
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -310,6 +321,16 @@ serve(async (req) => {
 
     if (insertError) {
       console.error("Error inserting signal:", insertError);
+      errorLogger.logAsync({
+        req,
+        userId: apiKeyData.user_id,
+        errorType: 'api',
+        severity: 'error',
+        source: 'signal-api',
+        message: 'Failed to store signal',
+        error: insertError,
+        metadata: { strategyId, apiKeyId: apiKeyData.id },
+      });
       return new Response(
         JSON.stringify({ error: "Failed to store signal" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -362,6 +383,15 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Signal API error:", error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    errorLogger.logAsync({
+      req,
+      errorType: 'api',
+      severity: 'critical',
+      source: 'signal-api',
+      message: 'Unexpected error in signal-api',
+      error: err,
+    });
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

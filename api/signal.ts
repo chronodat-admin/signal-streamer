@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { logErrorAsync } from './error-logger';
 
 /**
  * Secure proxy endpoint for third-party Signal API
@@ -52,6 +53,18 @@ export default async function handler(
 
     // Validate environment variables
     if (!supabaseUrl) {
+      const error = new Error('SUPABASE_URL environment variable is not set');
+      logErrorAsync({
+        errorType: 'api',
+        severity: 'critical',
+        source: 'signal-api-proxy',
+        message: 'Missing SUPABASE_URL configuration',
+        error: error,
+        requestUrl: req.url,
+        requestMethod: req.method,
+        requestHeaders: req.headers,
+        responseStatus: 500,
+      });
       console.error('SUPABASE_URL environment variable is not set');
       return res.status(500).json({ 
         error: 'Server configuration error',
@@ -68,6 +81,16 @@ export default async function handler(
                    (typeof req.query.api_key === 'string' ? req.query.api_key : undefined);
 
     if (!apiKey) {
+      logErrorAsync({
+        errorType: 'api',
+        severity: 'warning',
+        source: 'signal-api-proxy',
+        message: 'Missing API key in request',
+        requestUrl: req.url,
+        requestMethod: req.method,
+        requestHeaders: req.headers,
+        responseStatus: 401,
+      });
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'API key required. Provide via x-api-key header, Authorization: Bearer <key>, or api_key query param'
@@ -79,6 +102,19 @@ export default async function handler(
     try {
       body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     } catch (parseError) {
+      const error = parseError instanceof Error ? parseError : new Error(String(parseError));
+      logErrorAsync({
+        errorType: 'api',
+        severity: 'error',
+        source: 'signal-api-proxy',
+        message: 'Failed to parse request body',
+        error: error,
+        requestUrl: req.url,
+        requestMethod: req.method,
+        requestHeaders: req.headers,
+        requestBody: req.body,
+        responseStatus: 400,
+      });
       console.error('Error parsing request body:', parseError);
       return res.status(400).json({ 
         error: 'Invalid JSON',
@@ -119,12 +155,41 @@ export default async function handler(
     console.log(`Signal API response status: ${supabaseResponse.status}`);
     if (!supabaseResponse.ok) {
       console.error('Signal API returned error:', responseData);
+      logErrorAsync({
+        errorType: 'api',
+        severity: 'error',
+        source: 'signal-api-proxy',
+        message: 'Supabase signal-api function returned error',
+        error: new Error(JSON.stringify(responseData)),
+        requestUrl: req.url,
+        requestMethod: req.method,
+        requestHeaders: req.headers,
+        requestBody: body,
+        responseStatus: supabaseResponse.status,
+        responseBody: responseData,
+        metadata: { signalApiUrl },
+      });
     }
 
     // Return response
     return res.status(supabaseResponse.status).json(responseData);
 
   } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logErrorAsync({
+      errorType: 'api',
+      severity: 'critical',
+      source: 'signal-api-proxy',
+      message: 'Unexpected error in signal proxy',
+      error: err,
+      requestUrl: req.url,
+      requestMethod: req.method,
+      requestHeaders: req.headers,
+      requestBody: req.body,
+      responseStatus: 500,
+      ipAddress: req.headers['x-forwarded-for'] as string || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
     console.error('Error in signal proxy:', error);
     return res.status(500).json({ 
       error: 'Internal server error',

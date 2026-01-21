@@ -15,7 +15,8 @@ import {
   Shield,
   ArrowLeft,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -58,6 +59,12 @@ const adminNavigation = [
     href: '/admin/feedback', 
     icon: MessageSquare,
     description: 'View and manage user feedback submissi...'
+  },
+  { 
+    name: 'Error Logs', 
+    href: '/admin/errors', 
+    icon: AlertTriangle,
+    description: 'View and manage application error logs'
   },
 ];
 

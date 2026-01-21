@@ -29,6 +29,7 @@ import { UserManagement } from "./pages/admin/UserManagement";
 import { SubscribedUsers } from "./pages/admin/SubscribedUsers";
 import { ContactMessages } from "./pages/admin/ContactMessages";
 import { UserFeedback } from "./pages/admin/UserFeedback";
+import { ErrorLogs } from "./pages/admin/ErrorLogs";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/admin/subscriptions" element={<SubscribedUsers />} />
               <Route path="/admin/contact" element={<ContactMessages />} />
               <Route path="/admin/feedback" element={<UserFeedback />} />
+              <Route path="/admin/errors" element={<ErrorLogs />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
