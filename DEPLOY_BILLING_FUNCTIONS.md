@@ -72,7 +72,7 @@ Make sure these secrets are set in Supabase Dashboard → Edge Functions → Sec
 
 After deployment, test in your browser:
 
-1. Go to your billing page: `https://signal-streamer-ptpskk2ik-chronodat.vercel.app/dashboard/billing`
+1. Go to your billing page: `https://trademoq.com/dashboard/billing`
 2. The page should load without CORS errors
 3. Click "Upgrade to Pro" - should redirect to Stripe checkout without 401 errors
 
@@ -144,7 +144,7 @@ Test the functions directly:
 ```bash
 # Test check-subscription (requires auth token)
 curl -X OPTIONS https://ogcnilkuneeqkhmoamxi.supabase.co/functions/v1/check-subscription \
-  -H "Origin: https://signal-streamer-ptpskk2ik-chronodat.vercel.app"
+  -H "Origin: https://trademoq.com"
 
 # Should return 200 OK with CORS headers
 ```

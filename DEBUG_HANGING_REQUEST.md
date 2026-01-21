@@ -38,12 +38,12 @@ Use cURL with verbose output to see exactly what's happening:
 
 **Windows cmd.exe:**
 ```cmd
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
 ```
 
 **PowerShell:**
 ```powershell
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
 ```
 
 The `-v` flag shows:
@@ -59,7 +59,7 @@ The `-v` flag shows:
 First, test if the endpoint responds at all:
 
 ```cmd
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d "{}"
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d "{}"
 ```
 
 Even with an empty body, you should get a response (likely an error about missing fields, but it should respond quickly).
@@ -131,7 +131,7 @@ This should at least get a response (even if it's an error about invalid token).
 Run this to see if the endpoint is even responding:
 
 ```cmd
-curl -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d "{\"test\":\"test\"}" --max-time 10
+curl -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d "{\"test\":\"test\"}" --max-time 10
 ```
 
 The `--max-time 10` flag will timeout after 10 seconds, so you won't wait forever.

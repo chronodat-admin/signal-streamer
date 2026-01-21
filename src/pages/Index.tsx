@@ -11,6 +11,7 @@ import {
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
+import { SEO } from '@/components/SEO';
 
 // Simulated live signals for the hero visualization
 const generateSignal = () => {
@@ -200,7 +201,14 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background noise-overlay">
+    <>
+      <SEO 
+        title="TradeMoq - Real-Time Trading Signal Tracking Platform"
+        description="Connect TradingView webhooks to TradeMoq. Track, analyze, and share your trading signals with sub-50ms latency. Real-time analytics, multi-strategy management, and public strategy pages."
+        keywords="trading signals, TradingView, webhook, trading alerts, signal tracking, trading analytics, cryptocurrency signals, stock signals, forex signals"
+        canonical="https://trademoq.com/"
+      />
+      <div className="min-h-screen bg-background noise-overlay">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl overflow-hidden" style={{ height: '64px' }}>
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
@@ -479,7 +487,7 @@ const Index = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <div className="px-4 py-1 rounded-md bg-background text-xs text-muted-foreground font-mono">
-                      app.trademoq.io/dashboard
+                      app.trademoq.com/dashboard
                     </div>
                   </div>
                 </div>
@@ -556,7 +564,7 @@ const Index = () => {
                       <div className="p-4 rounded-lg bg-muted/50">
                         <div className="flex items-center gap-2 text-sm mb-2">
                           <ExternalLink className="h-4 w-4 text-primary" />
-                          <span className="font-mono">trademoq.io/s/</span>
+                          <span className="font-mono">trademoq.com/s/</span>
                           <span className="font-mono text-primary">your-strategy</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Share this link with your community</p>
@@ -764,6 +772,7 @@ const Index = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 

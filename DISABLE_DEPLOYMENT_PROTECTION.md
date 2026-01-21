@@ -26,7 +26,7 @@
 
 7. **Test the Endpoint**
    ```bash
-   curl -X POST https://signal-streamer-btgso6013-chronodat.vercel.app/api/tradingview \
+   curl -X POST https://trademoq.com/api/tradingview \
      -H "Content-Type: application/json" \
      -d '{
        "secret": "YOUR_TRADINGVIEW_SECRET",

@@ -17,7 +17,7 @@ You need your strategy's secret token. You can get it from:
 
 **URL:**
 ```
-https://signal-streamer.vercel.app/api/tradingview
+https://trademoq.com/api/tradingview
 ```
 
 **Headers:**
@@ -47,7 +47,7 @@ Content-Type: application/json
 
 2. **Set Method and URL**
    - Method: `POST`
-   - URL: `https://signal-streamer.vercel.app/api/tradingview`
+   - URL: `https://trademoq.com/api/tradingview`
 
 3. **Add Headers**
    - Go to "Headers" tab
@@ -101,7 +101,7 @@ Content-Type: application/json
 On Windows Command Prompt, you need to use double quotes and escape inner quotes:
 
 ```cmd
-curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" -H "Content-Type: application/json" -d "{\"token\": \"YOUR_STRATEGY_TOKEN\", \"strategyId\": \"YOUR_STRATEGY_ID\", \"signal\": \"BUY\", \"symbol\": \"AAPL\", \"price\": 192.34, \"time\": \"2026-01-08T20:48:30.608Z\", \"interval\": \"5\"}"
+curl.exe -X POST "https://trademoq.com/api/tradingview" -H "Content-Type: application/json" -d "{\"token\": \"YOUR_STRATEGY_TOKEN\", \"strategyId\": \"YOUR_STRATEGY_ID\", \"signal\": \"BUY\", \"symbol\": \"AAPL\", \"price\": 192.34, \"time\": \"2026-01-08T20:48:30.608Z\", \"interval\": \"5\"}"
 ```
 
 **Or use a JSON file** (recommended for Windows cmd.exe):
@@ -122,7 +122,7 @@ curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" -H "Conten
 
 2. Then run:
 ```cmd
-curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" -H "Content-Type: application/json" -d @test-payload.json
+curl.exe -X POST "https://trademoq.com/api/tradingview" -H "Content-Type: application/json" -d @test-payload.json
 ```
 
 ### For PowerShell (Windows)
@@ -130,7 +130,7 @@ curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" -H "Conten
 PowerShell supports single quotes, so you can use:
 
 ```powershell
-curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" `
+curl.exe -X POST "https://trademoq.com/api/tradingview" `
   -H "Content-Type: application/json" `
   -d '{
     "token": "YOUR_STRATEGY_TOKEN",
@@ -146,7 +146,7 @@ curl.exe -X POST "https://signal-streamer.vercel.app/api/tradingview" `
 ### For Bash/Git Bash/Linux/Mac
 
 ```bash
-curl -X POST https://signal-streamer.vercel.app/api/tradingview \
+curl -X POST https://trademoq.com/api/tradingview \
   -H "Content-Type: application/json" \
   -d '{
     "token": "YOUR_STRATEGY_TOKEN",

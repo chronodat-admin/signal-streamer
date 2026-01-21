@@ -36,13 +36,13 @@ Vercel's deployment protection blocks requests before they reach your function. 
 ### 2. Wrong URL
 
 **Verify the URL:**
-- ✅ Correct: `https://signal-streamer.vercel.app/api/tradingview`
-- ❌ Wrong: `https://signal-streamer.vercel.app/tradingview` (missing `/api/`)
-- ❌ Wrong: `http://signal-streamer.vercel.app/api/tradingview` (should be `https://`)
+- ✅ Correct: `https://trademoq.com/api/tradingview`
+- ❌ Wrong: `https://trademoq.com/tradingview` (missing `/api/`)
+- ❌ Wrong: `http://trademoq.com/api/tradingview` (should be `https://`)
 
 **Test with cURL:**
 ```cmd
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 Even a GET request should reach the function (it will return 405 Method Not Allowed, but you should see an invocation).
@@ -57,7 +57,7 @@ Even a GET request should reach the function (it will return 405 Method Not Allo
 
 **Test from command line:**
 ```cmd
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d "{}"
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d "{}"
 ```
 
 If this also hangs, it's a network issue, not a Vercel issue.
@@ -75,7 +75,7 @@ If this also hangs, it's a network issue, not a Vercel issue.
 ### Step 1: Test with Simple GET Request
 
 ```cmd
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 **Expected:**
@@ -111,17 +111,17 @@ Make sure `api/tradingview.ts` exists and is committed to your repository.
 
 **Test 1: Simple GET (should show invocation):**
 ```cmd
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 **Test 2: POST with empty body (should show invocation):**
 ```cmd
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d "{}"
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d "{}"
 ```
 
 **Test 3: Full POST request:**
 ```cmd
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
 ```
 
 ## What to Check After Fixing
@@ -141,7 +141,7 @@ If you've tried all of the above and still see "no invocations":
 1. **Check Vercel Status**: https://vercel-status.com
 2. **Try a different network** (mobile hotspot, different WiFi)
 3. **Check browser console** (if testing from browser)
-4. **Verify DNS**: `nslookup signal-streamer.vercel.app` (should resolve)
+4. **Verify DNS**: `nslookup trademoq.com` (should resolve)
 
 
 

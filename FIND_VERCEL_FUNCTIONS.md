@@ -21,7 +21,7 @@ In newer Vercel dashboards, functions are shown differently. Here's where to fin
 The best way to verify the function works is to test it:
 
 ```cmd
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 **What to expect:**
@@ -40,7 +40,7 @@ curl -v https://signal-streamer.vercel.app/api/tradingview
 Run this command to test if the endpoint exists:
 
 ```cmd
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 **Expected responses:**

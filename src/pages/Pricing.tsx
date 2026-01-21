@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
 import { useLanguage } from '@/i18n';
+import { SEO } from '@/components/SEO';
 
 const plans = [
   {
@@ -168,7 +169,14 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO 
+        title="Pricing - TradeMoq"
+        description="Choose the perfect plan for your trading needs. Free plan available. Upgrade to Pro or Elite for advanced features like CSV export, public strategy pages, and API access."
+        keywords="trading platform pricing, TradeMoq pricing, trading signal plans, free trading tools, pro trading features"
+        canonical="https://trademoq.com/pricing"
+      />
+      <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -324,6 +332,7 @@ const Pricing = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 

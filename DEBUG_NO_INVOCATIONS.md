@@ -20,7 +20,7 @@ Since deployment protection is disabled, let's check other causes:
 Even though the endpoint only accepts POST, a GET request should still create an invocation (it will return 405, but you'll see it in logs):
 
 ```cmd
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 **Expected:**
@@ -60,12 +60,12 @@ Try these variations to see which one works:
 
 **Option 1: Custom domain**
 ```cmd
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 **Option 2: Vercel deployment URL** (if you have one)
 ```cmd
-curl -v https://signal-streamer-<hash>-<team>.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 ```
 
 **Option 3: Check what URLs are available**
@@ -75,7 +75,7 @@ curl -v https://signal-streamer-<hash>-<team>.vercel.app/api/tradingview
 ## Step 7: Check Network/DNS
 
 ```cmd
-nslookup signal-streamer.vercel.app
+nslookup trademoq.com
 ```
 
 Should resolve to Vercel IP addresses.
@@ -108,13 +108,13 @@ Run this sequence:
 
 ```cmd
 # Test 1: Simple GET (should create invocation)
-curl -v https://signal-streamer.vercel.app/api/tradingview
+curl -v https://trademoq.com/api/tradingview
 
 # Test 2: POST with minimal data
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d "{}" --max-time 10
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d "{}" --max-time 10
 
 # Test 3: Check if domain resolves
-ping signal-streamer.vercel.app
+ping trademoq.com
 ```
 
 ## What to Share for Help

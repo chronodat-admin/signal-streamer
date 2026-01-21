@@ -63,7 +63,7 @@ serve(async (req) => {
     }
 
     // Get origin for return URL
-    const origin = req.headers.get("origin") || "https://trademoq.vercel.app";
+    const origin = req.headers.get("origin") || "https://trademoq.com";
 
     // Create Stripe Customer Portal session
     const session = await stripe.billingPortal.sessions.create({

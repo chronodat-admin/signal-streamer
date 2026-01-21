@@ -13,6 +13,7 @@ import StrategyDiscussion from '@/components/strategy/StrategyDiscussion';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { SEO } from '@/components/SEO';
 
 interface Strategy {
   id: string;
@@ -211,7 +212,14 @@ const PublicStrategy = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO 
+        title={strategy ? `${strategy.name} - TradeMoq` : 'Public Strategy - TradeMoq'}
+        description={strategy ? `View ${strategy.name} trading strategy performance, signals, and analytics on TradeMoq. ${strategy.description || 'Track real-time trading signals and performance metrics.'}` : 'View public trading strategy performance and signals on TradeMoq'}
+        keywords={`${strategy?.name || 'trading strategy'}, trading signals, strategy performance, public strategy, ${strategy?.exchange || ''}, ${strategy?.timeframe || ''}`}
+        canonical={`https://trademoq.com/s/${slug || ''}`}
+      />
+      <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -379,6 +387,7 @@ const PublicStrategy = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

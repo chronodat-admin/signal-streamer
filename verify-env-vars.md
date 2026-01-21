@@ -43,7 +43,7 @@ Set this to any secure random string (e.g., `vercel-proxy-secret-abc123`)
 Once both are set, test with:
 
 ```cmd
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
 ```
 
 You should see a response instead of hanging.

@@ -11,6 +11,7 @@ import { Mail, MessageSquare, Send, Loader2, ArrowLeft, CheckCircle2 } from 'luc
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 import { useLanguage } from '@/i18n';
+import { SEO } from '@/components/SEO';
 
 export default function Contact() {
   const { toast } = useToast();
@@ -175,7 +176,14 @@ export default function Contact() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO 
+        title="Contact Us - TradeMoq"
+        description="Get in touch with TradeMoq. Have questions about our trading signal tracking platform? We're here to help."
+        keywords="contact TradeMoq, trading platform support, customer service"
+        canonical="https://trademoq.com/contact"
+      />
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-background/95 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -340,6 +348,7 @@ export default function Contact() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

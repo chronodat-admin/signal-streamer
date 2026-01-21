@@ -134,12 +134,12 @@ Use `-v` flag to see detailed request/response:
 
 **Windows cmd.exe:**
 ```cmd
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
+curl -v -X POST https://trademoq.com/api/tradingview -H "Content-Type: application/json" -d @test-payload.json
 ```
 
 **PowerShell/Bash:**
 ```bash
-curl -v -X POST https://signal-streamer.vercel.app/api/tradingview \
+curl -v -X POST https://trademoq.com/api/tradingview \
   -H "Content-Type: application/json" \
   -d '{
     "token": "86675b5056c776ec0f5bbec0ab75bc0701db80f4e4f3d5745b1900f65800006b",
@@ -186,8 +186,8 @@ Your JSON must include all required fields:
 
 Make sure you're using the correct URL:
 
-- **Custom Domain:** `https://signal-streamer.vercel.app/api/tradingview`
-- **Vercel Deployment:** `https://signal-streamer-<hash>-<team>.vercel.app/api/tradingview`
+- **Custom Domain:** `https://trademoq.com/api/tradingview`
+- **Custom Domain:** `https://trademoq.com/api/tradingview`
 
 Both should work if configured correctly.
 

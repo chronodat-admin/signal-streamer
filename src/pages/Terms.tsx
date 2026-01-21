@@ -2,10 +2,18 @@ import { Link } from 'react-router-dom';
 import { Activity, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SEO } from '@/components/SEO';
 
 const Terms = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO 
+        title="Terms of Service - TradeMoq"
+        description="Read TradeMoq's Terms of Service to understand the rules and guidelines for using our trading signal tracking platform."
+        keywords="terms of service, user agreement, trading platform terms"
+        canonical="https://trademoq.com/terms"
+      />
+      <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -247,6 +255,7 @@ const Terms = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 

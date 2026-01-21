@@ -61,7 +61,7 @@ These security measures are sufficient, and deployment protection adds unnecessa
 5. Save changes
 6. Test the webhook endpoint:
    ```bash
-   curl -X POST https://signal-streamer-btgso6013-chronodat.vercel.app/api/tradingview \
+   curl -X POST https://trademoq.com/api/tradingview \
      -H "Content-Type: application/json" \
      -d '{
        "secret": "YOUR_TRADINGVIEW_SECRET",

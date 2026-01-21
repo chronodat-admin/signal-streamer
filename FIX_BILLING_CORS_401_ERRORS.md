@@ -5,7 +5,7 @@
 ### 1. CORS Error for `check-subscription`
 ```
 Access to fetch at 'https://ogcnilkuneeqkhmoamxi.supabase.co/functions/v1/check-subscription' 
-from origin 'https://signal-streamer-ptpskk2ik-chronodat.vercel.app' 
+from origin 'https://trademoq.com' 
 has been blocked by CORS policy: Response to preflight request doesn't pass access control check: 
 It does not have HTTP ok status.
 ```
