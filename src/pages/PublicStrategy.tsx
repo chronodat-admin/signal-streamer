@@ -224,8 +224,8 @@ const PublicStrategy = () => {
       />
       <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-b border-border bg-card">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl overflow-hidden" style={{ height: '64px' }}>
+        <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link to="/" className="flex items-center group h-full">
             <img
               src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'}
@@ -256,7 +256,7 @@ const PublicStrategy = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-6 py-8 max-w-6xl">
+      <div className="container mx-auto px-6 py-8 max-w-6xl pt-24">
         {/* Strategy Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
