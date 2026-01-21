@@ -205,7 +205,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <img 
             src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
             alt="TradeMoq Logo" 
-            className="h-10 w-auto"
+            className="h-16 w-auto"
           />
         </Link>
         <div className="flex items-center gap-1">
@@ -245,7 +245,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <img 
                     src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
                     alt="TradeMoq Logo" 
-                    className="h-10 w-auto"
+                    className="h-14 w-auto"
                   />
                 </Link>
                 <Button
@@ -264,7 +264,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <img 
                     src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
                     alt="TradeMoq Logo" 
-                    className="h-12 w-auto"
+                    className="h-20 w-auto"
                   />
                 </Link>
                 <Button
