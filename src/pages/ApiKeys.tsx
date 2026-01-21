@@ -322,16 +322,8 @@ export default function ApiKeys() {
   };
 
   const getApiEndpoint = () => {
-    // Use configured app URL or fallback to current origin
-    // In production: VITE_APP_URL = https://your-domain.com
-    // Locally: falls back to window.location.origin (http://localhost:8080)
-    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-    return `${appUrl}/api/signal`;
-  };
-
-  const getDirectSupabaseEndpoint = () => {
-    const baseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-    return `${baseUrl}/functions/v1/signal-api`;
+    // Production API URL - always use trademoq.com for consistency
+    return 'https://trademoq.com/api/signal';
   };
 
   const maskKey = (key: string) => {
@@ -584,13 +576,8 @@ export default function ApiKeys() {
                 <div>
                   <div className="font-medium flex items-center gap-2">
                     {t.apiKeys.apiEndpoint}
-                    <Badge variant="secondary" className="text-xs">{t.apiKeys.recommended}</Badge>
                   </div>
                   <code className="text-sm text-primary break-all">{getApiEndpoint()}</code>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <p className="mb-1">{t.apiKeys.alternativeEndpoint}</p>
-                  <code className="text-xs break-all opacity-70">{getDirectSupabaseEndpoint()}</code>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t.apiKeys.sendPostRequest.replace('{header}', `<code className="text-primary">${t.apiKeys.xApiKeyHeader}</code>`)}

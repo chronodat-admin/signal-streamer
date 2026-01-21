@@ -53,16 +53,8 @@ const StrategyDetail = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [pnlData, setPnlData] = useState<ReturnType<typeof calculateSignalPnL> | null>(null);
 
-  // Get base URL with protocol - use Vercel URL if available, otherwise fallback to current origin
-  const getBaseUrl = () => {
-    const vercelUrl = import.meta.env.VITE_VERCEL_URL || window.location.origin;
-    // Ensure URL has protocol
-    if (!vercelUrl.startsWith('http://') && !vercelUrl.startsWith('https://')) {
-      return `https://${vercelUrl}`;
-    }
-    return vercelUrl;
-  };
-  const baseUrl = getBaseUrl();
+  // Production webhook URL - always use trademoq.com for consistency
+  const baseUrl = 'https://trademoq.com';
   const webhookUrl = `${baseUrl}/api/tradingview`;
 
   useEffect(() => {
