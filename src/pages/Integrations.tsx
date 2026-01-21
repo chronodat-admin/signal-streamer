@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, MessageSquare, Hash, Send, Phone, Loader2, ExternalLink, Settings, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Plus, Trash2, MessageSquare, Hash, Send, Phone, Loader2, ExternalLink, Settings, Search, CheckCircle2, XCircle, Clock, Play } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate, formatDateTime } from '@/lib/formatUtils';
 import { IntegrationsPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
@@ -202,6 +202,7 @@ const Integrations = () => {
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ELITE'>('FREE');
+  const [testingIntegrationId, setTestingIntegrationId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     integration_type: 'discord' as IntegrationType,
     name: '',
@@ -467,6 +468,105 @@ const Integrations = () => {
     }
   };
 
+  const handleTestIntegration = async (integration: Integration) => {
+    const integrationType = integration.integration_type || integration.type || 'discord';
+    
+    // Only support testing Discord and Slack for now (webhook-based)
+    if (integrationType !== 'discord' && integrationType !== 'slack') {
+      toast({
+        title: t.common.error,
+        description: 'Testing is only available for Discord and Slack integrations',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const webhookUrl = integration.webhook_url || integration.config?.webhook_url;
+    if (!webhookUrl) {
+      toast({
+        title: t.common.error,
+        description: 'No webhook URL configured for this integration',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setTestingIntegrationId(integration.id);
+
+    try {
+      console.log(`Testing ${integrationType} webhook via API...`);
+      
+      // Use our API endpoint to avoid CORS issues
+      const response = await fetch('/api/test-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          webhook_url: webhookUrl,
+          type: integrationType,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Test response:', data);
+
+      if (data.success) {
+        toast({
+          title: '✅ Test Successful!',
+          description: `Test message sent to ${integrationType}. Check your channel!`,
+        });
+        
+        // Update integration status to active
+        await supabase
+          .from('integrations')
+          .update({ status: 'active', error_message: null })
+          .eq('id', integration.id);
+        
+        fetchIntegrations();
+      } else {
+        const errorMessage = data.error || 'Failed to send test message';
+        
+        toast({
+          title: '❌ Test Failed',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+
+        // Update integration with error
+        await supabase
+          .from('integrations')
+          .update({ 
+            status: 'error', 
+            error_message: errorMessage.substring(0, 500) 
+          })
+          .eq('id', integration.id);
+        
+        fetchIntegrations();
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send test message';
+      console.error('Test integration error:', error);
+      
+      toast({
+        title: '❌ Test Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+
+      // Update integration with error
+      await supabase
+        .from('integrations')
+        .update({ 
+          status: 'error', 
+          error_message: errorMessage.substring(0, 500) 
+        })
+        .eq('id', integration.id);
+      
+      fetchIntegrations();
+    } finally {
+      setTestingIntegrationId(null);
+    }
+  };
+
   const handleEdit = (integration: Integration) => {
     setEditingIntegration(integration);
     const integrationType = integration.integration_type || integration.type || 'discord';
@@ -722,6 +822,21 @@ const Integrations = () => {
                             checked={integration.enabled !== false}
                             onCheckedChange={() => handleToggle(integration)}
                           />
+                          {(integrationType === 'discord' || integrationType === 'slack') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleTestIntegration(integration)}
+                              disabled={testingIntegrationId === integration.id}
+                              title="Test Integration"
+                            >
+                              {testingIntegrationId === integration.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Play className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
