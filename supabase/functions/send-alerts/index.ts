@@ -720,11 +720,13 @@ serve(async (req) => {
 
     console.log(`Found ${filteredIntegrations.length} active integrations for strategy ${strategy_id} (${strategyIntegrations?.length || 0} strategy-specific, ${userIntegrations?.length || 0} user-level)`);
 
-    // Return early if no integrations found (don't create alert log)
+    // Return early if no integrations found - DO NOT create alert log entries
+    // This prevents cluttering the alert logs with entries when users haven't configured integrations yet
     if (filteredIntegrations.length === 0) {
-      console.log(`No active integrations found for strategy ${strategy_id}, user ${userId}`);
+      console.log(`No active integrations found for strategy ${strategy_id}, user ${userId} - returning without creating log entry`);
       console.log(`Strategy integrations: ${strategyIntegrations?.length || 0}, User integrations: ${userIntegrations?.length || 0}`);
       
+      // Return success response but do NOT insert into alert_logs table
       return new Response(JSON.stringify({ 
         success: true, 
         message: "No active integrations found",
