@@ -54,25 +54,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [userPlan, setUserPlan] = useState<PlanType>('FREE');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
-    });
-    
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
 
   // Enable real-time signal notifications
   useSignalNotifications();
@@ -201,10 +182,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center">
-          <div className="text-xl">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+            <Activity className="h-5 w-5 text-white" />
+          </div>
+          <div className="text-lg">
             <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
-            <span style={{ fontFamily: "'Rubik', 'Nunito', sans-serif", fontWeight: 800 }}>Moq</span>
+            <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 800 }}>Moq</span>
           </div>
         </Link>
         <div className="flex items-center gap-1">
@@ -241,9 +225,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {collapsed ? (
               <div className="flex flex-col items-center gap-3">
                 <Link to="/" className="flex items-center justify-center">
-                  <div className="text-lg">
-                    <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
-                    <span style={{ fontFamily: "'Rubik', 'Nunito', sans-serif", fontWeight: 800 }}>Moq</span>
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md flex-shrink-0">
+                    <Activity className="h-6 w-6 text-white" />
                   </div>
                 </Link>
                 <Button
@@ -258,10 +241,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </div>
             ) : (
               <div className="flex items-center justify-between gap-3">
-                <Link to="/" className="flex items-center">
-                  <div className="text-2xl">
+                <Link to="/" className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md flex-shrink-0">
+                    <Activity className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="text-xl">
                     <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
-                    <span style={{ fontFamily: "'Rubik', 'Nunito', sans-serif", fontWeight: 800 }}>Moq</span>
+                    <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 800 }}>Moq</span>
                   </div>
                 </Link>
                 <Button
