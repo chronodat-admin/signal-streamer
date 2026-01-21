@@ -202,6 +202,15 @@ const Leaderboard = () => {
                 key={theme}
               />
             </Link>
+            
+            <div className="hidden md:flex items-center gap-1">
+              <a href="/#features" className="nav-link">Features</a>
+              <a href="/#how-it-works" className="nav-link">How It Works</a>
+              <Link to="/leaderboard" className="nav-link">Leaderboard</Link>
+              <a href="/#pricing" className="nav-link">Pricing</a>
+              <Link to="/blog" className="nav-link">Blog</Link>
+            </div>
+            
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 border-l border-border pl-3 ml-3">
                 <LanguageSwitcher />
