@@ -12,7 +12,7 @@ interface SEOProps {
 export const SEO = ({
   title = 'TradeMoq - Real-Time Trading Signal Tracking Platform',
   description = 'Connect TradingView webhooks to TradeMoq. Track, analyze, and share your trading signals with sub-50ms latency. Real-time analytics, multi-strategy management, and public strategy pages.',
-  keywords = 'trading signals, TradingView, webhook, trading alerts, signal tracking, trading analytics, cryptocurrency signals, stock signals',
+  keywords = 'trading signals, TradingView, webhook, trading alerts, signal tracking, real-time alerts, webhook alerts, trading bot signals, automated trading signals, trading analytics, win rate tracking, performance analytics, strategy sharing, public strategy pages, trading dashboard, signal latency, cryptocurrency signals, stock signals, forex signals, algorithmic trading signals',
   ogImage = 'https://trademoq.com/og-image.png',
   ogType = 'website',
   canonical,
