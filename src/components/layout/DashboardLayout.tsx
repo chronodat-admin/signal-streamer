@@ -200,25 +200,27 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center">
-          <img 
-            src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
-            alt="TradeMoq Logo" 
-            className="h-16 w-auto"
-          />
-        </Link>
-        <div className="flex items-center gap-1">
-          <LanguageSwitcher />
-          <ColorSchemePicker />
-          <ThemeToggle />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border px-4 overflow-hidden" style={{ height: '64px' }}>
+        <div className="h-full flex items-center justify-between">
+          <Link to="/" className="flex items-center h-full">
+            <img 
+              src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
+              alt="TradeMoq Logo" 
+              className="h-20 w-auto"
+            />
+          </Link>
+          <div className="flex items-center gap-1">
+            <LanguageSwitcher />
+            <ColorSchemePicker />
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -238,14 +240,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-4 border-b border-border">
+          <div className="border-b border-border overflow-hidden" style={{ minHeight: '80px' }}>
             {collapsed ? (
-              <div className="flex flex-col items-center gap-3">
-                <Link to="/" className="flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 py-2">
+                <Link to="/" className="flex items-center justify-center h-full">
                   <img 
                     src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
                     alt="TradeMoq Logo" 
-                    className="h-14 w-auto"
+                    className="h-16 w-auto"
                   />
                 </Link>
                 <Button
@@ -259,12 +261,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-3">
-                <Link to="/" className="flex items-center">
+              <div className="flex items-center justify-between gap-3 h-full">
+                <Link to="/" className="flex items-center h-full">
                   <img 
                     src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
                     alt="TradeMoq Logo" 
-                    className="h-20 w-auto"
+                    className="h-24 w-auto"
                   />
                 </Link>
                 <Button
