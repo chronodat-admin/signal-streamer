@@ -95,3 +95,21 @@ export function formatDateTime(
   return formatDate(date, dateFormat, true);
 }
 
+/**
+ * Get source badge configuration with distinct colors for each source type
+ */
+export function getSourceBadgeConfig(source: string | null): { label: string; className: string } {
+  const sourceLabels: Record<string, { label: string; className: string }> = {
+    tradingview: { label: 'TradingView', className: 'bg-blue-500/10 text-blue-500 border-blue-500/30' },
+    trendspider: { label: 'TrendSpider', className: 'bg-purple-500/10 text-purple-500 border-purple-500/30' },
+    api: { label: 'API', className: 'bg-amber-500/10 text-amber-500 border-amber-500/30' },
+    manual: { label: 'Manual', className: 'bg-green-500/10 text-green-500 border-green-500/30' },
+    other: { label: 'Other', className: 'bg-slate-500/10 text-slate-500 border-slate-500/30' },
+  };
+  
+  return sourceLabels[source?.toLowerCase() || ''] || { 
+    label: source || 'Unknown', 
+    className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' 
+  };
+}
+

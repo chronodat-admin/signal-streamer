@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Copy, Check, Webhook, Clock, Download, ExternalLink, Loader2, BarChart3, DollarSign, TrendingUp } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
+import { formatCurrency, formatDate, formatDateTime, getSourceBadgeConfig } from '@/lib/formatUtils';
 import { StrategyAnalytics } from '@/components/strategy/StrategyAnalytics';
 import { getUserPlan } from '@/lib/planUtils';
 import { calculateSignalPnL, formatPnL } from '@/lib/pnlUtils';
@@ -36,6 +36,7 @@ interface Signal {
   price: number;
   signal_time: string;
   interval: string | null;
+  source?: string | null;
   raw_payload: any;
   created_at: string;
 }
@@ -437,6 +438,7 @@ const StrategyDetail = () => {
                           <TableHead>{t.strategyDetail.price}</TableHead>
                           <TableHead>{t.strategyDetail.interval}</TableHead>
                           <TableHead>{t.strategyDetail.time}</TableHead>
+                          <TableHead>{t.signals.source}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -456,6 +458,11 @@ const StrategyDetail = () => {
                               <span className="text-muted-foreground">
                                 {formatDateTime(signal.created_at, preferences.dateFormat)}
                               </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={`text-xs ${getSourceBadgeConfig(signal.source).className}`}>
+                                {getSourceBadgeConfig(signal.source).label}
+                              </Badge>
                             </TableCell>
                           </TableRow>
                         ))}

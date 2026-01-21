@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Activity, Filter, Download, Search, AlertCircle, CheckCircle2, XCircle, Plus, Loader2 } from 'lucide-react';
 import { usePreferences } from '@/hooks/usePreferences';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatUtils';
+import { formatCurrency, formatDate, formatDateTime, getSourceBadgeConfig } from '@/lib/formatUtils';
 import { getUserPlan, getHistoryDateLimit } from '@/lib/planUtils';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -38,7 +38,7 @@ interface Signal {
   created_at: string;
   strategy_id: string;
   alert_id: string | null;
-  source: string | null;
+  source?: string | null;
   raw_payload: any;
   strategies?: {
     name: string;
@@ -177,6 +177,7 @@ const Signals = () => {
         .from('signals')
         .select(`
           *,
+          source,
           strategies (name)
         `)
         .eq('user_id', user.id);
@@ -265,14 +266,7 @@ const Signals = () => {
   };
 
   const getSourceBadge = (source: string | null) => {
-    const sourceLabels: Record<string, { label: string; className: string }> = {
-      tradingview: { label: 'TradingView', className: 'bg-blue-500/10 text-blue-500 border-blue-500/30' },
-      trendspider: { label: 'TrendSpider', className: 'bg-purple-500/10 text-purple-500 border-purple-500/30' },
-      api: { label: 'API', className: 'bg-amber-500/10 text-amber-500 border-amber-500/30' },
-      manual: { label: 'Manual', className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' },
-      other: { label: 'Other', className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' },
-    };
-    const config = sourceLabels[source?.toLowerCase() || ''] || { label: source || 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/30' };
+    const config = getSourceBadgeConfig(source);
     return (
       <Badge variant="outline" className={`text-xs ${config.className}`}>
         {config.label}
