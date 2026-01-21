@@ -39,17 +39,21 @@ export default async function handler(
     // Validate environment variables
     if (!supabaseUrl) {
       const error = new Error('SUPABASE_EDGE_FUNCTION_URL environment variable is not set');
-      logErrorAsync({
-        errorType: 'api',
-        severity: 'critical',
-        source: 'tradingview-proxy',
-        message: 'Missing SUPABASE_EDGE_FUNCTION_URL configuration',
-        error: error,
-        requestUrl: req.url,
-        requestMethod: req.method,
-        requestHeaders: req.headers,
-        responseStatus: 500,
-      });
+      try {
+        logErrorAsync({
+          errorType: 'api',
+          severity: 'critical',
+          source: 'tradingview-proxy',
+          message: 'Missing SUPABASE_EDGE_FUNCTION_URL configuration',
+          error: error,
+          requestUrl: req.url,
+          requestMethod: req.method,
+          requestHeaders: req.headers,
+          responseStatus: 500,
+        });
+      } catch (logErr) {
+        console.error('Failed to log error:', logErr);
+      }
       console.error('SUPABASE_EDGE_FUNCTION_URL environment variable is not set');
       return res.status(500).json({ 
         error: 'Server configuration error',
@@ -59,17 +63,21 @@ export default async function handler(
 
     if (!proxySecret) {
       const error = new Error('VERCEL_PROXY_SECRET environment variable is not set');
-      logErrorAsync({
-        errorType: 'api',
-        severity: 'critical',
-        source: 'tradingview-proxy',
-        message: 'Missing VERCEL_PROXY_SECRET configuration',
-        error: error,
-        requestUrl: req.url,
-        requestMethod: req.method,
-        requestHeaders: req.headers,
-        responseStatus: 500,
-      });
+      try {
+        logErrorAsync({
+          errorType: 'api',
+          severity: 'critical',
+          source: 'tradingview-proxy',
+          message: 'Missing VERCEL_PROXY_SECRET configuration',
+          error: error,
+          requestUrl: req.url,
+          requestMethod: req.method,
+          requestHeaders: req.headers,
+          responseStatus: 500,
+        });
+      } catch (logErr) {
+        console.error('Failed to log error:', logErr);
+      }
       console.error('VERCEL_PROXY_SECRET environment variable is not set');
       return res.status(500).json({ 
         error: 'Server configuration error',
@@ -83,18 +91,22 @@ export default async function handler(
       body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     } catch (parseError) {
       const error = parseError instanceof Error ? parseError : new Error(String(parseError));
-      logErrorAsync({
-        errorType: 'api',
-        severity: 'error',
-        source: 'tradingview-proxy',
-        message: 'Failed to parse request body',
-        error: error,
-        requestUrl: req.url,
-        requestMethod: req.method,
-        requestHeaders: req.headers,
-        requestBody: req.body,
-        responseStatus: 400,
-      });
+      try {
+        logErrorAsync({
+          errorType: 'api',
+          severity: 'error',
+          source: 'tradingview-proxy',
+          message: 'Failed to parse request body',
+          error: error,
+          requestUrl: req.url,
+          requestMethod: req.method,
+          requestHeaders: req.headers,
+          requestBody: req.body,
+          responseStatus: 400,
+        });
+      } catch (logErr) {
+        console.error('Failed to log error:', logErr);
+      }
       console.error('Error parsing request body:', parseError);
       return res.status(400).json({ 
         error: 'Invalid JSON',
@@ -130,20 +142,24 @@ export default async function handler(
     console.log(`Supabase response status: ${supabaseResponse.status}`);
     if (!supabaseResponse.ok) {
       console.error('Supabase returned error:', responseData);
-      logErrorAsync({
-        errorType: 'api',
-        severity: 'error',
-        source: 'tradingview-proxy',
-        message: 'Supabase edge function returned error',
-        error: new Error(JSON.stringify(responseData)),
-        requestUrl: req.url,
-        requestMethod: req.method,
-        requestHeaders: req.headers,
-        requestBody: forwardBody,
-        responseStatus: supabaseResponse.status,
-        responseBody: responseData,
-        metadata: { supabaseUrl },
-      });
+      try {
+        logErrorAsync({
+          errorType: 'api',
+          severity: 'error',
+          source: 'tradingview-proxy',
+          message: 'Supabase edge function returned error',
+          error: new Error(JSON.stringify(responseData)),
+          requestUrl: req.url,
+          requestMethod: req.method,
+          requestHeaders: req.headers,
+          requestBody: forwardBody,
+          responseStatus: supabaseResponse.status,
+          responseBody: responseData,
+          metadata: { supabaseUrl },
+        });
+      } catch (logErr) {
+        console.error('Failed to log error:', logErr);
+      }
     }
 
     // Return Supabase response to TradingView (status + body)
@@ -151,20 +167,24 @@ export default async function handler(
 
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    logErrorAsync({
-      errorType: 'api',
-      severity: 'critical',
-      source: 'tradingview-proxy',
-      message: 'Unexpected error in tradingview proxy',
-      error: err,
-      requestUrl: req.url,
-      requestMethod: req.method,
-      requestHeaders: req.headers,
-      requestBody: req.body,
-      responseStatus: 500,
-      ipAddress: req.headers['x-forwarded-for'] as string || req.socket.remoteAddress,
-      userAgent: req.headers['user-agent'],
-    });
+    try {
+      logErrorAsync({
+        errorType: 'api',
+        severity: 'critical',
+        source: 'tradingview-proxy',
+        message: 'Unexpected error in tradingview proxy',
+        error: err,
+        requestUrl: req.url,
+        requestMethod: req.method,
+        requestHeaders: req.headers,
+        requestBody: req.body,
+        responseStatus: 500,
+        ipAddress: req.headers['x-forwarded-for'] as string || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'],
+      });
+    } catch (logErr) {
+      console.error('Failed to log error:', logErr);
+    }
     console.error('Error in tradingview proxy:', error);
     return res.status(500).json({ 
       error: 'Internal server error',

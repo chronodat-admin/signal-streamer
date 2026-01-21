@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { logErrorAsync } from './error-logger.js';
+import { logErrorAsync } from './error-logger';
 
 /**
  * Secure proxy endpoint for third-party Signal API
