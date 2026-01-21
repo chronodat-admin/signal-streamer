@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Activity, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SEO } from '@/components/SEO';
+import { useTheme } from '@/hooks/useTheme';
 
 const Terms = () => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+
   return (
     <>
       <SEO 
@@ -17,11 +21,13 @@ const Terms = () => {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary to-cyan-500 flex items-center justify-center shadow-lg shadow-primary/25">
-              <Activity className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-heading font-bold tracking-tight">TradeMoq</span>
+          <Link to="/" className="flex items-center group h-full">
+            <img
+              src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'}
+              alt="TradeMoq Logo"
+              className="h-10 w-auto transition-all duration-300 group-hover:scale-105"
+              key={theme}
+            />
           </Link>
           
           <div className="flex items-center gap-2">
