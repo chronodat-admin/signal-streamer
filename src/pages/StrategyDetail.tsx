@@ -154,7 +154,7 @@ const StrategyDetail = () => {
           price: '{{close}}',
           time: '{{timenow}}',
           interval: '{{interval}}',
-          source: 'trendspider',
+          source: 'tradingview',
         },
         null,
         2
@@ -173,13 +173,13 @@ const StrategyDetail = () => {
     "price": 192.34,
     "time": "${new Date().toISOString()}",
     "interval": "5",
-    "source": "trendspider"
+    "source": "tradingview"
   }'`
     : '';
 
   // cURL command for Windows (cmd.exe)
   const curlCommandWindows = strategy
-    ? `curl.exe -X POST "${webhookUrl}" -H "Content-Type: application/json" -d "{\\"token\\": \\"${strategy.secret_token}\\", \\"strategyId\\": \\"${strategy.id}\\", \\"signal\\": \\"BUY\\", \\"symbol\\": \\"AAPL\\", \\"price\\": 192.34, \\"time\\": \\"${new Date().toISOString()}\\", \\"interval\\": \\"5\\", \\"source\\": \\"trendspider\\"}"`
+    ? `curl.exe -X POST "${webhookUrl}" -H "Content-Type: application/json" -d "{\\"token\\": \\"${strategy.secret_token}\\", \\"strategyId\\": \\"${strategy.id}\\", \\"signal\\": \\"BUY\\", \\"symbol\\": \\"AAPL\\", \\"price\\": 192.34, \\"time\\": \\"${new Date().toISOString()}\\", \\"interval\\": \\"5\\", \\"source\\": \\"tradingview\\"}"`
     : '';
 
   // For display, we'll use a simplified version that works cross-platform
