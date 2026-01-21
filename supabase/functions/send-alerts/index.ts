@@ -33,7 +33,7 @@ async function sendDiscordAlert(
     color: color,
     timestamp: payload.signal_time,
     footer: {
-      text: "TradeMoq Trading Signals",
+      text: "trademoq Trading Signals",
     },
   };
 
@@ -161,7 +161,7 @@ async function sendSlackAlert(webhookUrl: string, payload: AlertPayload): Promis
             short: false,
           },
         ],
-        footer: "TradeMoq",
+        footer: "trademoq",
         ts: Math.floor(new Date(payload.signal_time).getTime() / 1000),
       },
     ],
@@ -243,7 +243,7 @@ async function sendEmailAlert(
         <p><strong>Price:</strong> $${payload.price.toFixed(2)}</p>
         <p><strong>Time:</strong> ${new Date(payload.signal_time).toLocaleString()}</p>
       </div>
-      <p style="color: #666; font-size: 12px;">TradeMoq Trading Signals</p>
+      <p style="color: #666; font-size: 12px;">trademoq Trading Signals</p>
     </div>
   `;
   const textBody = `${payload.signal_type.toUpperCase()} Signal: ${payload.symbol}\n\nStrategy: ${payload.strategy_name}\nPrice: $${payload.price.toFixed(2)}\nTime: ${new Date(payload.signal_time).toLocaleString()}`;
