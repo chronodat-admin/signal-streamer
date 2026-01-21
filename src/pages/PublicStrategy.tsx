@@ -14,6 +14,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ColorSchemePicker } from '@/components/ColorSchemePicker';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { SEO } from '@/components/SEO';
+import { useTheme } from '@/hooks/useTheme';
 
 interface Strategy {
   id: string;
@@ -51,6 +52,8 @@ const PublicStrategy = () => {
   const { slug } = useParams<{ slug: string }>();
   const { preferences } = usePreferences();
   const { t } = useLanguage();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, buys: 0, sells: 0, latestSignal: null });
@@ -223,9 +226,13 @@ const PublicStrategy = () => {
       {/* Navigation */}
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <Activity className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">TradeMoq</span>
+          <Link to="/" className="flex items-center group h-full">
+            <img
+              src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'}
+              alt="TradeMoq Logo"
+              className="h-10 w-auto transition-all duration-300 group-hover:scale-105"
+              key={theme}
+            />
           </Link>
           <div className="flex items-center gap-3">
             {owner && (
