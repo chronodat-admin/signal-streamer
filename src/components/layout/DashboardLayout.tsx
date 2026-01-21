@@ -188,7 +188,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
           <div className="text-lg">
             <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
-            <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 800 }}>Moq</span>
+            <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 800 }}>moq</span>
           </div>
         </Link>
         <div className="flex items-center gap-1">
@@ -247,7 +247,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   </div>
                   <div className="text-xl">
                     <span className="italic" style={{ fontFamily: "'Times New Roman', serif", fontStyle: 'italic', fontWeight: 'normal' }}>trade</span>
-                    <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 800 }}>Moq</span>
+                    <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 800 }}>moq</span>
                   </div>
                 </Link>
                 <Button
