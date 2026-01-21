@@ -499,7 +499,7 @@ const Index = () => {
                       <h4 className="font-heading font-semibold text-lg mb-4">Your Webhook URL</h4>
                       <div className="p-4 rounded-lg bg-muted/50 font-mono text-sm break-all">
                         <span className="text-muted-foreground">https://</span>
-                        <span className="text-primary">trademoq.io/api/webhook/</span>
+                        <span className="text-primary">trademoq.com/api/webhook/</span>
                         <span className="text-cyan-500">abc123xyz</span>
                       </div>
                       <div className="grid grid-cols-2 gap-4 mt-6">
