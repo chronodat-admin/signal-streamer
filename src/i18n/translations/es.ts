@@ -618,6 +618,8 @@ export const es: TranslationKeys = {
     selectStrategy: 'Selecciona una estrategia',
     webhookUrl: 'URL del Webhook',
     webhookUrlPlaceholder: 'https://...',
+    discordWebhookPlaceholder: 'https://discord.com/api/webhooks/...',
+    invalidDiscordWebhookUrl: 'URL del webhook de Discord inválida. Debe tener el formato: https://discord.com/api/webhooks/...',
     howToGetWebhook: 'Cómo obtener la URL del webhook',
     howToGetBotToken: 'Cómo obtener el token del bot y el ID del chat',
     howToSetupWhatsApp: 'Cómo configurar la integración de WhatsApp',

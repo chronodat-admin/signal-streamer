@@ -332,6 +332,19 @@ const Integrations = () => {
     e.preventDefault();
     if (!user) return;
 
+    // Validate Discord webhook URL format
+    if (formData.integration_type === 'discord' && formData.webhook_url) {
+      const discordWebhookPattern = /^https:\/\/(discord\.com|discordapp\.com|ptb\.discord\.com|canary\.discord\.com)\/api\/webhooks\/\d+\/.+$/;
+      if (!discordWebhookPattern.test(formData.webhook_url)) {
+        toast({
+          title: t.common.error,
+          description: t.integrations.invalidDiscordWebhookUrl || 'Invalid Discord webhook URL. It should be in the format: https://discord.com/api/webhooks/...',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     try {
       const config: Record<string, any> = {};
       if (formData.integration_type === 'telegram') {
@@ -790,7 +803,7 @@ const Integrations = () => {
                     type="url"
                     value={formData.webhook_url}
                     onChange={(e) => setFormData({ ...formData, webhook_url: e.target.value })}
-                    placeholder={t.integrations.webhookUrlPlaceholder}
+                    placeholder={formData.integration_type === 'discord' ? t.integrations.discordWebhookPlaceholder : t.integrations.webhookUrlPlaceholder}
                     required
                   />
                   {selectedIntegration?.docsUrl && (

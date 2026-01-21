@@ -29,6 +29,26 @@ async function sendDiscordAlert(
   supabase: any,
   logData: { userId: string; strategyId: string; signalId: string; integrationId: string }
 ): Promise<{ success: boolean; error?: string; responseStatus?: number; responseBody?: string }> {
+  // Validate webhook URL
+  if (!webhookUrl || typeof webhookUrl !== 'string' || webhookUrl.trim() === '') {
+    console.error("Discord webhook URL is empty or invalid");
+    return { success: false, error: "Webhook URL is empty or invalid" };
+  }
+
+  // Validate Discord webhook URL format
+  const discordWebhookPattern = /^https:\/\/discord\.com\/api\/webhooks\/\d+\/.+$/;
+  const discordPtyWebhookPattern = /^https:\/\/discordapp\.com\/api\/webhooks\/\d+\/.+$/;
+  const ptbWebhookPattern = /^https:\/\/ptb\.discord\.com\/api\/webhooks\/\d+\/.+$/;
+  const canaryWebhookPattern = /^https:\/\/canary\.discord\.com\/api\/webhooks\/\d+\/.+$/;
+  
+  if (!discordWebhookPattern.test(webhookUrl) && 
+      !discordPtyWebhookPattern.test(webhookUrl) &&
+      !ptbWebhookPattern.test(webhookUrl) &&
+      !canaryWebhookPattern.test(webhookUrl)) {
+    console.error(`Invalid Discord webhook URL format: ${webhookUrl.substring(0, 50)}...`);
+    return { success: false, error: "Invalid Discord webhook URL format. URL should be in format: https://discord.com/api/webhooks/..." };
+  }
+
   const isBuy = payload.signal_type.toUpperCase() === "BUY" || payload.signal_type.toUpperCase() === "LONG";
   const color = isBuy ? 0x22c55e : 0xef4444; // Green or Red
   const emoji = isBuy ? "🟢" : "🔴";
@@ -846,9 +866,9 @@ serve(async (req) => {
     // Send alerts to all integrations
     for (const integration of filteredIntegrations) {
       let success = false;
+      // Handle both old schema (type) and new schema (integration_type) - defined outside try block for catch access
+      const integrationType = integration.integration_type || integration.type;
       try {
-        // Handle both old schema (type) and new schema (integration_type)
-        const integrationType = integration.integration_type || integration.type;
         
         if (!integrationType) {
           console.error(`Integration ${integration.id} has no type specified. Integration data:`, JSON.stringify(integration));
@@ -874,6 +894,8 @@ serve(async (req) => {
 
         console.log(`Sending ${integrationType} alert to integration ${integration.id} (${integration.name})`);
 
+        let errorMessage: string | undefined;
+        
         switch (integrationType) {
           case "discord":
             const discordResult = await sendDiscordAlert(
@@ -888,6 +910,10 @@ serve(async (req) => {
               }
             );
             success = discordResult.success;
+            if (!success && discordResult.error) {
+              errorMessage = discordResult.error;
+              console.error(`Discord alert failed: ${errorMessage}`);
+            }
             break;
           case "slack":
             success = await sendSlackAlert(webhookUrl, payload);
@@ -976,7 +1002,7 @@ serve(async (req) => {
         };
         
         if (!success) {
-          updateData.error_message = "Failed to send alert";
+          updateData.error_message = errorMessage || "Failed to send alert";
         } else {
           updateData.error_message = null;
         }

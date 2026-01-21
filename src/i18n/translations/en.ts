@@ -616,6 +616,8 @@ export const en = {
     selectStrategy: 'Select a strategy',
     webhookUrl: 'Webhook URL',
     webhookUrlPlaceholder: 'https://...',
+    discordWebhookPlaceholder: 'https://discord.com/api/webhooks/...',
+    invalidDiscordWebhookUrl: 'Invalid Discord webhook URL. It should be in the format: https://discord.com/api/webhooks/...',
     howToGetWebhook: 'How to get webhook URL',
     howToGetBotToken: 'How to get bot token and chat ID',
     howToSetupWhatsApp: 'How to set up WhatsApp integration',
