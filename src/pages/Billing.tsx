@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useTrial } from '@/hooks/useTrial';
 import { STRIPE_PLANS } from '@/lib/stripe';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
