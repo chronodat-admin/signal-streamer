@@ -123,9 +123,15 @@ export const useSubscription = () => {
 
   // Create checkout session
   const createCheckout = async (priceId: string) => {
-    if (!session?.access_token) {
-      toast.error('Please sign in to upgrade');
-      return;
+    // Ensure we have a valid session
+    let currentSession = session;
+    if (!currentSession?.access_token) {
+      const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !freshSession?.access_token) {
+        toast.error('Session expired. Please sign in again.');
+        return;
+      }
+      currentSession = freshSession;
     }
 
     setCheckoutLoading(true);
@@ -133,26 +139,34 @@ export const useSubscription = () => {
     try {
       console.log('Creating checkout with priceId:', priceId);
       
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
+      // Use fetch directly to have more control over the request
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${currentSession.access_token}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ priceId }),
       });
 
-      console.log('Checkout response:', { data, error });
+      const responseData = await response.json();
 
-      if (error) {
-        throw new Error(error.message || 'Checkout failed');
+      console.log('Checkout response:', { status: response.status, data: responseData });
+
+      if (!response.ok) {
+        // Extract error message from response
+        const errorMessage = responseData?.error || responseData?.message || `Server returned ${response.status}`;
+        throw new Error(errorMessage);
       }
 
-      if (data?.error) {
-        throw new Error(data.error);
+      if (responseData?.error) {
+        throw new Error(responseData.error);
       }
 
-      if (data?.url) {
+      if (responseData?.url) {
         // Redirect in same window for better UX
-        window.location.href = data.url;
+        window.location.href = responseData.url;
       } else {
         throw new Error('No checkout URL returned');
       }

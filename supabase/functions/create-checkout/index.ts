@@ -76,27 +76,80 @@ serve(async (req) => {
     requestBody = await req.json();
     const body = requestBody as { priceId?: string; plan?: string };
     let priceId: string;
+    let expectedPlan: 'PRO' | 'ELITE' | null = null;
+    let productId: string | null = null;
+    let productName: string | null = null;
     
-    // Support both priceId (new) and plan (legacy)
-    if (body.priceId) {
-      priceId = body.priceId;
-    } else if (body.plan) {
-      // Map plan to price ID using environment variables
-      const proPriceId = Deno.env.get("STRIPE_PRO_PRICE_ID");
-      const elitePriceId = Deno.env.get("STRIPE_ELITE_PRICE_ID");
+    // Always use database as source of truth for price IDs
+    if (body.plan) {
+      // Plan provided - get price ID from database
+      expectedPlan = body.plan as 'PRO' | 'ELITE';
       
-      if (body.plan === "PRO" && proPriceId) {
-        priceId = proPriceId;
-      } else if (body.plan === "ELITE" && elitePriceId) {
-        priceId = elitePriceId;
+      const { data: planData, error: planError } = await supabaseClient
+        .from('subscription_plans')
+        .select('stripe_price_id, stripe_product_id, name')
+        .eq('plan_type', body.plan)
+        .not('stripe_price_id', 'is', null)
+        .single();
+      
+      if (planError || !planData?.stripe_price_id) {
+        logStep("ERROR: Plan not found in database or missing price ID", { 
+          plan: body.plan, 
+          error: planError?.message,
+          hasPriceId: !!planData?.stripe_price_id
+        });
+        throw new Error(`Price ID not found in database for plan: ${body.plan}. Please configure stripe_price_id in subscription_plans table.`);
+      }
+      
+      priceId = planData.stripe_price_id;
+      productId = planData.stripe_product_id;
+      productName = planData.name;
+      
+      logStep("Using price ID from database", { 
+        plan: body.plan, 
+        priceId,
+        productId,
+        productName
+      });
+    } else if (body.priceId) {
+      // Price ID provided - validate it against database
+      priceId = body.priceId;
+      
+      const { data: plans, error: plansError } = await supabaseClient
+        .from('subscription_plans')
+        .select('plan_type, stripe_price_id, stripe_product_id, name')
+        .in('plan_type', ['PRO', 'ELITE'])
+        .not('stripe_price_id', 'is', null);
+      
+      if (!plansError && plans && plans.length > 0) {
+        const matchingPlan = plans.find(p => p.stripe_price_id === priceId);
+        if (matchingPlan) {
+          expectedPlan = matchingPlan.plan_type as 'PRO' | 'ELITE';
+          productId = matchingPlan.stripe_product_id;
+          productName = matchingPlan.name;
+          logStep("Price ID validated against database", { 
+            priceId, 
+            plan: expectedPlan,
+            productId,
+            productName
+          });
+        } else {
+          logStep("WARNING: Price ID not found in database", { priceId });
+          throw new Error(`Price ID ${priceId} not found in database. Please use a valid price ID from subscription_plans table.`);
+        }
       } else {
-        throw new Error(`Price ID not configured for plan: ${body.plan}`);
+        throw new Error("Unable to validate price ID. Database query failed.");
       }
     } else {
       throw new Error("Either priceId or plan is required");
     }
     
-    logStep("Price ID determined", { priceId, plan: body.plan });
+    logStep("Final price ID determined", { 
+      priceId, 
+      plan: expectedPlan || body.plan,
+      productId,
+      productName
+    });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     
@@ -125,6 +178,7 @@ serve(async (req) => {
       cancel_url: `${origin}/dashboard/billing?canceled=true`,
       metadata: {
         user_id: user.id,
+        plan: expectedPlan || body.plan || 'unknown',
       },
     });
 

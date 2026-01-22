@@ -132,6 +132,9 @@ const Billing = () => {
     openCustomerPortal,
     refetch,
   } = useSubscription();
+  
+  // Track which specific plan button is loading
+  const [loadingPlan, setLoadingPlan] = useState<'PRO' | 'ELITE' | null>(null);
 
   const { isExpired: trialExpired, daysRemaining, trialEndDate, loading: trialLoading } = useTrial();
   const { plans, loading: plansLoading } = usePlans();
@@ -179,6 +182,10 @@ const Billing = () => {
   const details = planDetails[plan];
 
   const handleUpgrade = async (planKey: 'PRO' | 'ELITE') => {
+    // Prevent multiple simultaneous clicks
+    if (loadingPlan) return;
+    
+    setLoadingPlan(planKey);
     try {
       const stripePlan = await getStripePlan(planKey);
       console.log('Upgrading to:', planKey, 'priceId:', stripePlan.priceId);
@@ -186,6 +193,8 @@ const Billing = () => {
     } catch (error) {
       console.error('Error getting Stripe plan:', error);
       toast.error('Failed to load plan details. Please try again.');
+    } finally {
+      setLoadingPlan(null);
     }
   };
 
@@ -258,16 +267,22 @@ const Billing = () => {
                 <Button 
                   size="sm" 
                   onClick={() => handleUpgrade('PRO')}
-                  disabled={checkoutLoading}
+                  disabled={loadingPlan !== null}
                 >
+                  {loadingPlan === 'PRO' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
                   Upgrade to Pro - $7/mo
                 </Button>
                 <Button 
                   size="sm" 
                   variant="outline"
                   onClick={() => handleUpgrade('ELITE')}
-                  disabled={checkoutLoading}
+                  disabled={loadingPlan !== null}
                 >
+                  {loadingPlan === 'ELITE' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
                   Upgrade to Elite - $18/mo
                 </Button>
               </div>
@@ -432,9 +447,9 @@ const Billing = () => {
                         <Button 
                         className="w-full"
                         onClick={() => handleUpgrade('PRO')}
-                        disabled={checkoutLoading}
+                        disabled={loadingPlan !== null}
                       >
-                        {checkoutLoading ? (
+                        {loadingPlan === 'PRO' ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : null}
                           {t.billing.upgradeToPro}
@@ -443,9 +458,9 @@ const Billing = () => {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleUpgrade('ELITE')}
-                        disabled={checkoutLoading}
+                        disabled={loadingPlan !== null}
                       >
-                        {checkoutLoading ? (
+                        {loadingPlan === 'ELITE' ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : null}
                         {t.billing.upgradeToElite}
@@ -540,9 +555,9 @@ const Billing = () => {
                           <Button 
                             className="w-full"
                             onClick={() => handleUpgrade(planKey as 'PRO' | 'ELITE')}
-                            disabled={checkoutLoading || planKey === 'FREE'}
+                            disabled={loadingPlan !== null || planKey === 'FREE'}
                           >
-                            {checkoutLoading ? (
+                            {loadingPlan === planKey ? (
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             ) : (
                               <ArrowUpRight className="h-4 w-4 mr-2" />
