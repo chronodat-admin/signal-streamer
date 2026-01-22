@@ -43,12 +43,27 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Check for Authorization header (case-insensitive)
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader) {
+      logStep("Missing authorization header", { 
+        headers: Object.fromEntries(req.headers.entries())
+      });
+      throw new Error("No authorization header provided");
+    }
     
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) {
+      logStep("Invalid authorization header format", { header: authHeader.substring(0, 20) + "..." });
+      throw new Error("Invalid authorization header format");
+    }
+    
+    logStep("Verifying token", { tokenLength: token.length });
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      logStep("Token verification failed", { error: userError.message });
+      throw new Error(`Authentication error: ${userError.message}`);
+    }
     
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");

@@ -141,10 +141,23 @@ const Pricing = () => {
     setCheckoutLoading(plan);
 
     try {
+      // Ensure session is fresh and valid
+      let currentSession = session;
+      if (!currentSession?.access_token) {
+        const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !freshSession?.access_token) {
+          throw new Error('Session expired. Please sign in again.');
+        }
+        currentSession = freshSession;
+      }
+
+      console.log('Calling create-checkout with plan:', plan, 'Session valid:', !!currentSession?.access_token);
+
+      // Call the Edge Function with explicit Authorization header
       const response = await supabase.functions.invoke('create-checkout', {
         body: { plan },
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${currentSession.access_token}`,
         },
       });
 
