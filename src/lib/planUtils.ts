@@ -1,19 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { getPlanLimits as getPlanLimitsFromDB, type PlanLimits } from './planService';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
-export interface PlanLimits {
-  maxStrategies: number;
-  historyDays: number;
-  csvExport: boolean;
-  publicPages: boolean;
-  integrations: number;
-  rateLimitPerSec: number;
-  rateLimitPerDay: number;
-}
+// Re-export PlanLimits type
+export type { PlanLimits } from './planService';
 
-export const getPlanLimits = (plan: PlanType): PlanLimits => {
+// Legacy synchronous function for backward compatibility
+// Now uses database with fallback
+export const getPlanLimits = async (plan: PlanType): Promise<PlanLimits> => {
+  return await getPlanLimitsFromDB(plan);
+};
+
+// Synchronous fallback for cases where async isn't possible
+export const getPlanLimitsSync = (plan: PlanType): PlanLimits => {
   switch (plan) {
     case 'FREE':
       return {
@@ -46,7 +47,7 @@ export const getPlanLimits = (plan: PlanType): PlanLimits => {
         rateLimitPerDay: 200000,
       };
     default:
-      return getPlanLimits('FREE');
+      return getPlanLimitsSync('FREE');
   }
 };
 
@@ -66,7 +67,7 @@ export const getUserPlan = async (userId: string): Promise<PlanType> => {
 
 export const canCreateStrategy = async (userId: string, currentCount: number): Promise<{ allowed: boolean; reason?: string }> => {
   const plan = await getUserPlan(userId);
-  const limits = getPlanLimits(plan);
+  const limits = await getPlanLimits(plan);
 
   if (limits.maxStrategies === -1) {
     return { allowed: true };
@@ -82,8 +83,19 @@ export const canCreateStrategy = async (userId: string, currentCount: number): P
   return { allowed: true };
 };
 
-export const getHistoryDateLimit = (plan: PlanType): Date | null => {
-  const limits = getPlanLimits(plan);
+export const getHistoryDateLimit = async (plan: PlanType): Promise<Date | null> => {
+  const limits = await getPlanLimits(plan);
+  if (limits.historyDays === -1) {
+    return null; // unlimited
+  }
+  const date = new Date();
+  date.setDate(date.getDate() - limits.historyDays);
+  return date;
+};
+
+// Synchronous version for backward compatibility
+export const getHistoryDateLimitSync = (plan: PlanType): Date | null => {
+  const limits = getPlanLimitsSync(plan);
   if (limits.historyDays === -1) {
     return null; // unlimited
   }

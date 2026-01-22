@@ -95,7 +95,7 @@ const Dashboard = () => {
     try {
       // Get user plan and apply history limits
       const plan = await getUserPlan(user.id);
-      const historyLimit = getHistoryDateLimit(plan);
+      const historyLimit = await getHistoryDateLimit(plan);
       
       let query = supabase
         .from('signals')

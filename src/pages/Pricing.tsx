@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Activity, Check, X, ArrowLeft, ArrowUpRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
 import { useLanguage } from '@/i18n';
 import { SEO } from '@/components/SEO';
+import { usePlans } from '@/hooks/usePlans';
 
-const plans = [
+// Fallback plans if database not loaded
+const fallbackPlans = [
   {
     name: 'Free',
     price: '$0',
@@ -31,7 +33,7 @@ const plans = [
   },
   {
     name: 'Pro',
-    price: '$9',
+    price: '$7',
     period: '/month',
     description: 'For active traders',
     features: [
@@ -89,7 +91,45 @@ const Pricing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { plans, loading: plansLoading } = usePlans();
   const [checkoutLoading, setCheckoutLoading] = useState<'PRO' | 'ELITE' | null>(null);
+
+  // Transform database plans to display format
+  const displayPlans = useMemo(() => {
+    if (plans.length === 0) return fallbackPlans;
+    
+    return plans.map(plan => {
+      // Determine which features are included based on plan limits
+      const limits = plan.limits;
+      const features = plan.features.map(feature => ({
+        name: feature,
+        included: true,
+      }));
+      
+      // Add missing features as not included for FREE plan
+      if (plan.plan_type === 'FREE') {
+        features.push(
+          { name: 'CSV export', included: limits.csvExport },
+          { name: 'Public strategy pages', included: limits.publicPages },
+          { name: 'API access', included: false }
+        );
+      } else if (plan.plan_type === 'PRO') {
+        features.push({ name: 'API access', included: false });
+      }
+      
+      return {
+        name: plan.name,
+        price: `$${plan.price_monthly}`,
+        period: plan.plan_type === 'FREE' 
+          ? (plan.trial_days > 0 ? `/${plan.trial_days}-day trial` : '/forever')
+          : '/month',
+        description: plan.description || '',
+        features,
+        cta: plan.plan_type === 'FREE' ? 'Get Started' : plan.plan_type === 'PRO' ? 'Upgrade to Pro' : 'Go Elite',
+        popular: plan.is_popular,
+      };
+    });
+  }, [plans]);
 
   const handleCheckout = async (plan: 'PRO' | 'ELITE') => {
     // If not logged in, redirect to auth
@@ -276,8 +316,9 @@ const Pricing = () => {
                 )}
               </CardContent>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* FAQs */}
         <div className="max-w-3xl mx-auto">

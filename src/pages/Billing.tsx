@@ -22,11 +22,13 @@ import {
 import { useEffect, useState } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTrial } from '@/hooks/useTrial';
-import { STRIPE_PLANS } from '@/lib/stripe';
+import { usePlans } from '@/hooks/usePlans';
+import { getStripePlan } from '@/lib/stripe';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLanguage } from '@/i18n';
+import { Link } from 'react-router-dom';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -37,7 +39,15 @@ const PLAN_HIERARCHY: Record<PlanType, number> = {
   ELITE: 2,
 };
 
-const getPlanDetails = (t: any): Record<PlanType, { 
+// Icon mapping
+const iconMap: Record<string, typeof Zap> = {
+  Zap,
+  Crown,
+  Sparkles,
+};
+
+// Helper to get plan details from database
+const getPlanDetailsFromDB = (plans: any[], t: any): Record<PlanType, { 
   name: string; 
   price: string; 
   priceAmount: number;
@@ -45,35 +55,61 @@ const getPlanDetails = (t: any): Record<PlanType, {
   icon: typeof Zap;
   color: string;
   bgColor: string;
-}> => ({
-  FREE: {
-    name: 'Free',
-    price: '$0/15-day trial',
-    priceAmount: 0,
-    features: [t.planFeatures.oneStrategy, t.planFeatures.sevenDayHistory, t.planFeatures.emailSupport],
-    icon: Zap,
-    color: 'text-slate-500',
-    bgColor: 'bg-slate-500/10',
-  },
-  PRO: {
-    name: 'Pro',
-    price: '$9/month',
-    priceAmount: 9,
-    features: [t.planFeatures.tenStrategies, t.planFeatures.ninetyDayHistory, t.planFeatures.csvExport, t.planFeatures.publicPages],
-    icon: Crown,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
-  },
-  ELITE: {
-    name: 'Elite',
-    price: '$18/month',
-    priceAmount: 18,
-    features: [t.planFeatures.unlimitedStrategies, t.planFeatures.unlimitedHistory, t.planFeatures.apiAccess, t.planFeatures.dedicatedSupport],
-    icon: Sparkles,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-500/10',
-  },
-});
+}> => {
+  const planMap: Record<string, any> = {};
+  
+  plans.forEach(plan => {
+    const iconName = plan.icon_name || 'Zap';
+    const Icon = iconMap[iconName] || Zap;
+    
+    // Format price
+    let priceStr = `$${plan.price_monthly}/month`;
+    if (plan.plan_type === 'FREE') {
+      priceStr = plan.trial_days > 0 ? `$0/${plan.trial_days}-day trial` : '$0/forever';
+    }
+    
+    planMap[plan.plan_type] = {
+      name: plan.name,
+      price: priceStr,
+      priceAmount: plan.price_monthly,
+      features: plan.features || [],
+      icon: Icon,
+      color: plan.color || 'text-slate-500',
+      bgColor: plan.bg_color || 'bg-slate-500/10',
+    };
+  });
+  
+  // Fallback defaults if database plans not loaded
+  return {
+    FREE: planMap.FREE || {
+      name: 'Free',
+      price: '$0/15-day trial',
+      priceAmount: 0,
+      features: [t.planFeatures.oneStrategy, t.planFeatures.sevenDayHistory, t.planFeatures.emailSupport],
+      icon: Zap,
+      color: 'text-slate-500',
+      bgColor: 'bg-slate-500/10',
+    },
+    PRO: planMap.PRO || {
+      name: 'Pro',
+      price: '$7/month',
+      priceAmount: 7,
+      features: [t.planFeatures.tenStrategies, t.planFeatures.ninetyDayHistory, t.planFeatures.csvExport, t.planFeatures.publicPages],
+      icon: Crown,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/10',
+    },
+    ELITE: planMap.ELITE || {
+      name: 'Elite',
+      price: '$18/month',
+      priceAmount: 18,
+      features: [t.planFeatures.unlimitedStrategies, t.planFeatures.unlimitedHistory, t.planFeatures.apiAccess, t.planFeatures.dedicatedSupport],
+      icon: Sparkles,
+      color: 'text-amber-500',
+      bgColor: 'bg-amber-500/10',
+    },
+  };
+};
 
 // All available plans in order
 const ALL_PLANS: PlanType[] = ['FREE', 'PRO', 'ELITE'];
@@ -139,13 +175,18 @@ const Billing = () => {
     }
   }, [searchParams, setSearchParams, checkSubscription, refetch]);
 
-  const planDetails = getPlanDetails(t);
+  const planDetails = getPlanDetailsFromDB(plans, t);
   const details = planDetails[plan];
 
-  const handleUpgrade = async (planKey: keyof typeof STRIPE_PLANS) => {
-    const stripePlan = STRIPE_PLANS[planKey];
-    console.log('Upgrading to:', planKey, 'priceId:', stripePlan.priceId);
-    await createCheckout(stripePlan.priceId);
+  const handleUpgrade = async (planKey: 'PRO' | 'ELITE') => {
+    try {
+      const stripePlan = await getStripePlan(planKey);
+      console.log('Upgrading to:', planKey, 'priceId:', stripePlan.priceId);
+      await createCheckout(stripePlan.priceId);
+    } catch (error) {
+      console.error('Error getting Stripe plan:', error);
+      toast.error('Failed to load plan details. Please try again.');
+    }
   };
 
   const handleRefresh = async () => {
@@ -498,7 +539,7 @@ const Billing = () => {
                         ) : isUpgrade ? (
                           <Button 
                             className="w-full"
-                            onClick={() => handleUpgrade(planKey as keyof typeof STRIPE_PLANS)}
+                            onClick={() => handleUpgrade(planKey as 'PRO' | 'ELITE')}
                             disabled={checkoutLoading || planKey === 'FREE'}
                           >
                             {checkoutLoading ? (
