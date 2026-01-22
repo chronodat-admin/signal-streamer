@@ -248,7 +248,7 @@ const Pricing = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-20">
-          {plans.map((plan) => (
+          {displayPlans.map((plan) => (
             <Card
               key={plan.name}
               className={`stat-card relative ${
@@ -318,7 +318,6 @@ const Pricing = () => {
             </Card>
             ))}
           </div>
-        )}
 
         {/* FAQs */}
         <div className="max-w-3xl mx-auto">
