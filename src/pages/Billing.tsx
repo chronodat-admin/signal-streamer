@@ -28,7 +28,6 @@ import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLanguage } from '@/i18n';
-import { Link } from 'react-router-dom';
 
 type PlanType = Database['public']['Enums']['plan_type'];
 
@@ -135,6 +134,7 @@ const Billing = () => {
   } = useSubscription();
 
   const { isExpired: trialExpired, daysRemaining, trialEndDate, loading: trialLoading } = useTrial();
+  const { plans, loading: plansLoading } = usePlans();
 
   // Handle success/cancel redirects from Stripe
   useEffect(() => {
@@ -289,7 +289,7 @@ const Billing = () => {
           </Alert>
         )}
 
-        {loading && !processingSuccess ? (
+        {(loading || plansLoading) && !processingSuccess ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                       </div>

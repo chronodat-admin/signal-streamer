@@ -99,24 +99,35 @@ export const ErrorLogs = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch error logs with user emails
+      // Fetch error logs
       const { data: logs, error: logsError } = await supabase
         .from('error_logs')
-        .select(`
-          *,
-          profiles:user_id (
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(1000);
 
       if (logsError) throw logsError;
 
+      // Get unique user IDs from logs
+      const userIds = [...new Set((logs || []).map(log => log.user_id).filter(Boolean))] as string[];
+
+      // Fetch profiles for those user IDs
+      let profilesMap = new Map<string, { email: string | null }>();
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, email')
+          .in('user_id', userIds);
+
+        if (!profilesError && profiles) {
+          profilesMap = new Map(profiles.map(p => [p.user_id, { email: p.email }]));
+        }
+      }
+
       // Transform data to include user email
-      const transformedLogs: ErrorLog[] = (logs || []).map((log: any) => ({
+      const transformedLogs: ErrorLog[] = (logs || []).map((log) => ({
         ...log,
-        user_email: log.profiles?.email || null,
+        user_email: log.user_id ? profilesMap.get(log.user_id)?.email || null : null,
       }));
 
       setErrorLogs(transformedLogs);
