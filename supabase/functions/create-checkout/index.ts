@@ -9,6 +9,7 @@ import {
   createLocationSummary,
   createAuditLogger 
 } from "../_shared/index.ts";
+import { createErrorLogger } from "../_shared/error-logger.ts";
 
 const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -19,6 +20,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return handleCors();
   }
+
+  // Store these for error logging
+  let supabaseClient: ReturnType<typeof createClient> | null = null;
+  let userId: string | undefined;
+  let requestBody: unknown = null;
 
   try {
     logStep("Function started");
@@ -31,7 +37,7 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    const supabaseClient = createClient(
+    supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
@@ -46,12 +52,14 @@ serve(async (req) => {
     
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+    userId = user.id;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Get user's geolocation (non-blocking, we'll log it after checkout creation)
     const geoPromise = getGeoLocation(clientIP);
 
-    const body = await req.json();
+    requestBody = await req.json();
+    const body = requestBody as { priceId?: string; plan?: string };
     let priceId: string;
     
     // Support both priceId (new) and plan (legacy)
@@ -135,8 +143,51 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-checkout", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    logStep("ERROR in create-checkout", { message: errorMessage, stack: errorStack });
+    
+    // Try to log the error to the database (non-blocking)
+    if (supabaseClient) {
+      try {
+        const errorLogger = createErrorLogger(supabaseClient);
+        
+        errorLogger.logAsync({
+          req,
+          userId: userId || undefined,
+          errorType: 'edge_function',
+          severity: 'error',
+          source: 'create-checkout',
+          message: 'Failed to create checkout session',
+          error: error instanceof Error ? error : new Error(errorMessage),
+          requestBody: requestBody,
+          responseStatus: 500,
+          metadata: {
+            error_message: errorMessage,
+            error_stack: errorStack,
+          },
+        });
+      } catch (logError) {
+        console.error("[CREATE-CHECKOUT] Failed to log error to database:", logError);
+      }
+    }
+    
+    // Provide user-friendly error messages for common issues
+    let userMessage = errorMessage;
+    if (errorMessage.includes("STRIPE_SECRET_KEY is not set")) {
+      userMessage = "Payment processing is not configured. Please contact support.";
+    } else if (errorMessage.includes("Price ID not configured")) {
+      userMessage = "The selected plan is not available. Please contact support.";
+    } else if (errorMessage.includes("Authentication error") || errorMessage.includes("No authorization header")) {
+      userMessage = "Please sign in to continue.";
+    } else if (errorMessage.includes("No such price")) {
+      userMessage = "Invalid pricing configuration. Please contact support.";
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: userMessage,
+      details: errorMessage, // Include original error for debugging
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

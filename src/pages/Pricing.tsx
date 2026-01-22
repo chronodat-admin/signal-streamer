@@ -143,6 +143,9 @@ const Pricing = () => {
     try {
       const response = await supabase.functions.invoke('create-checkout', {
         body: { plan },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       console.log('Checkout response:', response);
@@ -157,12 +160,16 @@ const Pricing = () => {
         
         // Check if there's data with an error (edge function returned JSON error)
         if (response.data?.error) {
+          // Use the user-friendly error message from the Edge Function
           errorMessage = response.data.error;
+        } else if (response.data?.details) {
+          // Fall back to details if error is not available
+          errorMessage = response.data.details;
         } else if (response.error.message) {
           // Check for common configuration errors
           if (response.error.message.includes('non-2xx') || response.error.message.includes('500')) {
-            // Edge function returned an error - likely Stripe not configured
-            errorMessage = 'Payment processing is not yet configured. Please contact support or try again later.';
+            // Edge function returned an error - try to get the actual error from data
+            errorMessage = response.data?.error || 'Payment processing is not yet configured. Please contact support or try again later.';
           } else if (response.error.message.includes('FunctionsHttpError')) {
             errorMessage = 'Payment service temporarily unavailable. Please try again later.';
           } else {
