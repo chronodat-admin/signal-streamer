@@ -1,0 +1,4 @@
+# Disable automatic JWT verification at the gateway level
+# This allows our function to handle authentication manually with better error messages
+# and proper session refresh/retry handling
+verify_jwt = false

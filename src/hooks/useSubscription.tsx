@@ -72,21 +72,55 @@ export const useSubscription = () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
+      // Use fetch directly for consistent error handling
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/check-subscription`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
         },
       });
 
-      if (error) {
-        console.error('Edge function error:', error);
-        // Fall back to database
+      const data = await response.json();
+
+      // Handle 401 - try to refresh session
+      if (response.status === 401) {
+        console.log('Check subscription: 401 error, attempting refresh...');
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (!refreshError && refreshedSession?.access_token) {
+          // Retry with refreshed token
+          const retryResponse = await fetch(`${supabaseUrl}/functions/v1/check-subscription`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${refreshedSession.access_token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          const retryData = await retryResponse.json();
+          
+          if (retryResponse.ok && !retryData.error) {
+            setState({
+              plan: retryData.plan || 'FREE',
+              subscribed: retryData.subscribed || false,
+              subscriptionEnd: retryData.subscription_end || null,
+              loading: false,
+              error: null,
+            });
+            return;
+          }
+        }
+        
+        // Refresh failed - fall back to database
+        console.log('Session refresh failed, falling back to database');
         await fetchPlanFromDatabase();
         return;
       }
 
-      if (data?.error) {
-        console.error('Function returned error:', data.error);
+      if (!response.ok || data?.error) {
+        console.error('Check subscription error:', data?.error || response.statusText);
         // Fall back to database
         await fetchPlanFromDatabase();
         return;
@@ -174,7 +208,39 @@ export const useSubscription = () => {
 
       if (!response.ok) {
         // Extract error message from response
-        const errorMessage = responseData?.error || responseData?.message || `Server returned ${response.status}`;
+        let errorMessage = responseData?.error || responseData?.message || `Server returned ${response.status}`;
+        
+        // Handle 401 specifically - session might be expired
+        if (response.status === 401) {
+          // Try to refresh session and retry once
+          console.log('401 error, attempting to refresh session...');
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (!refreshError && refreshedSession?.access_token) {
+            console.log('Session refreshed, retrying checkout...');
+            // Retry with refreshed token
+            const retryResponse = await fetch(`${supabaseUrl}/functions/v1/create-checkout`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${refreshedSession.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ priceId }),
+            });
+            
+            const retryData = await retryResponse.json();
+            
+            if (retryResponse.ok && retryData?.url) {
+              window.location.href = retryData.url;
+              return;
+            } else {
+              errorMessage = retryData?.error || retryData?.message || 'Authentication failed after refresh';
+            }
+          } else {
+            errorMessage = 'Your session has expired. Please sign in again.';
+          }
+        }
+        
         throw new Error(errorMessage);
       }
 

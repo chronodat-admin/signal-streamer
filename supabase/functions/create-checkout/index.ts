@@ -62,7 +62,13 @@ serve(async (req) => {
     const tokenParts = token.split('.');
     if (tokenParts.length !== 3) {
       logStep("Invalid JWT format", { parts: tokenParts.length, tokenPreview: token.substring(0, 20) + "..." });
-      throw new Error("Invalid JWT token format");
+      return new Response(JSON.stringify({ 
+        error: "Invalid JWT token format",
+        message: "The authentication token format is invalid. Please sign in again."
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
     }
     
     logStep("Verifying token", { tokenLength: token.length, tokenPreview: token.substring(0, 20) + "..." });
@@ -74,17 +80,25 @@ serve(async (req) => {
       logStep("Token verification failed", { 
         error: userError.message,
         errorName: userError.name,
-        status: userError.status
+        status: userError.status,
+        fullError: JSON.stringify(userError)
       });
       
-      // Provide more specific error messages
-      if (userError.message.includes('JWT') || userError.message.includes('expired')) {
-        throw new Error("Your session has expired. Please sign in again.");
-      } else if (userError.message.includes('Invalid')) {
-        throw new Error("Invalid authentication token. Please sign in again.");
+      // Return 401 with clear error message
+      let errorMessage = "Authentication failed";
+      if (userError.message.includes('JWT') || userError.message.includes('expired') || userError.message.includes('Invalid')) {
+        errorMessage = "Your session has expired or is invalid. Please sign in again.";
       } else {
-        throw new Error(`Authentication error: ${userError.message}`);
+        errorMessage = userError.message || "Authentication failed";
       }
+      
+      return new Response(JSON.stringify({ 
+        error: errorMessage,
+        details: userError.message
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
     }
     
     const user = userData.user;

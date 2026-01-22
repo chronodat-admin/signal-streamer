@@ -40,15 +40,56 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Check for Authorization header
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader) {
+      logStep("Missing authorization header");
+      return new Response(JSON.stringify({ 
+        error: "Authentication required",
+        message: "Please sign in to check subscription status"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
     
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      logStep("Invalid authorization header format");
+      return new Response(JSON.stringify({ 
+        error: "Invalid authorization header",
+        message: "Please sign in again"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+    
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      logStep("Token verification failed", { error: userError.message });
+      return new Response(JSON.stringify({ 
+        error: userError.message.includes('expired') 
+          ? "Your session has expired. Please sign in again."
+          : "Authentication failed. Please sign in again.",
+        details: userError.message
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
     
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) {
+      logStep("User not found or email missing");
+      return new Response(JSON.stringify({ 
+        error: "User not authenticated",
+        message: "Please sign in again"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });

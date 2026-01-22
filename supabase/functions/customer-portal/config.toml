@@ -1,0 +1,3 @@
+# Disable automatic JWT verification at the gateway level
+# This allows our function to handle authentication manually with better error messages
+verify_jwt = false
