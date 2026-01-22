@@ -123,8 +123,9 @@ export const useSubscription = () => {
 
   // Create checkout session
   const createCheckout = async (priceId: string) => {
-    // Ensure we have a valid session
+    // Ensure we have a valid session and refresh if needed
     let currentSession = session;
+    
     if (!currentSession?.access_token) {
       const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !freshSession?.access_token) {
@@ -132,6 +133,23 @@ export const useSubscription = () => {
         return;
       }
       currentSession = freshSession;
+    }
+    
+    // Check if token is close to expiring (within 5 minutes) and refresh it
+    if (currentSession.expires_at) {
+      const expiresAt = currentSession.expires_at * 1000; // Convert to milliseconds
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (expiresAt - now < fiveMinutes) {
+        console.log('Token expiring soon, refreshing...');
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError || !refreshedSession?.access_token) {
+          toast.error('Failed to refresh session. Please sign in again.');
+          return;
+        }
+        currentSession = refreshedSession;
+      }
     }
 
     setCheckoutLoading(true);

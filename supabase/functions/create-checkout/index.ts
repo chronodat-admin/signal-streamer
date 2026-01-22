@@ -52,17 +52,39 @@ serve(async (req) => {
       throw new Error("No authorization header provided");
     }
     
-    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
     if (!token) {
       logStep("Invalid authorization header format", { header: authHeader.substring(0, 20) + "..." });
       throw new Error("Invalid authorization header format");
     }
     
-    logStep("Verifying token", { tokenLength: token.length });
+    // Validate token format (JWT should have 3 parts separated by dots)
+    const tokenParts = token.split('.');
+    if (tokenParts.length !== 3) {
+      logStep("Invalid JWT format", { parts: tokenParts.length, tokenPreview: token.substring(0, 20) + "..." });
+      throw new Error("Invalid JWT token format");
+    }
+    
+    logStep("Verifying token", { tokenLength: token.length, tokenPreview: token.substring(0, 20) + "..." });
+    
+    // Try to get user with the token
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    
     if (userError) {
-      logStep("Token verification failed", { error: userError.message });
-      throw new Error(`Authentication error: ${userError.message}`);
+      logStep("Token verification failed", { 
+        error: userError.message,
+        errorName: userError.name,
+        status: userError.status
+      });
+      
+      // Provide more specific error messages
+      if (userError.message.includes('JWT') || userError.message.includes('expired')) {
+        throw new Error("Your session has expired. Please sign in again.");
+      } else if (userError.message.includes('Invalid')) {
+        throw new Error("Invalid authentication token. Please sign in again.");
+      } else {
+        throw new Error(`Authentication error: ${userError.message}`);
+      }
     }
     
     const user = userData.user;
