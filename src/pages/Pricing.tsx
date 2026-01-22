@@ -15,8 +15,8 @@ const plans = [
   {
     name: 'Free',
     price: '$0',
-    period: 'forever',
-    description: 'Perfect for getting started',
+    period: '/15-day trial',
+    description: '15-day free trial, then upgrade required',
     features: [
       { name: '1 Strategy', included: true },
       { name: '7-day signal history', included: true },
@@ -31,7 +31,7 @@ const plans = [
   },
   {
     name: 'Pro',
-    price: '$19',
+    price: '$9',
     period: '/month',
     description: 'For active traders',
     features: [
@@ -48,7 +48,7 @@ const plans = [
   },
   {
     name: 'Elite',
-    price: '$49',
+    price: '$18',
     period: '/month',
     description: 'For professional traders',
     features: [
@@ -75,8 +75,8 @@ const faqs = [
     answer: 'We accept all major credit cards including Visa, Mastercard, and American Express. Payment processing is handled securely by Stripe.',
   },
   {
-    question: 'Is there a free trial for paid plans?',
-    answer: 'You can start with our Free plan to test the platform. Upgrade anytime when you need more features.',
+    question: 'How long is the free trial?',
+    answer: 'The free trial lasts 15 days. After the trial period, you\'ll need to upgrade to Pro or Elite to continue using the platform.',
   },
   {
     question: 'What happens to my signals if I downgrade?',
@@ -172,7 +172,7 @@ const Pricing = () => {
     <>
       <SEO 
         title="Pricing - TradeMoq"
-        description="Choose the perfect plan for your trading needs. Free plan available. Upgrade to Pro or Elite for advanced features like CSV export, public strategy pages, and API access."
+        description="Choose the perfect plan for your trading needs. Start with a 15-day free trial. Upgrade to Pro or Elite for advanced features like CSV export, public strategy pages, and API access."
         keywords="trading platform pricing, TradeMoq pricing, trading signal plans, free trading tools, pro trading features"
         canonical="https://trademoq.com/pricing"
       />

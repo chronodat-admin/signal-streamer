@@ -736,7 +736,7 @@ export const en = {
     proPlan: 'Pro Plan',
     elitePlan: 'Elite Plan',
     perMonth: '/month',
-    perForever: '/forever',
+    perForever: '/15-day trial',
     
     // Features
     features: 'Features',
@@ -758,8 +758,8 @@ export const en = {
     noActiveSubscriptionDescription: 'You\'re on the free plan',
     manageSubscription: 'Manage Subscription',
     updatePaymentMethod: 'Update payment method, change plan, or cancel subscription',
-    upgradeToPro: 'Upgrade to Pro - $19/mo',
-    upgradeToElite: 'Upgrade to Elite - $49/mo',
+    upgradeToPro: 'Upgrade to Pro - $7/mo',
+    upgradeToElite: 'Upgrade to Elite - $18/mo',
     
     // Change Plan
     changeYourPlan: 'Change Your Plan',

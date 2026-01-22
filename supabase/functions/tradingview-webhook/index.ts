@@ -180,7 +180,7 @@ serve(async (req) => {
       .eq("strategy_id", strategyId)
       .gte("created_at", oneSecondAgo);
 
-    // Get user plan for rate limits
+    // Get user plan for rate limits and trial check
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan")
@@ -188,6 +188,37 @@ serve(async (req) => {
       .single();
 
     const plan = profile?.plan || "FREE";
+    
+    // Check if FREE user's trial has expired
+    if (plan === "FREE") {
+      const { data: trialExpired } = await supabase
+        .rpc("is_trial_expired", { user_id_param: strategy.user_id });
+      
+      if (trialExpired) {
+        console.log(`Trial expired for user ${strategy.user_id}`);
+        errorLogger.logAsync({
+          req,
+          userId: strategy.user_id,
+          errorType: 'webhook',
+          severity: 'warning',
+          source: 'tradingview-webhook',
+          message: 'Trial expired - webhook blocked',
+          error: new Error('Trial expired'),
+          metadata: { strategyId, userId: strategy.user_id },
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: "Trial expired. Please upgrade to Pro or Elite to continue receiving signals.",
+            code: "TRIAL_EXPIRED"
+          }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+    
     const rateLimitPerSec = plan === "FREE" ? 1 : plan === "PRO" ? 5 : 20;
 
     if ((recentCount || 0) >= rateLimitPerSec) {

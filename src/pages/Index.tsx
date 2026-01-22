@@ -210,17 +210,17 @@ const Index = () => {
       />
       <div className="min-h-screen bg-background noise-overlay">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl overflow-hidden" style={{ height: '64px' }}>
-        <div className="container mx-auto px-6 h-full flex items-center justify-between">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-background/60 backdrop-blur-xl overflow-hidden h-14 sm:h-16">
+        <div className="container mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
           <Link to="/" className="flex items-center group h-full">
             <img 
               src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
               alt="TradeMoq Logo" 
-              className="h-48 w-auto transition-transform group-hover:scale-105"
+              className="h-24 sm:h-32 md:h-40 lg:h-48 w-auto transition-transform group-hover:scale-105"
             />
           </Link>
           
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             <a href="#features" className="nav-link">Features</a>
             <a href="#how-it-works" className="nav-link">How It Works</a>
             <Link to="/leaderboard" className="nav-link">Leaderboard</Link>
@@ -228,25 +228,28 @@ const Index = () => {
             <Link to="/blog" className="nav-link">Blog</Link>
           </div>
           
-          <div className="flex items-center gap-2">
-            <ColorSchemePicker />
-            <ThemeToggle />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="hidden sm:flex items-center gap-1">
+              <ColorSchemePicker />
+              <ThemeToggle />
+            </div>
             {user ? (
-              <Link to="/dashboard" >
-                <Button className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow">
+              <Link to="/dashboard">
+                <Button size="sm" className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow">
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="hidden sm:inline">Dashboard</span>
                 </Button>
               </Link>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/auth" >
-                  <Button variant="ghost" size="sm" className="hidden sm:flex">Sign In</Button>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm" className="hidden md:flex">Sign In</Button>
                 </Link>
-                <Link to="/auth" >
-                  <Button className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow">
-                    Get Started
-                    <ArrowRight className="h-4 w-4" />
+                <Link to="/auth">
+                  <Button size="sm" className="gap-1 sm:gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow text-xs sm:text-sm">
+                    <span className="hidden xs:inline">Get Started</span>
+                    <span className="xs:hidden">Start</span>
+                    <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </Link>
               </div>
@@ -256,41 +259,41 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 px-6 overflow-hidden">
+      <section className="relative pt-20 pb-12 sm:pt-24 sm:pb-16 lg:pt-32 lg:pb-24 px-4 sm:px-6 overflow-hidden">
         <GridBackground />
         
         <div className="container mx-auto max-w-7xl relative">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
             {/* Left: Hero content */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-6 animate-slide-up">
-                <Radio className="h-3 w-3 animate-pulse" />
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] sm:text-xs font-medium mb-4 sm:mb-6 animate-slide-up">
+                <Radio className="h-2.5 w-2.5 sm:h-3 sm:w-3 animate-pulse" />
                 <span>Real-Time Signal Tracking</span>
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               </div>
               
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 tracking-tight animate-slide-up" style={{ animationDelay: '100ms' }}>
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 tracking-tight animate-slide-up" style={{ animationDelay: '100ms' }}>
                 <span className="block">Never Miss a</span>
-                <span className="block mt-1">
+                <span className="block mt-0.5 sm:mt-1">
                   <span className="gradient-text">Trading Signal</span>
                 </span>
-                <span className="block mt-1 text-muted-foreground/80">Again.</span>
+                <span className="block mt-0.5 sm:mt-1 text-muted-foreground/80">Again.</span>
               </h1>
               
-              <p className="text-lg lg:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-slide-up" style={{ animationDelay: '200ms' }}>
+              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-6 sm:mb-8 leading-relaxed animate-slide-up px-2 sm:px-0" style={{ animationDelay: '200ms' }}>
                 Connect TradingView webhooks to TradeMoq. Track, analyze, and share your trading signals with{' '}
                 <span className="text-foreground font-medium">sub-50ms latency</span>.
               </p>
               
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-slide-up" style={{ animationDelay: '300ms' }}>
-                <Link to="/auth" >
-                  <Button size="lg" className="gap-2 h-12 px-8 shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 animate-slide-up" style={{ animationDelay: '300ms' }}>
+                <Link to="/auth" className="w-full sm:w-auto">
+                  <Button size="lg" className="gap-2 h-11 sm:h-12 px-6 sm:px-8 w-full sm:w-auto shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5">
                     <Play className="h-4 w-4 fill-current" />
                     Start Free Trial
                   </Button>
                 </Link>
-                <a href="#how-it-works">
-                  <Button variant="outline" size="lg" className="gap-2 h-12 px-8 group">
+                <a href="#how-it-works" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="gap-2 h-11 sm:h-12 px-6 sm:px-8 w-full sm:w-auto group">
                     See How It Works
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
@@ -298,42 +301,42 @@ const Index = () => {
               </div>
               
               {/* Trust indicators */}
-              <div className="flex items-center justify-center lg:justify-start gap-6 mt-10 text-sm text-muted-foreground animate-slide-up" style={{ animationDelay: '400ms' }}>
+              <div className="flex flex-col xs:flex-row items-center justify-center lg:justify-start gap-3 xs:gap-4 sm:gap-6 mt-6 sm:mt-10 text-xs sm:text-sm text-muted-foreground animate-slide-up" style={{ animationDelay: '400ms' }}>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-buy" />
+                  <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-buy" />
                   <span>No credit card required</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-buy" />
+                  <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-buy" />
                   <span>Setup in 60 seconds</span>
                 </div>
               </div>
             </div>
             
             {/* Right: Live signal feed visualization */}
-            <div className="relative animate-slide-up" style={{ animationDelay: '300ms' }}>
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-cyan-500/20 to-violet-500/20 rounded-2xl blur-2xl opacity-50" />
+            <div className="relative animate-slide-up mt-4 lg:mt-0" style={{ animationDelay: '300ms' }}>
+              <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-primary/20 via-cyan-500/20 to-violet-500/20 rounded-xl sm:rounded-2xl blur-xl sm:blur-2xl opacity-50" />
               <div className="relative">
                 <LiveSignalFeed />
                 
-                {/* Floating badge */}
-                <div className="absolute -top-3 -right-3 bg-card border border-border rounded-lg px-3 py-2 shadow-xl animate-float">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium">&lt;50ms Latency</span>
+                {/* Floating badge - hidden on very small screens */}
+                <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 bg-card border border-border rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 shadow-xl animate-float hidden xs:block">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                    <span className="text-[10px] sm:text-xs font-medium">&lt;50ms Latency</span>
                   </div>
                 </div>
                 
                 {/* Bottom metrics */}
-                <div className="absolute -bottom-4 left-4 right-4 bg-card border border-border rounded-lg px-4 py-3 shadow-xl">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="absolute -bottom-3 sm:-bottom-4 left-2 right-2 sm:left-4 sm:right-4 bg-card border border-border rounded-lg px-3 py-2 sm:px-4 sm:py-3 shadow-xl">
+                  <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <Bell className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
                       <span className="text-muted-foreground">Signals Today</span>
                       <span className="font-bold">247</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-3.5 w-3.5 text-buy" />
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-buy" />
                       <span className="text-buy font-medium">+12.4%</span>
                     </div>
                   </div>
@@ -345,10 +348,10 @@ const Index = () => {
       </section>
 
       {/* Social Proof / Stats */}
-      <section className="py-16 border-y border-border/50 bg-muted/20 relative overflow-hidden">
+      <section className="py-10 sm:py-12 lg:py-16 border-y border-border/50 bg-muted/20 relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-20" />
-        <div className="container mx-auto px-6 relative">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+        <div className="container mx-auto px-4 sm:px-6 relative">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
             {[
               { value: '50K', suffix: '+', label: 'Signals Tracked', icon: Activity },
               { value: '2.5K', suffix: '+', label: 'Active Traders', icon: Target },
@@ -356,13 +359,13 @@ const Index = () => {
               { value: '47', suffix: 'ms', label: 'Avg. Latency', icon: Gauge },
             ].map((stat, i) => (
               <div key={i} className="text-center group">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4 group-hover:scale-110 transition-transform">
-                  <stat.icon className="h-5 w-5" />
+                <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-primary/10 text-primary mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <div className="text-3xl lg:text-4xl font-display font-bold mb-1">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold mb-0.5 sm:mb-1">
                   <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                 </div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -370,23 +373,23 @@ const Index = () => {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-24 px-6 relative">
+      <section id="how-it-works" className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 relative">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 text-xs font-medium mb-4">
-              <Cpu className="h-3 w-3" />
+          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 text-[10px] sm:text-xs font-medium mb-3 sm:mb-4">
+              <Cpu className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               <span>Simple Integration</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
               Up and Running in{' '}
               <span className="gradient-text">3 Steps</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base lg:text-lg px-2">
               No coding required. Connect TradingView to TradeMoq in under a minute.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 relative">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative">
             {/* Connector line */}
             <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-primary/50 via-cyan-500/50 to-violet-500/50" />
             
@@ -413,16 +416,16 @@ const Index = () => {
                 color: 'from-violet-500 to-violet-500',
               },
             ].map((item, i) => (
-              <div key={i} className="relative group">
-                <div className="absolute -inset-4 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl blur-xl" 
+              <div key={i} className={`relative group ${i === 2 ? 'sm:col-span-2 md:col-span-1 sm:max-w-md sm:mx-auto md:max-w-none' : ''}`}>
+                <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl sm:rounded-2xl blur-lg sm:blur-xl" 
                      style={{ backgroundImage: `linear-gradient(to right, ${item.color.split(' ')[0].replace('from-', 'var(--')}), ${item.color.split(' ')[1].replace('to-', 'var(--')})` }} />
-                <div className="relative stat-card h-full text-center group-hover:border-primary/30 transition-colors">
-                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} text-white mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
-                    <item.icon className="h-6 w-6" />
+                <div className="relative stat-card h-full text-center group-hover:border-primary/30 transition-colors p-4 sm:p-6">
+                  <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} text-white mb-4 sm:mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
+                    <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                   </div>
-                  <div className="text-xs font-mono text-primary mb-2">STEP {item.step}</div>
-                  <h3 className="font-heading text-xl font-semibold mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
+                  <div className="text-[10px] sm:text-xs font-mono text-primary mb-1.5 sm:mb-2">STEP {item.step}</div>
+                  <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{item.title}</h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}
@@ -431,71 +434,97 @@ const Index = () => {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-24 px-6 bg-muted/20 relative">
+      <section id="features" className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 bg-muted/20 relative">
         <div className="absolute inset-0 bg-grid-pattern opacity-30" />
         <div className="container mx-auto max-w-6xl relative">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-500 text-xs font-medium mb-4">
-              <Zap className="h-3 w-3" />
+          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-500 text-[10px] sm:text-xs font-medium mb-3 sm:mb-4">
+              <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               <span>Powerful Features</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
               Built for{' '}
               <span className="gradient-text">Serious Traders</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base lg:text-lg px-2">
               Everything you need to track, analyze, and share your trading signals.
             </p>
           </div>
           
           {/* Feature showcase with tabs */}
-          <div className="grid lg:grid-cols-5 gap-8 items-start">
-            {/* Feature tabs */}
-            <div className="lg:col-span-2 space-y-3">
-              {features.map((feature, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveFeature(i)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all duration-300 ${
-                    activeFeature === i 
-                      ? 'bg-card border-primary/30 shadow-lg shadow-primary/10' 
-                      : 'bg-card/50 border-border/50 hover:border-border'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`p-2.5 rounded-lg ${feature.color} transition-transform ${activeFeature === i ? 'scale-110' : ''}`}>
-                      <feature.icon className="h-5 w-5" />
+          <div className="grid lg:grid-cols-5 gap-6 lg:gap-8 items-start">
+            {/* Feature tabs - horizontal scroll on mobile */}
+            <div className="lg:col-span-2 space-y-2 sm:space-y-3 order-2 lg:order-1">
+              {/* Mobile: horizontal scroll */}
+              <div className="flex lg:hidden gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                {features.map((feature, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveFeature(i)}
+                    className={`flex-shrink-0 p-3 rounded-xl border transition-all duration-300 ${
+                      activeFeature === i 
+                        ? 'bg-card border-primary/30 shadow-lg shadow-primary/10' 
+                        : 'bg-card/50 border-border/50'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg ${feature.color}`}>
+                      <feature.icon className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-heading font-semibold mb-1">{feature.title}</h3>
-                      <p className={`text-sm text-muted-foreground transition-all ${activeFeature === i ? 'opacity-100' : 'opacity-60'}`}>
-                        {feature.description}
-                      </p>
+                  </button>
+                ))}
+              </div>
+              {/* Desktop: vertical list */}
+              <div className="hidden lg:block space-y-3">
+                {features.map((feature, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveFeature(i)}
+                    className={`w-full text-left p-4 rounded-xl border transition-all duration-300 ${
+                      activeFeature === i 
+                        ? 'bg-card border-primary/30 shadow-lg shadow-primary/10' 
+                        : 'bg-card/50 border-border/50 hover:border-border'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`p-2.5 rounded-lg ${feature.color} transition-transform ${activeFeature === i ? 'scale-110' : ''}`}>
+                        <feature.icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-heading font-semibold mb-1">{feature.title}</h3>
+                        <p className={`text-sm text-muted-foreground transition-all ${activeFeature === i ? 'opacity-100' : 'opacity-60'}`}>
+                          {feature.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
             
             {/* Feature preview */}
-            <div className="lg:col-span-3">
-              <div className="relative rounded-2xl border border-border/50 bg-card overflow-hidden shadow-2xl">
+            <div className="lg:col-span-3 order-1 lg:order-2">
+              {/* Mobile feature title */}
+              <div className="lg:hidden mb-4">
+                <h3 className="font-heading font-semibold text-sm">{features[activeFeature].title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{features[activeFeature].description}</p>
+              </div>
+              <div className="relative rounded-xl sm:rounded-2xl border border-border/50 bg-card overflow-hidden shadow-xl sm:shadow-2xl">
                 {/* Browser chrome */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-muted/30">
+                  <div className="flex gap-1 sm:gap-1.5">
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500/60" />
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500/60" />
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500/60" />
                   </div>
                   <div className="flex-1 flex justify-center">
-                    <div className="px-4 py-1 rounded-md bg-background text-xs text-muted-foreground font-mono">
+                    <div className="px-2 sm:px-4 py-0.5 sm:py-1 rounded-md bg-background text-[10px] sm:text-xs text-muted-foreground font-mono truncate max-w-[200px] sm:max-w-none">
                       app.trademoq.com/dashboard
                     </div>
                   </div>
                 </div>
                 
                 {/* Feature preview content */}
-                <div className="p-6 min-h-[400px]">
+                <div className="p-4 sm:p-6 min-h-[280px] sm:min-h-[350px] lg:min-h-[400px]">
                   {activeFeature === 0 && (
                     <div className="space-y-4 animate-fade-in">
                       <h4 className="font-heading font-semibold text-lg mb-4">Your Webhook URL</h4>
@@ -589,20 +618,20 @@ const Index = () => {
           </div>
           
           {/* Additional features grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-10 sm:mt-12 lg:mt-16">
             {[
               { icon: Clock, title: 'Historical Data', desc: 'Up to unlimited history retention' },
               { icon: Download, title: 'CSV Export', desc: 'Download your data anytime' },
               { icon: Shield, title: 'Secure by Default', desc: 'Row-level security & encryption' },
               { icon: Gauge, title: 'Smart Rate Limits', desc: 'Scale up to 20 signals/sec' },
             ].map((feature, i) => (
-              <div key={i} className="stat-card flex items-start gap-4 group hover:border-primary/30 transition-colors">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-                  <feature.icon className="h-4 w-4" />
+              <div key={i} className="stat-card flex flex-col sm:flex-row items-start gap-2 sm:gap-4 group hover:border-primary/30 transition-colors p-3 sm:p-4">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                  <feature.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
                 <div>
-                  <h4 className="font-heading font-semibold text-sm mb-1">{feature.title}</h4>
-                  <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                  <h4 className="font-heading font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">{feature.title}</h4>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
                 </div>
               </div>
             ))}
@@ -611,35 +640,35 @@ const Index = () => {
       </section>
 
       {/* Pricing Preview */}
-      <section id="pricing" className="py-24 px-6 relative">
+      <section id="pricing" className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 relative">
         <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-medium mb-4">
-              <Check className="h-3 w-3" />
+          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] sm:text-xs font-medium mb-3 sm:mb-4">
+              <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               <span>Simple Pricing</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
               Start Free,{' '}
               <span className="gradient-text">Scale as You Grow</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base lg:text-lg px-2">
               No hidden fees. No surprise charges. Upgrade or downgrade anytime.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {[
               {
                 name: 'Free',
                 price: '$0',
-                description: 'Perfect for getting started',
+                description: '15-day free trial',
                 features: ['1 Strategy', '7-day signal history', 'Webhook integration', 'Basic analytics'],
                 cta: 'Get Started',
                 popular: false,
               },
               {
                 name: 'Pro',
-                price: '$19',
+                price: '$7',
                 description: 'For active traders',
                 features: ['10 Strategies', '90-day signal history', 'CSV data export', 'Public strategy pages', 'Priority support'],
                 cta: 'Start Pro Trial',
@@ -647,7 +676,7 @@ const Index = () => {
               },
               {
                 name: 'Elite',
-                price: '$49',
+                price: '$18',
                 description: 'For power users & teams',
                 features: ['Unlimited strategies', 'Unlimited history', 'API access', 'Custom integrations', 'Dedicated support'],
                 cta: 'Contact Sales',
@@ -656,35 +685,36 @@ const Index = () => {
             ].map((plan, i) => (
               <div 
                 key={i} 
-                className={`relative stat-card ${plan.popular ? 'border-primary ring-2 ring-primary/20' : ''}`}
+                className={`relative stat-card p-4 sm:p-6 ${plan.popular ? 'border-primary ring-2 ring-primary/20 sm:col-span-2 md:col-span-1' : ''}`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary to-cyan-500 text-white text-xs font-semibold rounded-full shadow-lg">
+                  <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-0.5 sm:py-1 bg-gradient-to-r from-primary to-cyan-500 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg whitespace-nowrap">
                     Most Popular
                   </div>
                 )}
-                <div className="mb-6">
-                  <h3 className="font-heading text-xl font-semibold mb-1">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-heading text-lg sm:text-xl font-semibold mb-0.5 sm:mb-1">{plan.name}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{plan.description}</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="font-display text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="font-display text-3xl sm:text-4xl font-bold">{plan.price}</span>
+                    <span className="text-muted-foreground text-sm">/month</span>
                   </div>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                   {plan.features.map((feature, j) => (
-                    <li key={j} className="flex items-center gap-3 text-sm">
-                      <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-3 w-3 text-primary" />
+                    <li key={j} className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                      <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary" />
                       </div>
                       <span className="text-muted-foreground">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth"  className="block">
+                <Link to="/auth" className="block">
                   <Button 
                     variant={plan.popular ? 'default' : 'outline'} 
-                    className={`w-full ${plan.popular ? 'shadow-lg shadow-primary/25' : ''}`}
+                    size="sm"
+                    className={`w-full sm:h-10 ${plan.popular ? 'shadow-lg shadow-primary/25' : ''}`}
                   >
                     {plan.cta}
                   </Button>
@@ -696,52 +726,52 @@ const Index = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 px-6 relative overflow-hidden">
+      <section className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[600px] lg:w-[800px] h-[400px] sm:h-[600px] lg:h-[800px] bg-primary/5 rounded-full blur-2xl sm:blur-3xl" />
         
         <div className="container mx-auto max-w-4xl text-center relative">
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 tracking-tight px-2">
             Ready to Streamline Your
             <br />
             <span className="gradient-text">Signal Tracking?</span>
           </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto px-4">
             Join thousands of traders already using TradeMoq to track and analyze their trading signals.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/auth">
-              <Button size="lg" className="gap-2 h-14 px-10 text-base shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4">
+            <Link to="/auth" className="w-full sm:w-auto">
+              <Button size="lg" className="gap-2 h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-base w-full sm:w-auto shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5">
                 <Play className="h-4 w-4 fill-current" />
                 Start Your Free Trial
               </Button>
             </Link>
           </div>
-          <p className="text-sm text-muted-foreground mt-6">
-            No credit card required • Free forever on the starter plan
+          <p className="text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
+            No credit card required • 15-day free trial
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-12 px-6 bg-muted/10">
+      <footer className="border-t border-border py-8 sm:py-10 lg:py-12 px-4 sm:px-6 bg-muted/10">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div className="md:col-span-2">
-              <Link to="/" className="flex items-center -my-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
+            <div className="col-span-2">
+              <Link to="/" className="flex items-center -my-2 sm:-my-4">
                 <img 
                   src={isDarkMode ? '/tm_logo.svg' : '/tm_logo_black.svg'} 
                   alt="TradeMoq Logo" 
-                  className="h-56 w-auto"
+                  className="h-32 sm:h-40 lg:h-56 w-auto"
                 />
               </Link>
-              <p className="text-sm text-muted-foreground max-w-xs">
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
                 The modern way to track, analyze, and share your trading signals from TradingView and beyond.
               </p>
             </div>
             <div>
-              <h4 className="font-heading font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <h4 className="font-heading font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Product</h4>
+              <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
                 <li><Link to="/leaderboard" className="hover:text-foreground transition-colors">Leaderboard</Link></li>
                 <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
@@ -750,8 +780,8 @@ const Index = () => {
               </ul>
             </div>
             <div>
-              <h4 className="font-heading font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <h4 className="font-heading font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Support</h4>
+              <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
                 <li><Link to="/api-docs" className="hover:text-foreground transition-colors">API Reference</Link></li>
                 <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
               </ul>
@@ -759,15 +789,15 @@ const Index = () => {
           </div>
           
           {/* Disclaimer */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <FooterDisclaimer />
           </div>
 
-          <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-muted-foreground">
+          <div className="pt-6 sm:pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               © 2026 TradeMoq. All rights reserved.
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground">
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             </div>

@@ -23,7 +23,8 @@ import { Plus, Layers, Settings, Eye, EyeOff, Trash2, Loader2, ExternalLink, Cop
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePreferences } from '@/hooks/usePreferences';
 import { formatDate } from '@/lib/formatUtils';
-import { canCreateStrategy, getUserPlan, getPlanLimits } from '@/lib/planUtils';
+import { canCreateStrategy, getUserPlan, getPlanLimits, isTrialExpired } from '@/lib/planUtils';
+import { useTrial } from '@/hooks/useTrial';
 import { StrategiesPageSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { EmptyStrategies } from '@/components/dashboard/EmptyState';
 import { useLanguage } from '@/i18n';
@@ -114,6 +115,24 @@ const Strategies = () => {
   const createStrategy = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !name.trim()) return;
+
+    // Check if trial has expired for FREE users
+    if (userPlan === 'FREE') {
+      const expired = await isTrialExpired(user.id);
+      if (expired) {
+        toast({
+          title: 'Trial Expired',
+          description: 'Your 15-day free trial has ended. Please upgrade to Pro or Elite to continue creating strategies.',
+          variant: 'destructive',
+          action: (
+            <Link to="/dashboard/billing">
+              <Button variant="outline" size="sm">Upgrade Now</Button>
+            </Link>
+          ),
+        });
+        return;
+      }
+    }
 
     // Check plan limits using server-side function
     const { allowed, reason } = await canCreateStrategy(user.id, strategies.length);

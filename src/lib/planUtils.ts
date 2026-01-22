@@ -92,3 +92,50 @@ export const getHistoryDateLimit = (plan: PlanType): Date | null => {
   return date;
 };
 
+// Trial expiration helpers
+export interface TrialStatus {
+  isExpired: boolean;
+  daysRemaining: number | null;
+  trialEndDate: Date | null;
+}
+
+export const getTrialStatus = async (userId: string): Promise<TrialStatus> => {
+  // Get user profile to check plan and created_at
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('plan, created_at')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !profile || profile.plan !== 'FREE') {
+    return {
+      isExpired: false,
+      daysRemaining: null,
+      trialEndDate: null,
+    };
+  }
+
+  // Calculate trial end date (15 days from account creation)
+  const createdDate = new Date(profile.created_at);
+  const trialEndDate = new Date(createdDate);
+  trialEndDate.setDate(trialEndDate.getDate() + 15);
+
+  const now = new Date();
+  const isExpired = now > trialEndDate;
+  
+  // Calculate days remaining
+  const diffTime = trialEndDate.getTime() - now.getTime();
+  const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+  return {
+    isExpired,
+    daysRemaining: isExpired ? 0 : daysRemaining,
+    trialEndDate,
+  };
+};
+
+export const isTrialExpired = async (userId: string): Promise<boolean> => {
+  const status = await getTrialStatus(userId);
+  return status.isExpired;
+};
+

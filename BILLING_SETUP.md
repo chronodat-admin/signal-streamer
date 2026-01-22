@@ -28,12 +28,12 @@ In Stripe Dashboard → Products, create:
 
 ### Product 1: Pro Plan
 - **Name**: SignalPulse Pro
-- **Price**: $19.00 USD / month (recurring)
+- **Price**: $7.00 USD / month (recurring)
 - **Price ID**: Copy this (e.g., `price_1234...`)
 
 ### Product 2: Elite Plan
 - **Name**: SignalPulse Elite
-- **Price**: $49.00 USD / month (recurring)
+- **Price**: $18.00 USD / month (recurring)
 - **Price ID**: Copy this (e.g., `price_5678...`)
 
 ## Step 3: Set Environment Variables

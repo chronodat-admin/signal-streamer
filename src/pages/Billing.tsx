@@ -47,7 +47,7 @@ const getPlanDetails = (t: any): Record<PlanType, {
 }> => ({
   FREE: {
     name: 'Free',
-    price: '$0/forever',
+    price: '$0/15-day trial',
     priceAmount: 0,
     features: [t.planFeatures.oneStrategy, t.planFeatures.sevenDayHistory, t.planFeatures.emailSupport],
     icon: Zap,
@@ -56,8 +56,8 @@ const getPlanDetails = (t: any): Record<PlanType, {
   },
   PRO: {
     name: 'Pro',
-    price: '$19/month',
-    priceAmount: 19,
+    price: '$9/month',
+    priceAmount: 9,
     features: [t.planFeatures.tenStrategies, t.planFeatures.ninetyDayHistory, t.planFeatures.csvExport, t.planFeatures.publicPages],
     icon: Crown,
     color: 'text-blue-500',
@@ -65,8 +65,8 @@ const getPlanDetails = (t: any): Record<PlanType, {
   },
   ELITE: {
     name: 'Elite',
-    price: '$49/month',
-    priceAmount: 49,
+    price: '$18/month',
+    priceAmount: 18,
     features: [t.planFeatures.unlimitedStrategies, t.planFeatures.unlimitedHistory, t.planFeatures.apiAccess, t.planFeatures.dedicatedSupport],
     icon: Sparkles,
     color: 'text-amber-500',
@@ -96,6 +96,8 @@ const Billing = () => {
     openCustomerPortal,
     refetch,
   } = useSubscription();
+
+  const { isExpired: trialExpired, daysRemaining, trialEndDate, loading: trialLoading } = useTrial();
 
   // Handle success/cancel redirects from Stripe
   useEffect(() => {
@@ -203,6 +205,48 @@ const Billing = () => {
               </Alert>
             )}
 
+        {/* Trial Expired Alert */}
+        {plan === 'FREE' && !trialLoading && trialExpired && (
+          <Alert variant="destructive" className="border-red-500 bg-red-500/10">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertTitle className="text-red-500">Trial Expired</AlertTitle>
+            <AlertDescription className="text-red-700 dark:text-red-400">
+              Your 15-day free trial has ended. Upgrade to Pro or Elite to continue using the platform.
+              <div className="mt-3 flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => handleUpgrade('PRO')}
+                  disabled={checkoutLoading}
+                >
+                  Upgrade to Pro - $7/mo
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleUpgrade('ELITE')}
+                  disabled={checkoutLoading}
+                >
+                  Upgrade to Elite - $18/mo
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Trial Expiring Soon Alert */}
+        {plan === 'FREE' && !trialLoading && !trialExpired && daysRemaining !== null && daysRemaining <= 3 && daysRemaining > 0 && (
+          <Alert className="border-amber-500 bg-amber-500/10">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertTitle className="text-amber-500">Trial Ending Soon</AlertTitle>
+            <AlertDescription className="text-amber-700 dark:text-amber-400">
+              Your free trial expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}. 
+              {trialEndDate && ` Trial ends on ${new Date(trialEndDate).toLocaleDateString()}.`}
+              {' '}
+              <Link to="/pricing" className="underline font-medium">Upgrade now</Link> to continue using the platform.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {loading && !processingSuccess ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -232,6 +276,36 @@ const Billing = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-3xl font-bold">{details.price}</div>
+                
+                {/* Trial Status for FREE plan */}
+                {plan === 'FREE' && !trialLoading && (
+                  <div className={`p-3 rounded-lg border ${
+                    trialExpired 
+                      ? 'border-red-500 bg-red-500/10' 
+                      : daysRemaining !== null && daysRemaining <= 3
+                      ? 'border-amber-500 bg-amber-500/10'
+                      : 'border-blue-500 bg-blue-500/10'
+                  }`}>
+                    {trialExpired ? (
+                      <div className="text-sm">
+                        <p className="font-medium text-red-600 dark:text-red-400 mb-1">Trial Expired</p>
+                        <p className="text-red-700 dark:text-red-300 text-xs">Upgrade required to continue</p>
+                      </div>
+                    ) : daysRemaining !== null ? (
+                      <div className="text-sm">
+                        <p className="font-medium text-foreground mb-1">
+                          {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining
+                        </p>
+                        {trialEndDate && (
+                          <p className="text-muted-foreground text-xs">
+                            Trial ends: {new Date(trialEndDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {details.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">

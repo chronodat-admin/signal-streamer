@@ -738,7 +738,7 @@ export const es: TranslationKeys = {
     proPlan: 'Plan Pro',
     elitePlan: 'Plan Elite',
     perMonth: '/mes',
-    perForever: '/siempre',
+    perForever: '/prueba de 15 días',
     
     // Features
     features: 'Características',
@@ -760,8 +760,8 @@ export const es: TranslationKeys = {
     noActiveSubscriptionDescription: 'Estás en el plan gratuito',
     manageSubscription: 'Gestionar Suscripción',
     updatePaymentMethod: 'Actualizar método de pago, cambiar plan o cancelar suscripción',
-    upgradeToPro: 'Mejorar a Pro - $19/mes',
-    upgradeToElite: 'Mejorar a Elite - $49/mes',
+    upgradeToPro: 'Mejorar a Pro - $7/mes',
+    upgradeToElite: 'Mejorar a Elite - $18/mes',
     
     // Change Plan
     changeYourPlan: 'Cambiar Tu Plan',
